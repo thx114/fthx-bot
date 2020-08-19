@@ -8,6 +8,7 @@
 + [x] 发送带自定义文字的图片
 + [x] 签到
 + [x] 极其简陋的聊天系统
++ [x] 以图搜图
 + [ ] 自动重置签到,色图限制
 + [ ] 请求频率限制
 + [ ] 处理添加好友请求
@@ -21,11 +22,9 @@
 
   1.```pip install -r requirements.txt```
   
-  2.在`bot.py`中输入你的`host`，`authKey`，`account`
+  2.在`runtimetext.py`里按照注释写入相应的信息
  
-  3.在`runtimetext.py`里`admin`与`op`中输入`主人qq号`
- 
-  4.启动
+  3.启动
 
 ### 关于配置文件:
 
