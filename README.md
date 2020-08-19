@@ -18,9 +18,9 @@
 ### 使用
 写的太烂了,不建议您使用此bot
 
-1.在[bot.py]中输入你的[host]，[authKey]，[account]
-2.在[runtimetext.py]里[admin]与[op]中输入[主人qq号]
-3.启动
+ 1.在[bot.py]中输入你的[host]，[authKey]，[account]
+ 2.在[runtimetext.py]里[admin]与[op]中输入[主人qq号]
+ 3.启动
 
 ### 关于配置文件:
 [f1]:中文字体，将文字写入图片时中文采用的字体 （我使用的是ResourceHanRoundedCN-Heavy
