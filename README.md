@@ -2,7 +2,7 @@
 这是一个使用Mirai,[`Application/Graia Framework`](https://github.com/GraiaProject/Application)编写的机器人
 
 
-### 他能做什么
+# 他能做什么
 
 + [x] setu相关
 + [x] 发送带自定义文字的图片
@@ -11,7 +11,7 @@
 + [x] 以图搜图
 + [x] 其他基于api的一些功能:舔狗日记，历史上的今天等
 
-###todos:
+#todos:
 
 + [x] 集中的配置加载/处理系统
 + [ ] 自动重置签到,色图限制
@@ -21,7 +21,7 @@
 
 **此项目是我边学边做的产物,实际代码可能十分丑陋,会在未来慢慢重写**
 
-### 使用
+# 使用
 
 ~~写的太烂了,不建议您使用此bot~~
 
@@ -35,7 +35,7 @@
  
   5.启动
 
-### 关于配置文件:
+# 关于配置文件:
 
 runtimetext.py中:
 
@@ -48,6 +48,7 @@ runtimetext.py中:
 cfg.json中:
 
   这里的东西基本不用太动，大部分都是用指令修改
-### 许可证
+  
+# 许可证
 
 我们使用 [`GNU AGPLv3`](https://choosealicense.com/licenses/agpl-3.0/) 作为本项目的开源许可证
