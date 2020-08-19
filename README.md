@@ -11,7 +11,7 @@
 + [x] 以图搜图
 + [x] 其他基于api的一些功能:舔狗日记，历史上的今天等
 
-#todos:
+# todos:
 
 + [x] 集中的配置加载/处理系统
 + [ ] 自动重置签到,色图限制
@@ -23,9 +23,9 @@
 
 # 使用
 
-~~写的太烂了,不建议您使用此bot~~
+*~~写的太烂了,不建议您使用此bot~~
 
-  1.安装[Application](https://github.com/GraiaProject/Application)以及前置包括mirai等
+  1.安装[**Application**](https://github.com/GraiaProject/Application)以及前置包括mirai等
 
   2.`git clone https://github.com/thx114/fthx-bot.git`
 
@@ -33,15 +33,15 @@
   
   4.在`runtimetext.py`里按照注释写入相应的信息
  
-  5.启动
+  5.启动`bot.py`
 
 # 关于配置文件:
 
 runtimetext.py中:
 
-  `f1`:中文字体，将文字写入图片时中文采用的字体 （我使用的是ResourceHanRoundedCN-Heavy
+  `f1`:中文字体，将文字写入图片时中文采用的字体 （我使用的是*ResourceHanRoundedCN-Heavy
 
-  `f2`:英文字体，将文字写入图片时英文采用的字体，该字体宽度应是中文字体的一半 （我使用的是GenShinGothic-Monospace-Heavy
+  `f2`:英文字体，将文字写入图片时英文采用的字体，该字体宽度应是中文字体的一半 （我使用的是*GenShinGothic-Monospace-Heavy
 
   `feback`:聊天系统，可以按照例子添加文字
 
@@ -51,4 +51,4 @@ cfg.json中:
   
 # 许可证
 
-我们使用 [`GNU AGPLv3`](https://choosealicense.com/licenses/agpl-3.0/) 作为本项目的开源许可证
+使用 [`GNU AGPLv3`](https://choosealicense.com/licenses/agpl-3.0/) 作为本项目的开源许可证
