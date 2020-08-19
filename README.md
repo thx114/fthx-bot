@@ -37,8 +37,6 @@
 
 ### 关于配置文件:
 
-(配置文件太多了，以后会写配置载入系统的)
-
 runtimetext.py中:
 
   `f1`:中文字体，将文字写入图片时中文采用的字体 （我使用的是ResourceHanRoundedCN-Heavy
@@ -47,6 +45,9 @@ runtimetext.py中:
 
   `feback`:聊天系统，可以按照例子添加文字
 
+cfg.json中:
+
+  这里的东西基本不用太动，大部分都是用指令修改
 ### 许可证
 
 我们使用 [`GNU AGPLv3`](https://choosealicense.com/licenses/agpl-3.0/) 作为本项目的开源许可证
