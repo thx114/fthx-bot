@@ -23,7 +23,7 @@
 
 ### 使用
 
-写的太烂了,不建议您使用此bot
+~~写的太烂了,不建议您使用此bot~~
 
   1.安装[Application](https://github.com/GraiaProject/Application)以及前置包括mirai等
 
