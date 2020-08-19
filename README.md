@@ -1,5 +1,5 @@
 # fthx-bot
-这是一个基于[Application/Graia Framework](https://github.com/GraiaProject/Application)的机器人
+这是一个基于[`Application/Graia Framework`](https://github.com/GraiaProject/Application)的机器人
 
 
 ### 他能做什么
@@ -19,11 +19,16 @@
 
 写的太烂了,不建议您使用此bot
 
-  1.在[bot.py]中输入你的[host]，[authKey]，[account]
+  ```
+  1.pip install -r requirements.txt
+  
+  ```
+  
+  2.在`bot.py`中输入你的`host`，`authKey`，`account`
  
-  2.在[runtimetext.py]里[admin]与[op]中输入[主人qq号]
+  3.在`runtimetext.py`里`admin`与`op`中输入`主人qq号`
  
-  3.启动
+  4.启动
 
 ### 关于配置文件:
 
@@ -31,11 +36,11 @@
 
 runtimetext.py中:
 
-  [f1]:中文字体，将文字写入图片时中文采用的字体 （我使用的是ResourceHanRoundedCN-Heavy
+  `f1`:中文字体，将文字写入图片时中文采用的字体 （我使用的是ResourceHanRoundedCN-Heavy
 
-  [f2]:英文字体，将文字写入图片时英文采用的字体，该字体宽度应是中文字体的一半 （我使用的是GenShinGothic-Monospace-Heavy
+  `f2`:英文字体，将文字写入图片时英文采用的字体，该字体宽度应是中文字体的一半 （我使用的是GenShinGothic-Monospace-Heavy
 
-  [feback]:聊天系统，可以按照例子添加文字
+  `feback`:聊天系统，可以按照例子添加文字
 
 ### 许可证
 
