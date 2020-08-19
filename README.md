@@ -1,5 +1,5 @@
 # fthx-bot
-这是一个基于[`Application/Graia Framework`](https://github.com/GraiaProject/Application)的机器人
+这是一个使用Mirai,[`Application/Graia Framework`](https://github.com/GraiaProject/Application)编写的机器人
 
 
 ### 他能做什么
@@ -9,6 +9,10 @@
 + [x] 签到
 + [x] 极其简陋的聊天系统
 + [x] 以图搜图
++ [x] 其他基于api的一些功能:舔狗日记，历史上的今天等
+
+###todos:
+
 + [x] 集中的配置加载/处理系统
 + [ ] 自动重置签到,色图限制
 + [ ] 请求频率限制
@@ -21,11 +25,15 @@
 
 写的太烂了,不建议您使用此bot
 
-  1.```pip install -r requirements.txt```
+  安装[Application](https://github.com/GraiaProject/Application)以及他的前置包括mirai等
+
+  1.`git clone https://github.com/voidf/bot_irori.git`
+
+  2.```pip install -r requirements.txt```
   
-  2.在`runtimetext.py`里按照注释写入相应的信息
+  3.在`runtimetext.py`里按照注释写入相应的信息
  
-  3.启动
+  4.启动
 
 ### 关于配置文件:
 
