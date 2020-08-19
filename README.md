@@ -27,9 +27,9 @@
 
   1.安装[Application](https://github.com/GraiaProject/Application)以及前置包括mirai等
 
-  2.`git clone `
+  2.`git clone https://github.com/thx114/fthx-bot.git`
 
-  3.```pip install -r requirements.txt```
+  3.`pip install -r requirements.txt`
   
   4.在`runtimetext.py`里按照注释写入相应的信息
  
