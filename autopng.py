@@ -196,8 +196,8 @@ def run1():
 
     canvas.delete(tk.ALL)
     print(qaq)
-    im1.save('1.gif')
-    imgpath = '1.gif'
+    im1.save('./chace/1.gif')
+    imgpath = './chace/1.gif'
     img = Image.open(imgpath)
     photo = ImageTk.PhotoImage(img)
     canvas.create_image(840+540-200, 350, image=photo)
@@ -221,7 +221,7 @@ B.pack()
 
 
 canvas = tk.Canvas(root, width=1920,height=700,bd=0, highlightthickness=0)
-imgpath = 'mainbg.gif'
+imgpath = './chace/mainbg.gif'
 img = Image.open(imgpath)
 photo = ImageTk.PhotoImage(img)
 canvas.create_image(840+540-200, 350, image=photo)
@@ -235,10 +235,8 @@ canvas.create_window(350, 200, width=700, height=400,
                                        window=ttext)
 canvas.create_window(350, 600, width=700, height=40,
                                        window=ttext2)
-f= open(r'rs.txt','r')
-all_the_text =f.read()
-f.close()
-ttext.insert('1.0',all_the_text )
+
+
 ttext2.insert('1.0','蓝色命令：##99FFFF   绿色变量：##CCFF33  白色默认：##ffffff    换行：\\n  大小：\\b' )
 
 root.mainloop()

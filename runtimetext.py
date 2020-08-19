@@ -1,12 +1,13 @@
-bot_qq = qq  #机器人的qq
-authkey = "key"  #你在http api配置中设置的authkey 
-host_ = "http://127.0.0.1:8080" #你在http api设置的host
-setu_ = 'C:/qaq/' #你的色图文件夹地址
-setu_remove_ = 'C:/qaq2/' #你的色图移除暂存文件夹
+bot_qq = 11111111 #在此填入bot_qq号
+authkey = "87654321" #在此填入http api 中的 authkey
+host_ = "http://127.0.0.1:8080" #在此填入http api 中的 host
+setu_ = 'C:/MIRAI/bot_irori-master/outsetu/'  #你的色图文件夹路径
+setu_remove_ = 'C:/MIRAI/bot_irori-master/setu/' #你的移除暂存文件夹路径
 
 
-admin = [1764362678] #主人的qq
-op = [1764362678,1256779787,2922150732,3370171857,2538723194] #可移除色图的op
+admin = [1764362678]  #主人的qq号 
+op = [1764362678,1256779787,2922150732,3370171857,2538723194] #可移除色图的op的qq号
+msglist = []
 thetypes = [1,2,3,4,5,6,7,8]
 f1 = "C:\\WINDOWS\\Fonts\\ResourceHanRoundedCN-Heavy.ttf"
 f2 = "C:\\WINDOWS\\Fonts\\GenShinGothic-Monospace-Heavy.ttf"
@@ -23,11 +24,11 @@ mainmap="""
 │ ’#99FFFF百科 ’#CCFF33[信息]’#FFFFFF:查找百科’#99FFFFrep’#CCFF33 [id]’#FFFFFF:这图不够色   │‘
 │ ’#99FFFF直链 ’#CCFF33[链接]’#FFFFFF:网盘直链’#99FFFF群直链’#CCFF33 [id]’#FFFFFF:加群链接  │‘
 │’#99FFFF 热榜’#CCFF33 [接口/id]’#FFFFFF:热榜’#99FFFF 网抑云’#FFFFFF:网易云热评     │‘
+│’#99FFFF 签到’#FFFFFF:签到获取色图  ’#99FFFF @我 ’#CCFF33[图片]’#FFFFFF:以图搜图   │‘
 │ ’#99FFFF短链 ’#CCFF33[接口] [链接]’#FFFFFF:生成短链 (接口选填)    │‘
 ╰ ───────────────────────────────────────── ╯‘
 ╭ ──────────── ；20  ；40管理员功能；20  ；30──────────── ╮‘
 │    ；15        ；30                                   │‘
-│ ’#99FFFF更新色图’#FFFFFF:从服务器更新色图                 │‘
 │ ’#99FFFFhsolv’#FFFFFF:色图限制相关,’#99FFFFh hsolv’#FFFFFF 查看用法       │‘
 │ ’#99FFFFsg+’#FFFFFF/’#99FFFFsg-’#FFFFFF ’#CCFF33[群号]’#FFFFFF:给予或删除某群的色图权限   │‘
 │ ’#99FFFFban’#FFFFFF:禁用某人色图权限   ’#99FFFFrun’#FFFFFF:运行def        │‘
@@ -111,14 +112,14 @@ feback={
     '$符':'lsp的对话',
     '喵':'喵喵喵?|舔~|喵?!',
     '摸头':'(乖巧)|嘻嘻',
-    '透':'哇唔...轻点嘛♡|嘤嘤嘤..|唔喵 ..还想要♡|要坏掉惹..♡',
+    '透':'-----',
     '嘤嘤嘤':'嘤嘤嘤?|嘤嘤！|抱走你哦~|想干嘛哦'
     },
     {
     '$符':'主人的对话',
     '喵':'喵喵喵?|舔~|喵?!|唔喵~',
     '摸头':'(乖巧)♡|嘻嘻',
-    '透':'嘤嘤嘤♡..|还想要♡~|好...好舒服♡|要坏掉惹♡....|主人好棒呀~♡',
+    '透':'-----',
     '嘤嘤嘤':'嘤嘤嘤?|嘤嘤！'
     }
 

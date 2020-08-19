@@ -1,5 +1,4 @@
-from http.client import METHOD_NOT_ALLOWED
-import logging
+import json
 from operator import eq
 import shutil
 from runtimetext import imgh,admin,op,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_
@@ -7,7 +6,6 @@ from urllib.request import urlretrieve
 from PIL import ImageFont,ImageDraw
 import cv2
 from graia.application import Group,Friend
-from graia.application.entry import NewFriendRequestEvent
 from graia.application.event.messages import GroupMessage,FriendMessage
 from graia.application.group import Member
 from graia.application.message.elements.internal import App, Image, Plain
@@ -19,70 +17,50 @@ import requests
 import random
 import os
 from PIL import Image as Im
-import json
+
+#读取配置...
+jsonfile = open("cfg.json","r")
+cfg = json.load(jsonfile)
+jsonfile.close()
+id_data = cfg['id']
+fr_data = cfg['fr']
+stlist_data = cfg['stlist']
+lstfr_data = cfg['lstfr']
+lstgr_data = cfg['lstgr']
+qdlist_data = cfg['qdlist']
+qd_data = cfg['qd']
+hsolvmax_data = cfg['hsolvmax']
+hsolvch_data = cfg['hsolvch']
+null_data = cfg['null']
+relist_data = cfg['relist']
+sg_data = cfg['sg']
+ban_data = cfg['ban']
+
+
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
 app = GraiaMiraiApplication(
     broadcast=bcc,
     connect_info=Session(
-        host=host_, # 填入 httpapi 服务运行的地址
-        authKey=authkey, # 填入 authKey
-        account=bot_qq, # 你的机器人的 qq 号
-        websocket=True # Graia 已经可以根据所配置的消息接收的方式来保证消息接收部分的正常运作.
+        host=host_,
+        authKey=authkey,
+        account=bot_qq,
+        websocket=True
     )
 )
-def setu(group,id):
-    print('色图请求开始')
-    f= open(r'setugroup.txt','r')
-    cfgin =f.read()
-    arr = cfgin.split(',')
-    if str(group) in arr != 0 : 
-        theid = id
-        jsonfile = open("id.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        if str(id) not in data:
-            print("datanot")
-            data[theid] = 1
-            jsonfile=open("id.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-        jsonfile = open("id.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        jsonfile = open("list.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        if str(id) not in data:
-            print("datanot")
-            data[theid] = 1
-            jsonfile=open("list.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-        jsonfile = open("list.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        hsolv = data[str(id)]
-        truehso = int(hsolv)
-        truehso = truehso + 1
-        data[theid] = truehso
-        jsonfile=open("list.json","w")
-        json.dump(data,jsonfile)
-        jsonfile.close()
-        jsonfile = open("id.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        hsolv = data[str(id)]
-        f= open(r'hsolv.txt','r')
-        hsolvmax =f.read()
-        if hsolv <= int(hsolvmax) or id in admin:
-            truehso = int(hsolv)
-            truehso = truehso + 1
-            data[theid] = truehso
-            jsonfile=open("id.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-            PL = "test"
+
+def savecfg():
+    print("保存配置文件")
+    jsonfile=open("cfg.json","w")
+    json.dump(cfg,jsonfile)
+    jsonfile.close()
+def setu(group,id,g):
+    id = str(id)
+    hsolv = id_data[id]
+    if group in sg_data: 
+        print('in')
+        hsolvmax = int(str(hsolvmax_data))
+        if hsolv <= hsolvmax or int(id) in admin:
             rootdir = setu_
             file_names = []
             for parent,dirnames, filenames in os.walk(rootdir):
@@ -91,55 +69,13 @@ def setu(group,id):
             df = rootdir + "/" + file_names[x]
             print("选中色图" + df)
             savename = df.replace(setu_,"").replace('.jpg','')
-            f= open(r'cs.txt','r')
-            st =f.read()
-            jsonfile = open("lastsetu.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            theid = group
-            data[theid] = savename
-            jsonfile = open("lastsetu.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
+            lstgr_data[id] = savename
             print('done' + df)
+            id_data[id] = id_data[id] + 1
+            stlist_data[id] = stlist_data[id] + 1
             return df
     print("2级色图")
-    jsonfile = open("fr.json","r")
-    data = json.load(jsonfile)
-    jsonfile.close()
-    id = str(id)
-    if id not in data:
-        data[id] = 10
-        jsonfile=open("fr.json","w")
-        json.dump(data,jsonfile)
-        jsonfile.close()
-    jsonfile = open("fr.json","r")
-    data = json.load(jsonfile)
-    jsonfile.close()
-    print('fr')
-    if int(str(data[id])) >= 1:
-        theid = id
-        jsonfile = open("list.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        if str(id) not in data:
-            print("datanot")
-            data[id] = 1
-            jsonfile=open("list.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-        jsonfile = open("list.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        print('list')
-        hsolv = data[str(id)]
-        truehso = int(hsolv)
-        truehso = truehso + 1
-        data[id] = truehso
-        jsonfile=open("list.json","w")
-        json.dump(data,jsonfile)
-        jsonfile.close()
-        PL = "test"
+    if fr_data[id] >= 1:
         rootdir = setu_
         file_names = []
         for parent,dirnames, filenames in os.walk(rootdir):
@@ -147,24 +83,13 @@ def setu(group,id):
         x = random.randint(0, len(file_names)-1)
         df = rootdir + "/" + file_names[x]
         savename = df.replace(setu_,"").replace('.jpg','')
-        outmsg = 'https://www.pixivdl.net/artworks/' + savename
-        jsonfile = open("frsetu.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        theid = id
-        data[theid] = savename
-        jsonfile = open("frsetu.json","w")
-        json.dump(data,jsonfile)
-        jsonfile.close()
-        jsonfile = open("fr.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        data[id] = int(str(data[id])) - 1
-        outmsg = outmsg + "剩余色图：" + str(data[id])
-        jsonfile = open("fr.json","w")
-        json.dump(data,jsonfile)
-        jsonfile.close()
+        outmsg = 'https://www.pixivdl.net/artworks' + savename
+        if g == 1: lstgr_data[id] = savename
+        else:      lstfr_data[id] = savename
+        fr_data[id] = fr_data[id] - 1
+        outmsg = outmsg + "剩余色图：" + str(fr_data[id])
         print('色图请求完成' + outmsg)
+        savecfg()
         return outmsg
     else:
         outmsg = "你没有剩余色图或其他错误"
@@ -402,12 +327,11 @@ def getimg():
         file_path = './chace/imgchace.jpg'
         urlretrieve(outurl, file_path)
         print("getimg done")
+
 @bcc.receiver("GroupMessage")
 async def group_message_handler(app: GraiaMiraiApplication, message: MessageChain, group: Group, member: Member):
-    f= open(r'ban.txt','r')
-    cfgin =f.read()
-    ban = cfgin.split(',')
-    if str(member.id) in ban >=1:
+    id = str(member.id)
+    if int(id) in ban_data:
         return
     file_count = x = 0
     msg = message.asDisplay()
@@ -428,44 +352,39 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             outmsg="未知错误"
             gr = group.id
             mb = member.id
+            g = 1
             outmsg = setu(gr,mb)
-            f= open(r'cs.txt','r')
-            st =f.read()
+            st = int(str(hsolvch_data))
             if outmsg.startswith('https:'):
                 botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-                if int(st) > 0:
+                if st > 0:
                     await asyncio.sleep(60)
-                    return await app.revokeMessage(botmsg)  
-                return
+                    await app.revokeMessage(botmsg)
             else:
                 botmsg = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg)]))
-                if int(st) > 0:
-                    await asyncio.sleep(int(st))
-                    return await app.revokeMessage(botmsg)  
-                return
-# @机器人
+                if st > 0:
+                    await asyncio.sleep(st)
+                    await app.revokeMessage(botmsg)
+
     if txt.find('target=3311409147') >= 1:
         print('发现@')
+#@以图搜图
         if out1.startswith('http://gchat.qpic.cn') :
-            print('发现图片')
+            print('以图搜图')
             apikey = "fb07063649fbc97b864f9852aa7c6b7a1c3452c8"
             url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=1&url=$url".replace('$url',out1).replace('$key',apikey)
             headers = {}
             text = requests.get(url, headers=headers) 
-            print(text.text)
             data = json.loads(text.text)
             data = data['results']
             data = data[0]
             data = data["data"]
-            print(data)
             n = 0
             outmsg = ""
             for i in data:
                 outmsg = outmsg + '\n' + str(i) + ":" + str(data[i])
-            return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-            
-        print('请求聊天api...')
-        botid = 3311409147
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+#@机器人
         text = txt.replace('__root__=','').replace('[','').replace(']','')
         arr = text.split('),')
         for i in arr:
@@ -478,29 +397,13 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             if i.find('lain') >=1:
                 arr1 = i.split(', ')
                 truemsg = arr1[1].replace('text=\'','').replace(')','').replace('\'','')
-                print(truemsg)
-                data = feback
-                data = data['data']
-                jsonfile = open("null.json","r")
-                newdata = json.load(jsonfile)
-                jsonfile.close()
+                feback = feback['data']
+                newdata = {}
                 n = 0
-                for i in data:
+                for i in feback:
                     n = n + 1
                     newdata[str(n)] = i
-                id = member.id
-                jsonfile = open("list.json","r")
-                data = json.load(jsonfile)
-                jsonfile.close()
-                if str(id) not in data:
-                    data[id] = 1
-                    jsonfile=open("list.json","w")
-                    json.dump(data,jsonfile)
-                    jsonfile.close()
-                jsonfile = open("list.json","r")
-                data = json.load(jsonfile)
-                jsonfile.close()
-                hsolv = data[str(id)]
+                hsolv = stlist_data[id]
                 if hsolv >= 60:
                     r1 = 20
                     r2 = 100
@@ -514,38 +417,32 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                     r2 = 101
                     r3 = 102
                 r = random.randint(1,100)
-                print(type(newdata))
                 if r <= r1:
                     data = newdata['1']
                 elif r <= r2:
                     data = newdata['2']
                 elif r <= r3:
                     data = newdata['3']
-                print(data)
+                else:
+                    print('几率设置错误')
+                    data = newdata['1']
                 truemsg = truemsg.replace(' ','')
                 for i in data:
                     if truemsg.startswith(i):
-                        print('truemsg in data')
                         outmsg = 'truemsg in data'
-                        print(truemsg)
                         text = data[truemsg]
-                        print(text)
                         arr = text.split('|')
-                        print(arr)
                         max = len(arr) - 1
-                        print(max)
                         r = random.randint(0,max)
-                        print(r)
                         outmsg = str(arr[r])
-                        print(outmsg)
-                        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+                        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #早
     print(msg)
     if msg.startswith('早') and member.id in admin:
         outmsg = '啊啊啊，主人睡傻了QAQ'
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #菜单
-    if msg.startswith("/help") or msg.startswith('菜单') or msg.startswith('main'):
+    elif msg.startswith("/help") or msg.startswith('菜单') or msg.startswith('main'):
         print("main")
         ism = 1
         fontl = f1
@@ -554,9 +451,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         msg = mainmap
         cm = 0
         toimg(msg,fontl,fonty,ism,img,cm)
-        return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #帮助
-    if msg.startswith('h ') or msg.startswith('/h'):
+    elif msg.startswith('h ') or msg.startswith('/h'):
         msg = msg.replace('h ','').replace('/','')
         ism = 0
         cm = 0
@@ -568,28 +465,28 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             img = "./chace/mainbg.png"
             ism = 1
             toimg(msg,fontl,fonty,ism,img,cm)
-        if msg.startswith('扫雷'):
+        elif msg.startswith('扫雷'):
             fontl = f1
             fonty = f2
             msg = sl
             img = "./chace/mainbg.png"
             ism = 1
             toimg(msg,fontl,fonty,ism,img,cm)
-        if msg.startswith('img'):
+        elif msg.startswith('img'):
             fontl = f1
             fonty = f2
             msg = imgh
             img = "./chace/mainbg.png"
             ism = 1
             toimg(msg,fontl,fonty,ism,img,cm)
-        if msg.startswith('短链'):
+        elif msg.startswith('短链'):
             fontl = f1
             fonty = f2
             msg = dlmsg
             img = "./chace/mainbg.png"
             ism = 1
             toimg(msg,fontl,fonty,ism,img,cm)
-        if msg.startswith('热榜'):
+        elif msg.startswith('热榜'):
             fontl = f1
             fonty = f2
             msg = rb
@@ -597,15 +494,12 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             ism = 1
             toimg(msg,fontl,fonty,ism,img,cm)
         if ism == 1:
-            return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
         else:
-            return await app.sendGroupMessage(group,MessageChain.create([Plain('帮助文本不存在')]))
+            await app.sendGroupMessage(group,MessageChain.create([Plain('帮助文本不存在')]))
 #汇报不够色rep
-    if msg.startswith("rep"):
-        jsonfile = open("id.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        hsolv = data[str(member.id)]
+    elif msg.startswith("rep"):
+        hsolv = stlist_data[id]
         outmsg = "出现未知问题"
         if msg.startswith('rep '):
             if hsolv >= 80 or member.id in op != 0:
@@ -630,47 +524,40 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 outmsg = "你没有权限执行此操作"
         else:
             print('未知rep')
-            jsonfile = open("lastsetu.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
             gr = str(group.id)
             if hsolv >= 80 or member.id in op != 0:
-                name = str(data[gr])
+                name = str(lstgr_data[gr])
                 srcfile=setu_ + name + ".jpg"
                 dstfile=setu_remove_ + name + ".jpg"
                 shutil.move(srcfile,dstfile)
                 outmsg = name + "已汇报且暂时移出色图库"
             else:
                 outmsg = "你没有权限执行此操作"
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #撤回时间
-    if msg.startswith("hsolvch") and member.id in admin != 0:
+    elif msg.startswith("hsolvch") and member.id in admin != 0:
         thetext = msg.replace("hsolvch ","")
-        print(thetext)
-        with open("cs.txt","w") as f:
-            f.write(thetext)
+        cfg['hsolvch'] = int(thetext)
         outmsg = "撤回时间已改为" + thetext + "秒"
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #色图群权限
-    if msg.startswith("sg") and member.id in admin != 0:
+    elif msg.startswith("sg") and member.id in admin != 0:
         setugroup = message.asDisplay().replace('sg','')
-        print
-        f= open(r'setugroup.txt','r')
-        cfgin =f.read()
-        arr = cfgin.split(',')
-        print(arr)
+        sg_data
         outmsg = "发生未知错误"
         theg = setugroup.replace('-','').replace('+','').replace(' ','')
-        print(theg)
-        if theg in arr != 0:
+        if int(theg) in sg_data:
             print("is in")
             if setugroup.startswith('-'):
-                p = arr.index(theg)
-                del arr[p]
-                outcfg = ','.join(str(i) for i in arr)
-                print(outcfg)
-                with open("setugroup.txt","w") as f:
-                    f.write(outcfg)
+                print('-')
+                p = sg_data.index(int(theg))
+                print(1)
+                del sg_data[p]
+                print(2)
+                outcfg = ','.join(str(i) for i in sg_data)
+                print(3)
+                cfg['sg'] = sg_data
+                print(4)
                 outmsg = "已禁用此群的色图权限"
             else:
                 outmsg = "此群已是色图群"
@@ -682,98 +569,63 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 print("no -")
                 new = int(setugroup.replace('-','').replace('+','').replace(' ',''))
                 print(1)
-                arr.append(new)
-                print(arr)
-                outcfg = ','.join(str(i) for i in arr)
+                sg_data.append(new)
+                print(sg_data)
+                outcfg = ','.join(str(i) for i in sg_data)
                 print(outcfg)
-                with open("setugroup.txt","w") as f:
-                    f.write(outcfg)
+                cfg['sg'] = sg_data
                 outmsg = "已将此群变更为色图群"
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #ban
-    if msg.startswith("ban") and member.id in admin != 0 :
-        f= open(r'ban.txt','r')
-        cfgin =f.read()
-        ban = cfgin.split(',')
+    elif msg.startswith("ban") and member.id in admin != 0 :
+        
         msg = msg.replace('ban','').replace(' ','')
         if msg.startswith('-'):
             msg = msg.replace('-','')
-            ban.remove(msg)
+            ban_data.remove(int(msg))
             outmsg = msg + "ban-"
-            outcfg = ','.join(str(i) for i in ban)
-            with open("ban.txt","w") as f:
-                f.write(outcfg)
-            print(outmsg)
+            cfg['ban'] = ban_data
         else:
-            print(1)
-            if msg in ban != 0:
+            if int(msg) in ban_data != 0:
                 outmsg = "已存在"
-                print(outmsg)
             else:
-                print(2)
-                ban.append(msg)
-                print(3)
-                outcfg = ','.join(str(i) for i in ban)
-                with open("ban.txt","w") as f:
-                    f.write(outcfg)
+                ban_data.append(int(msg))
+                outcfg = ','.join(str(i) for i in ban_data)
+                cfg['ban'] = ban_data
                 outmsg = msg + "ban+"
-                print(outmsg)
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #hsolvmax 色图限制
-    if msg.startswith("hsolvmax") and member.id in admin != 0 :
+    elif msg.startswith("hsolvmax") and member.id in admin != 0 :
         thetext = msg.replace("hsolvmax ","")
-        print(thetext)
-        with open("hsolv.txt","w") as f:
-            f.write(thetext)
+        cfg['hsolvmax'] = int(thetext)
         outmsg = "色图限制上限已被改为" + thetext
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #hso等级清零
-    if msg.startswith("hsolv") and member.id in admin != 0 :
+    elif msg.startswith("hsolv") and member.id in admin != 0 :
         msg = msg.replace("hsolv",'')
         if msg.startswith('- *'):
             outmsg = "所有当天hso等级被清除"
-            jsonfile = open("id.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            for i in data:
-                data[i] = 0
-            jsonfile=open("id.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-            jsonfile = open("qdli.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            for i in data:
-                data[i] = 0
-            jsonfile=open("qdli.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-            return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            for i in id_data:
+                id_data[i] = 0
+            for i in qdlist_data:
+                qdlist_data[i] = 0
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            savecfg()
         elif msg.startswith('-'):
             id = int(msg.replace("-","").replace(' ',''))
-            print(id)
-            jsonfile = open("id.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            data[id] = 0
-            jsonfile=open("id.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-            print("admin:" + str(id) +str(data[id]))
+            id_data[id] = 0
             outmsg = str(id) + "的hso等级已降到0"
-            return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            savecfg()
 #lsp排行榜
         if msg.startswith('list'):
             print("list读取")
-            jsonfile = open("list.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
             groupids = []
             hsolvlist = []
             mlist = await app.memberList(group)
             for i in mlist:
                 groupids.append(i.id)
-            for item in data:
+            for item in stlist_data:
                 if int(item) in groupids != 0:
                     for i in mlist:
                         if i.id == int(item) != 0:
@@ -790,109 +642,49 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             cm = 0
             img = "./chace/mainbg.png"
             toimg(msg,fontl,fonty,ism,img,cm)
-            return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
         else:
             print("printhsolv")
             id = int(msg.replace("-","").replace(' ',''))
-            jsonfile = open("list.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
+   
             mid = 0
-            mid = int(data[str(id)])
+            mid = int(stlist_data[str(id)])
             outmsg = str(id) + "的hso等级为" + str(mid)
-            return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #签到
-    if msg.startswith('签到'):
-        id = str(member.id)
+    elif msg.startswith('签到'):
         stadd = random.randint(5,20)
         outmsg = "签到成功\n群聊色图限制已重置\n随机获得了色图$张"
-        jsonfile = open("qdli.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        if str(member.id) not in data:
-            data[id] = 0
-            jsonfile=open("qdli.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-        jsonfile = open("qdli.json","r")
-        data = json.load(jsonfile)
-        jsonfile.close()
-        if int(str(data[id])) == 0:
-            data[id] = int(str(data[id])) + 1
-            jsonfile=open("qdli.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-            jsonfile = open("qd.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            print(8)
-            if str(member.id) not in data:
-                print("datanot")
-                data[id] = 0
-                jsonfile=open("qd.json","w")
-                json.dump(data,jsonfile)
-                jsonfile.close()
-            jsonfile = open("qd.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            data[id] = int(str(data[id])) + 1
-            jsonfile=open("qd.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-            jsonfile = open("id.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            print(1)
-            if str(member.id) not in data:
-                print("datanot")
-                data[id] = 0
-                jsonfile=open("id.json","w")
-                json.dump(data,jsonfile)
-                jsonfile.close()
-                outmsg = outmsg + "\n使用来份色图获取色图,群内要色图只会发链接(色图群会优先消耗hsolv*),私聊会发图"
-            data[id] = 0
-            jsonfile=open("id.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
-            jsonfile = open("fr.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            if str(member.id) not in data:
-                data[id] = 10
-                jsonfile=open("fr.json","w")
-                json.dump(data,jsonfile)
-                jsonfile.close()
-                stadd = stadd + 10
-                outmsg = outmsg + "\n(这是你第一次签到获取色图)"
-            jsonfile = open("fr.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
-            dataid = int(str(data[id]))
-            dataid = dataid + stadd
-            data[id] = dataid
-            jsonfile=open("fr.json","w")
-            json.dump(data,jsonfile)
-            jsonfile.close()
+        datas = [id_data,fr_data,stlist_data,qdlist_data,qd_data]
+        datasstr = ['id','fr','stlist','qdlist','qd']
+        u = 0
+        for i in datas :
+            if id not in i:
+                i[id] = 0
+                u = u + 1
+        if u >= 1: 
+            print(id + ':配置初始化完成')
+            stadd = stadd + 10
+            outmsg = outmsg + "\n使用来份色图获取色图,群内要色图只会发链接(色图群会优先消耗hsolv*),私聊会发图\n这是你第一次签到"
+        if qd_data[id] == 0:
+            qd_data[id] = 1
+            qdlist_data[id] = qdlist_data[id] + 1
+            id_data[id] = 0
+            fr_data[id] = fr_data[id] + stadd
             outmsg = outmsg.replace('$',str(stadd))
         else:
-            print('all签到')
             outmsg="你今天已经签到过了"
-        
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #img
-    if msg.startswith("img"):
-        print('img')
+    elif msg.startswith("img"):
         cm = 0
         if msg.find('!main') >= 1:
-            print(1)
             ism = 1
             img = "./chace/mainbg.png"
             msg = msg.replace('!main','')
         elif msg.find('!cimg') >=1:
-            print("cimg")
             ism = 1
             msg = msg[0:msg.rfind('text=')].replace("/r",'').replace('!cimg','')
-            print(msg)
             cm = 1
             img = "./chace/formqq.jpg"
         else:
@@ -902,16 +694,16 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         fonty = f2
         msg = msg.replace('img ','')
         toimg(msg,fontl,fonty,ism,img,cm)
-        return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #ping
-    if msg.startswith("ping "):
+    elif msg.startswith("ping "):
         ip = message.asDisplay().replace('ping ',"")
         url = "http://weijieyue.cn/api/ping.php?ip=$ip".replace('$ip',ip)
         header = {}
         r = requests.get(url, headers=header)
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(r.text)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(r.text)]))
 #舔狗日记
-    if msg.startswith("舔狗日记"):
+    elif msg.startswith("舔狗日记"):
         cm = 0
         print('请求舔狗日记...')
         url = "http://www.dashige.xyz/API/tgrj/api.php"
@@ -923,14 +715,13 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         y = f2
         ism = 1
         img = "./chace/imgchace.jpg"
-        print('调用def...')
         toimg(msg,l,y,ism,img,cm)
-        return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #run
-    if msg.startswith('run -getimg') and member.id in admin:
+    elif msg.startswith('run -getimg') and member.id in admin:
         getimg()
 #历史上的今天
-    if msg.startswith('历史'):
+    elif msg.startswith('历史'):
         cm = 0
         print('请求历史上的今天...')
         url = "http://kumeng.ihcblog.cn/api/today.php"
@@ -946,9 +737,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         img = "./chace/imgchace.jpg"
         print('调用def...')
         toimg(msg,l,y,ism,img,cm)
-        return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #网抑云
-    if msg.startswith('网抑云'):
+    elif msg.startswith('网抑云'):
         cm = 0
         print('请求网抑云api...')
         url =  'https://nd.2890.ltd/api/'
@@ -963,9 +754,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             data = data['data']
             data = data['content']
             outmsg = str(data['content'])
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #群直链
-    if msg.startswith('群直链'):
+    elif msg.startswith('群直链'):
         msg = msg.replace('群直链','')
         if msg.startswith(' '):
             msg = msg.replace(' ','')
@@ -983,9 +774,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             qunid = str(datain['guin'])
             outurl = str(datain['url'])
             outmsg = '群号:$i\n链接:$u'.replace('$i',qunid).replace('$u',outurl)
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #直链
-    if msg.startswith('直链'):
+    elif msg.startswith('直链'):
         msg = msg.replace('直链 ','')
         if msg.startswith('www'):
            msg = msg.replace('www','https://www')
@@ -1010,9 +801,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 outmsg = 'u$u'.replace('$u',outurl)
         else:
             outmsg = '不支持的直链网站或其他错误'
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #短链 1 xxxxxx
-    if msg.startswith('短链 '):
+    elif msg.startswith('短链 '):
         tt = 1
         uf = ' '
         print('短链' + msg)
@@ -1037,9 +828,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             datain = data['data']
             outurl = str(datain['short_url'])
             outmsg = str(outurl)
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #热榜
-    if msg.startswith('热榜'):
+    elif msg.startswith('热榜'):
         qaq = False
         t = "bilibili"
         outmsg = "发生未知错误"
@@ -1055,17 +846,14 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 qaq = True
                 ta = int(msg)
                 n = 0
-                jsonfile = open("relist.json","r")
-                data = json.load(jsonfile)
-                jsonfile.close()
-                data1 = data['data']
-                listdata = data1['list']
+                data = relist_data['data']
+                listdata = data['list']
                 for i in listdata:
                     n = n + 1
                     if ta == n:
                         outmsg = str(i["link"])
                 print(2)
-                return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
         if qaq == False:
             print('type=',t)
             url = "https://v1.alapi.cn/api/tophub/get?type=$t".replace('$t',t)
@@ -1097,13 +885,11 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 imgp = "./chace/mainbg.jpg"
                 cm = 0
                 imgmsg = '/b20' + imgmsg
-                jsonfile=open("relist.json","w")
-                json.dump(data,jsonfile)
-                jsonfile.close()
+                relist_data = data
                 toimg(imgmsg,l,y,ism,imgp,cm)   
-            return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))   
+        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))   
 #百科
-    if msg.startswith('百科'):
+    elif msg.startswith('百科'):
         msg = msg.replace('百科','')
         print('请求百科...')
         url = "http://beimoapi.xyz/baike/api.php/?msg=$msg".replace('$msg',msg)
@@ -1131,48 +917,46 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         y = f2
         ism = 1
         cm = 0
-        text = '/b20' + text[text.rfind('300±'):].replace('300±','') + '/n___________________________________________________________________________________________________________'
+        text = '/b20' + text[text.rfind('300±'):].replace('300±','') + '/n_____________________________________________________________________________________'
         toimg(text,l,y,ism,img,cm)
-        return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #来份色图
-    if msg.startswith("来份色图") or msg.startswith('色图来'):
+    elif msg.startswith("来份色图") or msg.startswith('色图来'):
+        print("色图来")
         outmsg="未知错误"
         gr = group.id
         mb = member.id
-        outmsg = setu(gr,mb)
-        f= open(r'cs.txt','r')
-        st =f.read()
+        g = 1
+        outmsg = setu(gr,mb,g)
+        st = int(str(hsolvch_data))
         if outmsg.startswith('https:'):
             botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
             if int(st) > 0:
                 await asyncio.sleep(60)
-                return await app.revokeMessage(botmsg)  
-            return
+                await app.revokeMessage(botmsg)
         else:
             botmsg = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg)]))
             if int(st) > 0:
                 await asyncio.sleep(int(st))
-                return await app.revokeMessage(botmsg)  
-            return
-    if msg.startswith('不够色'):
-        return await app.sendGroupMessage(group,MessageChain.create([Plain('那你发')]))
+                await app.revokeMessage(botmsg)
+#不够色
+    elif msg.startswith('不够色'):
+        await app.sendGroupMessage(group,MessageChain.create([Plain('那你发')]))
 #统计色图-
-    if msg.startswith("统计色图"):
+    elif msg.startswith("统计色图"):
         rootdir = setu_
         for dirpath, dirnames, filenames in os.walk(rootdir):
             for file in filenames:
                 file_count = file_count + 1
             print(dirpath,file_count)
         msg = "共有$sl张色图".replace("$sl",str(file_count))
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(msg)]))
+        await app.sendGroupMessage(group,MessageChain.create([Plain(msg)]))
+    savecfg()
 
-#none
 @bcc.receiver("FriendMessage")
 async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,message:MessageChain):
 #qaq
-    f= open(r'ban.txt','r')
-    cfgin =f.read()
-    ban = cfgin.split(',')
+    ban = ban_data
     if str(friend.id) in ban >=1:
         return
     msg = message.asDisplay()
@@ -1181,45 +965,38 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,me
     if msg.startswith('rep'):
         if friend.id in op != 0:
             print('未知rep')
-            jsonfile = open("frsetu.json","r")
-            data = json.load(jsonfile)
-            jsonfile.close()
             gr = str(friend.id)
-            name = str(data[gr])
+            name = str(lstfr_data[gr])
             srcfile=setu_ + name + ".jpg"
             dstfile=setu_remove_ + name + ".jpg"
             shutil.move(srcfile,dstfile)
             outmsg = name + "已汇报且暂时移出色图库"
         else:
             outmsg = "你没有权限这样做"
-        return await app.sendFriendMessage(friend,MessageChain.create([Plain(outmsg)]))
+        await app.sendFriendMessage(friend,MessageChain.create([Plain(outmsg)]))
 #色图
-    if msg.startswith('来份色图'):
+    elif msg.startswith('来份色图'):
         outmsg="未知错误"
         gr = 'none'
         mb = friend.id
-        outmsg = setu(gr,mb)
-        f= open(r'cs.txt','r')
-        st =f.read()
+        g = 0
+        outmsg = setu(gr,mb,g)
+        st = int(str(hsolvch_data))
         if outmsg.startswith('https:'):
             botmsg = await app.sendFriendMessage(friend,MessageChain.create([Plain(outmsg)]))
             if int(st) > 0:
                 await asyncio.sleep(60)
-                return await app.revokeMessage(botmsg)  
+                await app.revokeMessage(botmsg)  
             return
         else:
             botmsg = await app.sendFriendMessage(friend,MessageChain.create([Image.fromLocalFile(outmsg)]))
             if int(st) > 0:
                 await asyncio.sleep(int(st))
-                return await app.revokeMessage(botmsg)  
+                await app.revokeMessage(botmsg)  
             return
+    savecfg()
 
 
-@bcc.receiver('NewFriendRequestEvent')
-async def NewFriend(app: GraiaMiraiApplication,event:NewFriendRequestEvent):
-    print('new')
-    event.accept()
 
-    
 
 app.launch_blocking()
