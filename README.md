@@ -19,9 +19,9 @@
 
 写的太烂了,不建议您使用此bot
 
+  1.
   ```
-  1.pip install -r requirements.txt
-  
+  pip install -r requirements.txt
   ```
   
   2.在`bot.py`中输入你的`host`，`authKey`，`account`
