@@ -27,7 +27,7 @@
 
   1.安装[Application](https://github.com/GraiaProject/Application)以及前置包括mirai等
 
-  2.`git clone https://github.com/voidf/bot_irori.git`
+  2.`git clone `
 
   3.```pip install -r requirements.txt```
   
