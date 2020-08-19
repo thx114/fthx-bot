@@ -19,19 +19,23 @@
 
 写的太烂了,不建议您使用此bot
 
- 1.在[bot.py]中输入你的[host]，[authKey]，[account]
+  1.在[bot.py]中输入你的[host]，[authKey]，[account]
  
- 2.在[runtimetext.py]里[admin]与[op]中输入[主人qq号]
+  2.在[runtimetext.py]里[admin]与[op]中输入[主人qq号]
  
- 3.启动
+  3.启动
 
 ### 关于配置文件:
 
-[f1]:中文字体，将文字写入图片时中文采用的字体 （我使用的是ResourceHanRoundedCN-Heavy
+(配置文件太多了，以后会写配置载入系统的)
 
-[f2]:英文字体，将文字写入图片时英文采用的字体，该字体宽度应是中文字体的一半 （我使用的是GenShinGothic-Monospace-Heavy
+runtimetext.py中:
 
-[feback]:聊天系统，可以按照例子添加文字
+  [f1]:中文字体，将文字写入图片时中文采用的字体 （我使用的是ResourceHanRoundedCN-Heavy
+
+  [f2]:英文字体，将文字写入图片时英文采用的字体，该字体宽度应是中文字体的一半 （我使用的是GenShinGothic-Monospace-Heavy
+
+  [feback]:聊天系统，可以按照例子添加文字
 
 ### 许可证
 
