@@ -1,6 +1,8 @@
+from http.client import METHOD_NOT_ALLOWED
+import logging
 from operator import eq
 import shutil
-from runtimetext import imgh,admin,op,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback
+from runtimetext import imgh,admin,op,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_
 from urllib.request import urlretrieve
 from PIL import ImageFont,ImageDraw
 import cv2
@@ -23,10 +25,10 @@ bcc = Broadcast(loop=loop)
 app = GraiaMiraiApplication(
     broadcast=bcc,
     connect_info=Session(
-        host="http://127.0.0.1:8080", # 填入 httpapi 服务运行的地址
-        authKey="authKey", # 填入 authKey
-        account=qq, # 你的机器人的 qq 号
-        websocket=True
+        host=host_, # 填入 httpapi 服务运行的地址
+        authKey=authkey, # 填入 authKey
+        account=bot_qq, # 你的机器人的 qq 号
+        websocket=True # Graia 已经可以根据所配置的消息接收的方式来保证消息接收部分的正常运作.
     )
 )
 def setu(group,id):
@@ -81,14 +83,14 @@ def setu(group,id):
             json.dump(data,jsonfile)
             jsonfile.close()
             PL = "test"
-            rootdir = "./outsetu"
+            rootdir = setu_
             file_names = []
             for parent,dirnames, filenames in os.walk(rootdir):
                 file_names = filenames
             x = random.randint(0, len(file_names)-1)
             df = rootdir + "/" + file_names[x]
             print("选中色图" + df)
-            savename = df.replace("./outsetu/","").replace('.jpg','')
+            savename = df.replace(setu_,"").replace('.jpg','')
             f= open(r'cs.txt','r')
             st =f.read()
             jsonfile = open("lastsetu.json","r")
@@ -138,13 +140,13 @@ def setu(group,id):
         json.dump(data,jsonfile)
         jsonfile.close()
         PL = "test"
-        rootdir = "./outsetu"
+        rootdir = setu_
         file_names = []
         for parent,dirnames, filenames in os.walk(rootdir):
             file_names = filenames
         x = random.randint(0, len(file_names)-1)
         df = rootdir + "/" + file_names[x]
-        savename = df.replace("./outsetu/","").replace('.jpg','')
+        savename = df.replace(setu_,"").replace('.jpg','')
         outmsg = 'https://www.pixivdl.net/artworks/' + savename
         jsonfile = open("frsetu.json","r")
         data = json.load(jsonfile)
@@ -411,8 +413,57 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
     msg = message.asDisplay()
     txt = str(message)
     out1 = txt[txt.rfind('url='):].replace(", path=None, type=<ImageType.Group: \'Group\'>)]","").replace('url=','').replace('\'','')
-#@机器人
+#@聊天图片检测
+    if out1.startswith('http://gchat.qpic.cn') :
+        print(out1)
+        name = out1.replace('http://gchat.qpic.cn/gchatpic_new/',"").replace("/","").replace('?term=2','')
+        file_path = './chace/formqq.jpg'
+        d = file_path
+        urlretrieve(out1, d)
+        img1=cv2.imread('./chace/formqq.jpg')
+        hash1= dHash(img1)
+        hash2= "1101100001010100100000101100001010000010111001011100000010100000"
+        n=cmpHash(hash1,hash2)
+        if n == 0 :
+            outmsg="未知错误"
+            gr = group.id
+            mb = member.id
+            outmsg = setu(gr,mb)
+            f= open(r'cs.txt','r')
+            st =f.read()
+            if outmsg.startswith('https:'):
+                botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+                if int(st) > 0:
+                    await asyncio.sleep(60)
+                    return await app.revokeMessage(botmsg)  
+                return
+            else:
+                botmsg = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg)]))
+                if int(st) > 0:
+                    await asyncio.sleep(int(st))
+                    return await app.revokeMessage(botmsg)  
+                return
+# @机器人
     if txt.find('target=3311409147') >= 1:
+        print('发现@')
+        if out1.startswith('http://gchat.qpic.cn') :
+            print('发现图片')
+            apikey = "fb07063649fbc97b864f9852aa7c6b7a1c3452c8"
+            url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=1&url=$url".replace('$url',out1).replace('$key',apikey)
+            headers = {}
+            text = requests.get(url, headers=headers) 
+            print(text.text)
+            data = json.loads(text.text)
+            data = data['results']
+            data = data[0]
+            data = data["data"]
+            print(data)
+            n = 0
+            outmsg = ""
+            for i in data:
+                outmsg = outmsg + '\n' + str(i) + ":" + str(data[i])
+            return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            
         print('请求聊天api...')
         botid = 3311409147
         text = txt.replace('__root__=','').replace('[','').replace(']','')
@@ -488,37 +539,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                         outmsg = str(arr[r])
                         print(outmsg)
                         return await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-#聊天图片检测
-    if out1.startswith('http://gchat.qpic.cn') :
-        name = out1.replace('http://gchat.qpic.cn/gchatpic_new/',"").replace("/","").replace('?term=2','')
-        file_path = './chace/formqq.jpg'
-        d = file_path
-        urlretrieve(out1, d)
-        img1=cv2.imread('./chace/formqq.jpg')
-        hash1= dHash(img1)
-        hash2= "1101100001010100100000101100001010000010111001011100000010100000"
-        n=cmpHash(hash1,hash2)
-        if n == 0 :
-            outmsg="未知错误"
-            gr = group.id
-            mb = member.id
-            outmsg = setu(gr,mb)
-            f= open(r'cs.txt','r')
-            st =f.read()
-            if outmsg.startswith('https:'):
-                botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-                if int(st) > 0:
-                    await asyncio.sleep(60)
-                    return await app.revokeMessage(botmsg)  
-                return
-            else:
-                botmsg = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg)]))
-                if int(st) > 0:
-                    await asyncio.sleep(int(st))
-                    return await app.revokeMessage(botmsg)  
-                return
+#早
     print(msg)
-    if msg.startswith('早'):
+    if msg.startswith('早') and member.id in admin:
         outmsg = '啊啊啊，主人睡傻了QAQ'
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #菜单
@@ -588,14 +611,14 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             if hsolv >= 80 or member.id in op != 0:
                 thetext = msg.replace("rep ","")
                 file_names = []
-                rootdir = "./outsetu"
+                rootdir = setu_
                 for filenames in os.walk(rootdir):
                     file_names = filenames
                 print(thetext + ".jpg")
                 for item in file_names:
                     if thetext + ".jpg" in item != 0:
-                        srcfile='./outsetu/' + thetext + ".jpg"
-                        dstfile='./setu/' + thetext + ".jpg"
+                        srcfile=setu_ + thetext + ".jpg"
+                        dstfile=setu_remove_ + thetext + ".jpg"
                         fpath,fname=os.path.split(dstfile)    
                         if not os.path.exists(fpath):
                             os.makedirs(fpath)                
@@ -613,8 +636,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             gr = str(group.id)
             if hsolv >= 80 or member.id in op != 0:
                 name = str(data[gr])
-                srcfile='./outsetu/' + name + ".jpg"
-                dstfile='./setu/' + name + ".jpg"
+                srcfile=setu_ + name + ".jpg"
+                dstfile=setu_remove_ + name + ".jpg"
                 shutil.move(srcfile,dstfile)
                 outmsg = name + "已汇报且暂时移出色图库"
             else:
@@ -761,8 +784,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             res.reverse()
             a = '‘'.join(res)
             msg = "-lsp排行榜：‘/b20" + a + "‘    ‘______________________"
-            fontl = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf"
-            fonty = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf"
+            fontl = f1
+            fonty = f2
             ism = 1
             cm = 0
             img = "./chace/mainbg.png"
@@ -875,8 +898,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         else:
             ism = 0
             img = ""
-        fontl = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf"
-        fonty = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf"
+        fontl = f1
+        fonty = f2
         msg = msg.replace('img ','')
         toimg(msg,fontl,fonty,ism,img,cm)
         return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
@@ -896,8 +919,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         text = requests.get(url, headers=header) 
         msg ="##FFFFFF- "  + text.text + ""
         getimg()
-        l = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf"
-        y = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf"
+        l = f1
+        y = f2
         ism = 1
         img = "./chace/imgchace.jpg"
         print('调用def...')
@@ -916,8 +939,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         text = "历史上的今天：" + text.text.replace('1：','$').replace('2：','$').replace('3：','$').replace('4：','$').replace('5：','$').replace('6：','$').replace('7：','$').replace('8：','$').replace('9：','$').replace('注意：由内容过长，只显示10个列','')
         alist = text.split('$')
         msg = '‘'.join(alist)
-        l = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf"
-        y = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf"
+        l = f1
+        y = f2
         ism = 1
         getimg()
         img = "./chace/imgchace.jpg"
@@ -1067,8 +1090,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                     title = str(i['title'])
                     rd = str(i["other"])
                     imgmsg =  imgmsg +'   热度:' + rd + '/n' + str(n) + "_" + title 
-                l = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf"
-                y = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf"
+                l = f1
+                y = f2
                 ism = 1
                 #getimg()
                 imgp = "./chace/mainbg.jpg"
@@ -1104,15 +1127,15 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         cv2.waitKey(0)  
         img="./chace/baikechace.jpg"
         print('调用def...')
-        l = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf"
-        y = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf"
+        l = f1
+        y = f2
         ism = 1
         cm = 0
         text = '/b20' + text[text.rfind('300±'):].replace('300±','') + '/n___________________________________________________________________________________________________________'
         toimg(text,l,y,ism,img,cm)
         return await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #来份色图
-    if msg.startswith("来份色图"):
+    if msg.startswith("来份色图") or msg.startswith('色图来'):
         outmsg="未知错误"
         gr = group.id
         mb = member.id
@@ -1131,45 +1154,18 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 await asyncio.sleep(int(st))
                 return await app.revokeMessage(botmsg)  
             return
-#统计色图
+    if msg.startswith('不够色'):
+        return await app.sendGroupMessage(group,MessageChain.create([Plain('那你发')]))
+#统计色图-
     if msg.startswith("统计色图"):
-        rootdir = "./outsetu"
+        rootdir = setu_
         for dirpath, dirnames, filenames in os.walk(rootdir):
             for file in filenames:
                 file_count = file_count + 1
             print(dirpath,file_count)
         msg = "共有$sl张色图".replace("$sl",str(file_count))
         return await app.sendGroupMessage(group,MessageChain.create([Plain(msg)]))
-#更新色图
-    if msg.startswith("更新色图") and member.id in admin:
-        al = dl = 0
-        from urllib import request
-        import xml.dom.minidom
-        print("获取列表中..")
-        await app.sendGroupMessage(group,MessageChain.create([Plain("获取色图列表中...")]))
-        province_info = request.urlopen('https://yande.re/post.xml?tags=pantsu&limit=50')
-        DOMTree = xml.dom.minidom.parse(province_info)
-        province_data = DOMTree.documentElement
-        print(province_data)
-        provinces = province_data.getElementsByTagName("post")
-        await app.sendGroupMessage(group,MessageChain.create([Plain("下载中")]))
-        for province in provinces:
-            iurl = province.getAttribute("jpeg_url")
-            iid = province.getAttribute("id")
-            directoy = './outsetu/'
-            target = iid + ".jpg"
-            for (root,dirs,files) in os.walk(directoy):
-                if target in files:
-                    al = al + 1
-                else:
-                    print(iid + "下载中..")
-                    dpath = './setu/$iname.jpg'.replace('$iname',iid)
-                    urlretrieve(iurl, dpath)
-                    dl = dl + 1
-                    print(str(iid) + "下载完成" + str(dl))
-        msg = "色图更新完毕！\n[$al个已存在]\n[$dl个色图已下载]".replace('$al',str(al)).replace("$dl",str(dl))
-        print(msg)
-        return await app.sendGroupMessage(group,MessageChain.create([Plain(msg)]))
+
 #none
 @bcc.receiver("FriendMessage")
 async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,message:MessageChain):
@@ -1190,8 +1186,8 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,me
             jsonfile.close()
             gr = str(friend.id)
             name = str(data[gr])
-            srcfile='./outsetu/' + name + ".jpg"
-            dstfile='./setu/' + name + ".jpg"
+            srcfile=setu_ + name + ".jpg"
+            dstfile=setu_remove_ + name + ".jpg"
             shutil.move(srcfile,dstfile)
             outmsg = name + "已汇报且暂时移出色图库"
         else:
