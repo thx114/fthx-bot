@@ -25,15 +25,15 @@
 
 写的太烂了,不建议您使用此bot
 
-  安装[Application](https://github.com/GraiaProject/Application)以及他的前置包括mirai等
+  1.安装[Application](https://github.com/GraiaProject/Application)以及前置包括mirai等
 
-  1.`git clone https://github.com/voidf/bot_irori.git`
+  2.`git clone https://github.com/voidf/bot_irori.git`
 
-  2.```pip install -r requirements.txt```
+  3.```pip install -r requirements.txt```
   
-  3.在`runtimetext.py`里按照注释写入相应的信息
+  4.在`runtimetext.py`里按照注释写入相应的信息
  
-  4.启动
+  5.启动
 
 ### 关于配置文件:
 
