@@ -81,14 +81,14 @@ def setu(group,id):
             json.dump(data,jsonfile)
             jsonfile.close()
             PL = "test"
-            rootdir = "C:/MIRAI/bot_irori-master/outsetu"
+            rootdir = "./outsetu"
             file_names = []
             for parent,dirnames, filenames in os.walk(rootdir):
                 file_names = filenames
             x = random.randint(0, len(file_names)-1)
             df = rootdir + "/" + file_names[x]
             print("选中色图" + df)
-            savename = df.replace("C:/MIRAI/bot_irori-master/outsetu/","").replace('.jpg','')
+            savename = df.replace("./outsetu/","").replace('.jpg','')
             f= open(r'cs.txt','r')
             st =f.read()
             jsonfile = open("lastsetu.json","r")
@@ -138,13 +138,13 @@ def setu(group,id):
         json.dump(data,jsonfile)
         jsonfile.close()
         PL = "test"
-        rootdir = "C:/MIRAI/bot_irori-master/outsetu"
+        rootdir = "./outsetu"
         file_names = []
         for parent,dirnames, filenames in os.walk(rootdir):
             file_names = filenames
         x = random.randint(0, len(file_names)-1)
         df = rootdir + "/" + file_names[x]
-        savename = df.replace("C:/MIRAI/bot_irori-master/outsetu/","").replace('.jpg','')
+        savename = df.replace("./outsetu/","").replace('.jpg','')
         outmsg = 'https://www.pixivdl.net/artworks/' + savename
         jsonfile = open("frsetu.json","r")
         data = json.load(jsonfile)
@@ -588,14 +588,14 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             if hsolv >= 80 or member.id in op != 0:
                 thetext = msg.replace("rep ","")
                 file_names = []
-                rootdir = "C:/MIRAI/bot_irori-master/outsetu"
+                rootdir = "./outsetu"
                 for filenames in os.walk(rootdir):
                     file_names = filenames
                 print(thetext + ".jpg")
                 for item in file_names:
                     if thetext + ".jpg" in item != 0:
-                        srcfile='C:/MIRAI/bot_irori-master/outsetu/' + thetext + ".jpg"
-                        dstfile='C:/MIRAI/bot_irori-master/setu/' + thetext + ".jpg"
+                        srcfile='./outsetu/' + thetext + ".jpg"
+                        dstfile='./setu/' + thetext + ".jpg"
                         fpath,fname=os.path.split(dstfile)    
                         if not os.path.exists(fpath):
                             os.makedirs(fpath)                
@@ -613,8 +613,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             gr = str(group.id)
             if hsolv >= 80 or member.id in op != 0:
                 name = str(data[gr])
-                srcfile='C:/MIRAI/bot_irori-master/outsetu/' + name + ".jpg"
-                dstfile='C:/MIRAI/bot_irori-master/setu/' + name + ".jpg"
+                srcfile='./outsetu/' + name + ".jpg"
+                dstfile='./setu/' + name + ".jpg"
                 shutil.move(srcfile,dstfile)
                 outmsg = name + "已汇报且暂时移出色图库"
             else:
@@ -1133,7 +1133,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             return
 #统计色图
     if msg.startswith("统计色图"):
-        rootdir = "C:/MIRAI/bot_irori-master/outsetu"
+        rootdir = "./outsetu"
         for dirpath, dirnames, filenames in os.walk(rootdir):
             for file in filenames:
                 file_count = file_count + 1
@@ -1156,14 +1156,14 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         for province in provinces:
             iurl = province.getAttribute("jpeg_url")
             iid = province.getAttribute("id")
-            directoy = 'C:/MIRAI/bot_irori-master/outsetu/'
+            directoy = './outsetu/'
             target = iid + ".jpg"
             for (root,dirs,files) in os.walk(directoy):
                 if target in files:
                     al = al + 1
                 else:
                     print(iid + "下载中..")
-                    dpath = 'C:/MIRAI/bot_irori-master/setu/$iname.jpg'.replace('$iname',iid)
+                    dpath = './setu/$iname.jpg'.replace('$iname',iid)
                     urlretrieve(iurl, dpath)
                     dl = dl + 1
                     print(str(iid) + "下载完成" + str(dl))
@@ -1190,8 +1190,8 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,me
             jsonfile.close()
             gr = str(friend.id)
             name = str(data[gr])
-            srcfile='C:/MIRAI/bot_irori-master/outsetu/' + name + ".jpg"
-            dstfile='C:/MIRAI/bot_irori-master/setu/' + name + ".jpg"
+            srcfile='./outsetu/' + name + ".jpg"
+            dstfile='./setu/' + name + ".jpg"
             shutil.move(srcfile,dstfile)
             outmsg = name + "已汇报且暂时移出色图库"
         else:
