@@ -4,7 +4,7 @@ from operator import eq
 import re
 import shutil
 import urllib
-from runtimetext import imgh,admin,op, setu_add_,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw
+from runtimetext import imgh,admin,op,setu_add_,hsomap,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw,apikey
 from urllib.request import urlretrieve
 from PIL import ImageFont,ImageDraw
 import cv2
@@ -361,7 +361,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             g = 1
             outmsg = setu(gr,mb,g)
             st = int(str(hsolvch_data))
-            if outmsg.startswith('https:'):
+            if outmsg.startswith('https:') or outmsg.startswith('你'):
                 botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
                 if st > 0:
                     await asyncio.sleep(60)
@@ -371,12 +371,11 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 if st > 0:
                     await asyncio.sleep(st)
                     await app.revokeMessage(botmsg)
-    if txt.find('target=' + bot_qq) >= 1:
+    if txt.find('target=' + str(bot_qq)) >= 1:
         print('发现@')
 #@以图搜图
         if out1.startswith('http://gchat.qpic.cn') :
             print('以图搜图')
-            apikey = "fb07063649fbc97b864f9852aa7c6b7a1c3452c8"
             url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=1&url=$url".replace('$url',out1).replace('$key',apikey)
             headers = {}
             text = requests.get(url, headers=headers) 
@@ -392,6 +391,24 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             if outmsg.find('urls:[\'https://www.pixiv') >= 1:
                 data = data['pixiv_id']
                 cfg['setuadd'] = str(data)
+            print(msg)
+            if msg.find('setu+') >= 1 and member.id in op:
+                print('find')
+                text = txt.replace('__root__=','').replace('[','').replace(']','')
+                arr = text.split('),')
+                print(arr)
+                for i in arr:
+                    if i.find('lain') >=1:
+                        arr1 = i.split(', ')
+                        truemsg = arr1[1].replace('text=\'','').replace(')','').replace('\'','')
+                        newdata = {}
+                        print(truemsg)
+                        truemsg = truemsg.replace('setu+','').replace(' ','')
+                        pid = cfg['setuadd']
+                        srcfile= './chace/formqq.jpg'
+                        dstfile=setu_add_ + pid + "_p0.jpg"
+                        shutil.move(srcfile,dstfile)
+                        outmsg = 'pid:' + pid + '\n已被从qq下载图片并加入色图库'
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #@机器人
         text = txt.replace('__root__=','').replace('[','').replace(']','')
@@ -612,7 +629,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         outmsg = "色图限制上限已被改为" + thetext
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #hso等级清零
-    elif msg.startswith("hsolv") and member.id in admin != 0 :
+    elif msg.startswith("hsolv") and member.id in admin:
         msg = msg.replace("hsolv",'')
         if msg.startswith('- *'):
             outmsg = "所有当天hso等级被清除"
@@ -633,6 +650,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             print("list读取")
             groupids = []
             hsolvlist = []
+            n = 0
             mlist = await app.memberList(group)
             for i in mlist:
                 groupids.append(i.id)
@@ -645,8 +663,30 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                             hsolvlist.append(str(inmsg))
             res = sorted(hsolvlist, key=lambda x: (lambda y: (int(y[1]), y[0]))(x.split(':')))
             res.reverse()
+            out = ''
+            for i in res:
+                if n == 0:
+                    for i in res[n]:
+                        r = random.randint(0,18)
+                        out = out + '#' + hsomap[r] + ''.join(i)
+                    res[n] = '\\b30##FF0000' + out
+                if n == 1:
+                    res[n] = '\\b25##FF0000' + res[n]
+                if n == 3:
+                    res[n] = '\\b20##FF3300'+ res[n]
+                if n == 6:
+                    res[n] = '##FF6600'+ res[n]
+                if n == 9:
+                    res[n] = '##FF9900'+ res[n]
+                if n == 12:
+                    res[n] = '##FFCC00'+ res[n]
+                if n == 15:
+                    res[n] = '##FFFF00'+ res[n]
+                if n == 19:
+                    res[n] = '##FFFFFF'+ res[n]
+                n = n + 1
             a = '‘'.join(res)
-            msg = "-lsp排行榜：‘/b20" + a + "‘    ‘______________________"
+            msg = "-lsp排行榜：‘\\b20" + a + "‘    ‘______________________"
             fontl = f1
             fonty = f2
             ism = 1

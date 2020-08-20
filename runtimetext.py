@@ -1,22 +1,23 @@
 bot_qq = 11111111 #在此填入bot_qq号
 authkey = "87654321" #在此填入http api 中的 authkey
 host_ = "http://127.0.0.1:8080" #在此填入http api 中的 host
-pixiv_name = "1764362678@qq.com" #在此填入你的pixiv账号
-pixiv_pw = "thx07210721" #在此填入你的pixiv密码
-setu_ = 'C:/MIRAI/bot_irori-master/outsetu/'  #你的色图文件夹路径
-setu_remove_ = 'C:/MIRAI/bot_irori-master/setu/' #你的移除暂存文件夹路径
-apikey = "fb07063649fbc97b864f9852aa7c6b7a1c3452c8" #你的saucenao apikey 没有请注册
+pixiv_name = "" #在此填入你的pixiv账号
+pixiv_pw = "" #在此填入你的pixiv密码
+setu_ = 'C:/outsetu/'  #你的色图文件夹路径
+setu_remove_ = 'C:/setu/' #你的移除暂存文件夹路径
+apikey = "" #你的saucenao apikey 没有请注册
 
-admin = [1764362678]  #主人的qq号 
-op = [1764362678,1256779787,2922150732,3370171857,2538723194] #可移除色图的op的qq号
+admin = []  #主人的qq号 
+op = [] #可移除色图的op的qq号
 thetypes = [1,2,3,4,5,6,7,8]
 f1 = "C:\\WINDOWS\\Fonts\\ResourceHanRoundedCN-Heavy.ttf"
 f2 = "C:\\WINDOWS\\Fonts\\GenShinGothic-Monospace-Heavy.ttf"
 resotypes = ['zhihu','weibo','weixin','baidu','toutiao','163','xl','36k','hitory','sspai','csdn','juejin','bilibili','douyin','52pojie','v2ex','hostloc']
 listtype = ["1",'2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19',"20"]
 istomsg = {"\\n":"‘","##":"’#","\\b":"；",'【':'[','】':']','《':'<','》':'>','？':'?','”':'"','“':'"'}
+hsomap = ['#FFFF00','#FFCC00','#FF9900','#FF6600','#FF3300','#FF0000','#00FF00','#0000FF','#FF00FF','#66FFFF','#6600FF','#6633FF','#6666FF','#6699FF','#66CCFF','#66FFFF','#3300FF','#FFCCFF','#CC9900']
 mainmap="""
-╭ ──────────────── ；20  ；40菜单；20  ；30──────────────── ╮‘
+ ╭ ──────────────── ；20  ；40菜单；20  ；30──────────────── ╮‘
 │    ；15by F_thx；30                  ；15-使用’#99FFFFh ’#CCFF33[指令]’#FFFFFF:查看相应用法；30    │‘
 │ ’#99FFFFping’#FFFFFF    :ping ip    ’#99FFFFimg’#FFFFFF     :生成文字图片 │‘
 │ ’#99FFFF来份色图’#FFFFFF:获取色图  ’#99FFFF 统计色图’#FFFFFF:统计色图个数 │‘
@@ -34,6 +35,7 @@ mainmap="""
 │ ’#99FFFFsg+’#FFFFFF/’#99FFFFsg-’#FFFFFF’#FFFFFF:给予或删除某群的色图权限          │‘
 │ ’#99FFFFban’#FFFFFF:禁用某人色图权限                      │‘
 │ ##99FFFFsetu+ ##CCFF33[pid]##FFFFFF:从以图搜图或pid添加色图       │‘
+│ ##99FFFF@我 setu+ ##CCFF33[图片]##FFFFFF:从以图搜图直接添加色图   │‘
 ╰ ───────────────────────────────────────── ╯‘
 """
 sl = """；20##FFFFFF
