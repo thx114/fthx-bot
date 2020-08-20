@@ -17,8 +17,8 @@ import requests
 import random
 import os
 from PIL import Image as Im
-
 #读取配置...
+feback_data = feback['data']
 jsonfile = open("cfg.json","r")
 cfg = json.load(jsonfile)
 jsonfile.close()
@@ -35,7 +35,6 @@ null_data = cfg['null']
 relist_data = cfg['relist']
 sg_data = cfg['sg']
 ban_data = cfg['ban']
-
 
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
@@ -365,7 +364,6 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 if st > 0:
                     await asyncio.sleep(st)
                     await app.revokeMessage(botmsg)
-
     if txt.find('target=3311409147') >= 1:
         print('发现@')
 #@以图搜图
@@ -397,10 +395,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             if i.find('lain') >=1:
                 arr1 = i.split(', ')
                 truemsg = arr1[1].replace('text=\'','').replace(')','').replace('\'','')
-                feback = feback['data']
                 newdata = {}
                 n = 0
-                for i in feback:
+                for i in feback_data:
                     n = n + 1
                     newdata[str(n)] = i
                 hsolv = stlist_data[id]
@@ -458,41 +455,23 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         ism = 0
         cm = 0
         print('帮助')
+        img = "./chace/mainbg.png"
+        ism = 1
         if msg.startswith('hsolv'):
-            fontl = f1
-            fonty = f2
             msg = hsolvtext
-            img = "./chace/mainbg.png"
-            ism = 1
-            toimg(msg,fontl,fonty,ism,img,cm)
+            toimg(msg,f1,f2,ism,img,cm)
         elif msg.startswith('扫雷'):
-            fontl = f1
-            fonty = f2
             msg = sl
-            img = "./chace/mainbg.png"
-            ism = 1
-            toimg(msg,fontl,fonty,ism,img,cm)
+            toimg(msg,f1,f2,ism,img,cm)
         elif msg.startswith('img'):
-            fontl = f1
-            fonty = f2
             msg = imgh
-            img = "./chace/mainbg.png"
-            ism = 1
-            toimg(msg,fontl,fonty,ism,img,cm)
+            toimg(msg,f1,f2,ism,img,cm)
         elif msg.startswith('短链'):
-            fontl = f1
-            fonty = f2
             msg = dlmsg
-            img = "./chace/mainbg.png"
-            ism = 1
-            toimg(msg,fontl,fonty,ism,img,cm)
+            toimg(msg,f1,f2,ism,img,cm)
         elif msg.startswith('热榜'):
-            fontl = f1
-            fonty = f2
             msg = rb
-            img = "./chace/mainbg.png"
-            ism = 1
-            toimg(msg,fontl,fonty,ism,img,cm)
+            toimg(msg,f1,f2,ism,img,cm)
         if ism == 1:
             await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
         else:
@@ -518,10 +497,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                             os.makedirs(fpath)                
                         shutil.move(srcfile,dstfile)          
                         outmsg = thetext + "已汇报且暂时移出色图库"
-                    else:
-                        outmsg = "文件不存在或出现未知问题"
-            else:
-                outmsg = "你没有权限执行此操作"
+                    else:outmsg = "文件不存在或出现未知问题"
+            else:outmsg = "你没有权限执行此操作"
         else:
             print('未知rep')
             gr = str(group.id)
@@ -531,8 +508,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 dstfile=setu_remove_ + name + ".jpg"
                 shutil.move(srcfile,dstfile)
                 outmsg = name + "已汇报且暂时移出色图库"
-            else:
-                outmsg = "你没有权限执行此操作"
+            else:outmsg = "你没有权限执行此操作"
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #撤回时间
     elif msg.startswith("hsolvch") and member.id in admin != 0:
@@ -547,32 +523,21 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         outmsg = "发生未知错误"
         theg = setugroup.replace('-','').replace('+','').replace(' ','')
         if int(theg) in sg_data:
-            print("is in")
             if setugroup.startswith('-'):
-                print('-')
                 p = sg_data.index(int(theg))
-                print(1)
                 del sg_data[p]
-                print(2)
                 outcfg = ','.join(str(i) for i in sg_data)
-                print(3)
                 cfg['sg'] = sg_data
-                print(4)
                 outmsg = "已禁用此群的色图权限"
             else:
                 outmsg = "此群已是色图群"
         else:
-            print("notin")
             if setugroup.startswith('-'):
                 outmsg = "此群不存在"
             else:
-                print("no -")
                 new = int(setugroup.replace('-','').replace('+','').replace(' ',''))
-                print(1)
                 sg_data.append(new)
-                print(sg_data)
                 outcfg = ','.join(str(i) for i in sg_data)
-                print(outcfg)
                 cfg['sg'] = sg_data
                 outmsg = "已将此群变更为色图群"
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
@@ -630,7 +595,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                     for i in mlist:
                         if i.id == int(item) != 0:
                             itemid = await app.getMember(group,int(item))
-                            inmsg = '|$item:$int'.replace('$item',itemid.name).replace('$int',str(data[item]))
+                            inmsg = '|$item:$int'.replace('$item',itemid.name).replace('$int',str(stlist_data[item]))
                             hsolvlist.append(str(inmsg))
             res = sorted(hsolvlist, key=lambda x: (lambda y: (int(y[1]), y[0]))(x.split(':')))
             res.reverse()
@@ -646,7 +611,6 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         else:
             print("printhsolv")
             id = int(msg.replace("-","").replace(' ',''))
-   
             mid = 0
             mid = int(stlist_data[str(id)])
             outmsg = str(id) + "的hso等级为" + str(mid)
@@ -656,7 +620,6 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         stadd = random.randint(5,20)
         outmsg = "签到成功\n群聊色图限制已重置\n随机获得了色图$张"
         datas = [id_data,fr_data,stlist_data,qdlist_data,qd_data]
-        datasstr = ['id','fr','stlist','qdlist','qd']
         u = 0
         for i in datas :
             if id not in i:
@@ -796,8 +759,6 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             else :
                 datain = data['data']
                 outurl = str(datain['url'])
-                #dataa = data['author']
-                #outname = str(dataa['name'])
                 outmsg = 'u$u'.replace('$u',outurl)
         else:
             outmsg = '不支持的直链网站或其他错误'
@@ -885,7 +846,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 imgp = "./chace/mainbg.jpg"
                 cm = 0
                 imgmsg = '/b20' + imgmsg
-                relist_data = data
+                cfg['relist'] = data
                 toimg(imgmsg,l,y,ism,imgp,cm)   
         await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))   
 #百科
