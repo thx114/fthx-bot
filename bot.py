@@ -452,6 +452,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
 #setu+
     elif msg.startswith('setu+') and member.id in admin:
         pid = int(cfg['setuadd'])
+        if msg.startswith('setu+ '):
+            msg = msg.replace('setu+','').replace(' ','')
+            pid = int(msg)
         print(pid)
         url = 'https://api.imjad.cn/pixiv/v2/?type=illust&id=$id'.replace('$id',str(pid))
         headers = {}
@@ -459,13 +462,26 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         print('getdone')
         data = json.loads(text.text)
         data = data['illust']
-        data = data['meta_pages']
-        data = data[0]
-        data = data["image_urls"]
-        data = data["original"]
+        data1 = data['meta_pages']
+        if data1 == []:
+            print('null')
+            data1 = data['meta_single_page']
+            data = data1['original_image_url']
+        else:
+            data1 = data['meta_pages']
+            data = data1[0]
+            data = data["image_urls"]
+            data = data["original"]
+        print(data)
+        print('下载开始')
         api.download(data)
-        srcfile='./' + str(pid) + "_p0.jpg"
-        dstfile=setu_ + str(pid) + "_p0.jpg"
+        print('下载完成')
+        if data.find('png') >=1:
+            srcfile='./' + str(pid) + "_p0.png"
+            dstfile=setu_ + str(pid) + "_p0.png"
+        else:
+            srcfile='./' + str(pid) + "_p0.jpg"
+            dstfile=setu_ + str(pid) + "_p0.jpg"
         shutil.move(srcfile,dstfile)
         await app.sendGroupMessage(group,MessageChain.create([Plain(str(pid) + '已加入色图库')]))
 #菜单
