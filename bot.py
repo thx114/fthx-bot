@@ -371,7 +371,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 if st > 0:
                     await asyncio.sleep(st)
                     await app.revokeMessage(botmsg)
-    if txt.find('target=3311409147') >= 1:
+    if txt.find('target=' + bot_qq) >= 1:
         print('发现@')
 #@以图搜图
         if out1.startswith('http://gchat.qpic.cn') :

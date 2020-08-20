@@ -5,11 +5,10 @@ pixiv_name = "1764362678@qq.com" #在此填入你的pixiv账号
 pixiv_pw = "thx07210721" #在此填入你的pixiv密码
 setu_ = 'C:/MIRAI/bot_irori-master/outsetu/'  #你的色图文件夹路径
 setu_remove_ = 'C:/MIRAI/bot_irori-master/setu/' #你的移除暂存文件夹路径
-
+apikey = "fb07063649fbc97b864f9852aa7c6b7a1c3452c8" #你的saucenao apikey 没有请注册
 
 admin = [1764362678]  #主人的qq号 
 op = [1764362678,1256779787,2922150732,3370171857,2538723194] #可移除色图的op的qq号
-msglist = []
 thetypes = [1,2,3,4,5,6,7,8]
 f1 = "C:\\WINDOWS\\Fonts\\ResourceHanRoundedCN-Heavy.ttf"
 f2 = "C:\\WINDOWS\\Fonts\\GenShinGothic-Monospace-Heavy.ttf"
@@ -32,8 +31,9 @@ mainmap="""
 ╭ ──────────── ；20  ；40管理员功能；20  ；30──────────── ╮‘
 │    ；15        ；30                                   │‘
 │ ’#99FFFFhsolv’#FFFFFF:色图限制相关,’#99FFFFh hsolv’#FFFFFF 查看用法       │‘
-│ ’#99FFFFsg+’#FFFFFF/’#99FFFFsg-’#FFFFFF ’#CCFF33[群号]’#FFFFFF:给予或删除某群的色图权限   │‘
-│ ’#99FFFFban’#FFFFFF:禁用某人色图权限   ’#99FFFFrun’#FFFFFF:运行def        │‘
+│ ’#99FFFFsg+’#FFFFFF/’#99FFFFsg-’#FFFFFF’#FFFFFF:给予或删除某群的色图权限          │‘
+│ ’#99FFFFban’#FFFFFF:禁用某人色图权限                      │‘
+│ ##99FFFFsetu+ ##CCFF33[pid]##FFFFFF:从以图搜图或pid添加色图       │‘
 ╰ ───────────────────────────────────────── ╯‘
 """
 sl = """；20##FFFFFF
