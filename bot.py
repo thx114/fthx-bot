@@ -1,7 +1,10 @@
+from http.client import METHOD_NOT_ALLOWED
 import json
 from operator import eq
+import re
 import shutil
-from runtimetext import imgh,admin,op,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_
+import urllib
+from runtimetext import imgh,admin,op, setu_add_,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw
 from urllib.request import urlretrieve
 from PIL import ImageFont,ImageDraw
 import cv2
@@ -17,6 +20,11 @@ import requests
 import random
 import os
 from PIL import Image as Im
+from pixivpy3 import *
+
+api = AppPixivAPI()
+api.login(pixiv_name, pixiv_pw)
+print("初始化完成")
 #读取配置...
 feback_data = feback['data']
 jsonfile = open("cfg.json","r")
@@ -35,7 +43,8 @@ null_data = cfg['null']
 relist_data = cfg['relist']
 sg_data = cfg['sg']
 ban_data = cfg['ban']
-
+setuadd = cfg['setuadd']
+print('读取配置完成')
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
 app = GraiaMiraiApplication(
@@ -49,7 +58,6 @@ app = GraiaMiraiApplication(
 )
 
 def savecfg():
-    print("保存配置文件")
     jsonfile=open("cfg.json","w")
     json.dump(cfg,jsonfile)
     jsonfile.close()
@@ -351,7 +359,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             gr = group.id
             mb = member.id
             g = 1
-            outmsg = setu(gr,mb)
+            outmsg = setu(gr,mb,g)
             st = int(str(hsolvch_data))
             if outmsg.startswith('https:'):
                 botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
@@ -378,8 +386,12 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             data = data["data"]
             n = 0
             outmsg = ""
+            print('done')
             for i in data:
                 outmsg = outmsg + '\n' + str(i) + ":" + str(data[i])
+            if outmsg.find('urls:[\'https://www.pixiv') >= 1:
+                data = data['pixiv_id']
+                cfg['setuadd'] = str(data)
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #@机器人
         text = txt.replace('__root__=','').replace('[','').replace(']','')
@@ -437,6 +449,25 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
     if msg.startswith('早') and member.id in admin:
         outmsg = '啊啊啊，主人睡傻了QAQ'
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+#setu+
+    elif msg.startswith('setu+') and member.id in admin:
+        pid = int(cfg['setuadd'])
+        print(pid)
+        url = 'https://api.imjad.cn/pixiv/v2/?type=illust&id=$id'.replace('$id',str(pid))
+        headers = {}
+        text = requests.get(url, headers=headers)
+        print('getdone')
+        data = json.loads(text.text)
+        data = data['illust']
+        data = data['meta_pages']
+        data = data[0]
+        data = data["image_urls"]
+        data = data["original"]
+        api.download(data)
+        srcfile='./' + str(pid) + "_p0.jpg"
+        dstfile=setu_ + str(pid) + "_p0.jpg"
+        shutil.move(srcfile,dstfile)
+        await app.sendGroupMessage(group,MessageChain.create([Plain(str(pid) + '已加入色图库')]))
 #菜单
     elif msg.startswith("/help") or msg.startswith('菜单') or msg.startswith('main'):
         print("main")
@@ -881,14 +912,13 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #来份色图
     elif msg.startswith("来份色图") or msg.startswith('色图来'):
-        print("色图来")
         outmsg="未知错误"
         gr = group.id
         mb = member.id
         g = 1
         outmsg = setu(gr,mb,g)
         st = int(str(hsolvch_data))
-        if outmsg.startswith('https:'):
+        if outmsg.startswith('https:') or outmsg.startswith('你'):
             botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
             if int(st) > 0:
                 await asyncio.sleep(60)

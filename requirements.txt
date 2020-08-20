@@ -3,3 +3,4 @@ requests==2.24.0
 Pillow==7.2.0
 graia-application-mirai>=0.1.10
 graia-broadcast>=0.0.12
+pixivpy>=3.5.9

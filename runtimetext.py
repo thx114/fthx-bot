@@ -1,6 +1,8 @@
 bot_qq = 11111111 #在此填入bot_qq号
 authkey = "87654321" #在此填入http api 中的 authkey
 host_ = "http://127.0.0.1:8080" #在此填入http api 中的 host
+pixiv_name = "1764362678@qq.com" #在此填入你的pixiv账号
+pixiv_pw = "thx07210721" #在此填入你的pixiv密码
 setu_ = 'C:/MIRAI/bot_irori-master/outsetu/'  #你的色图文件夹路径
 setu_remove_ = 'C:/MIRAI/bot_irori-master/setu/' #你的移除暂存文件夹路径
 
