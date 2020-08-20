@@ -102,7 +102,6 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
     print('绘图开始')
     for i in istomsg:
         msg = msg.replace(str(i),str(istomsg[i]))
-    msg = msg
     x = y = my = mx = ghs = qaq = mmx = 0
     fx = fx1 = fx2 = fx0 = 30
     ghslist = qaqlist = []
@@ -573,7 +572,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             for i in id_data:
                 id_data[i] = 0
             for i in qdlist_data:
-                qdlist_data[i] = 0
+                qd_data[i] = 0
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
             savecfg()
         elif msg.startswith('-'):
@@ -838,14 +837,13 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                         break
                     title = str(i['title'])
                     rd = str(i["other"])
-                    imgmsg =  imgmsg +'   热度:' + rd + '/n' + str(n) + "_" + title 
+                    imgmsg =  imgmsg + '\\n' + str(n) + "_" + rd + "_"  + title 
                 l = f1
                 y = f2
                 ism = 1
-                #getimg()
                 imgp = "./chace/mainbg.jpg"
                 cm = 0
-                imgmsg = '/b20' + imgmsg
+                imgmsg = '\\b20' + imgmsg
                 cfg['relist'] = data
                 toimg(imgmsg,l,y,ism,imgp,cm)   
         await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))   
