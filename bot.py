@@ -23,7 +23,7 @@ from PIL import Image as Im
 from pixivpy3 import *
 
 api = AppPixivAPI()
-#api.login(pixiv_name, pixiv_pw)
+api.login(pixiv_name, pixiv_pw) #如果不想用请#此行
 print("初始化完成")
 #读取配置...
 feback_data = feback['data']
