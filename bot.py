@@ -23,7 +23,7 @@ from PIL import Image as Im
 from pixivpy3 import *
 
 api = AppPixivAPI()
-api.login(pixiv_name, pixiv_pw)
+#api.login(pixiv_name, pixiv_pw)
 print("初始化完成")
 #读取配置...
 feback_data = feback['data']
@@ -103,6 +103,7 @@ def setu(group,id,g):
         print('色图请求完成' + outmsg)
         return outmsg
 def toimg(msg,fontl,fonty,ism,imgp,cm):
+    string = "~!@#$%^&*()_+-*/<>,.[]\/"
     img = Im.open(imgp)
     mmmx = 700
     mmmx = img.size[0]
@@ -112,7 +113,8 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
         msg = msg.replace(str(i),str(istomsg[i]))
     x = y = my = mx = ghs = qaq = mmx = 0
     fx = fx1 = fx2 = fx0 = 30
-    ghslist = qaqlist = []
+    ghslist = [] 
+    qaqlist = []
     font = ImageFont.truetype(fontl,fx)
     fillColor = "#ffffff"
     print("for1")
@@ -130,11 +132,10 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                     qaq = 0
                     fx1 = int(outqaq)
                     fx = int(outqaq)
-                    outqaq = ""
                     qaqlist = []
             else:
-                if '\u4e00' <= u <= '\u9fff':
-                    fx1 = fx
+                if u >= u'\u4e00' and u <= u'\u9fa5' or u >= u'\u3040' and u <= u'\u31FF':
+                    fx1 = fx 
                 else:
                     fx1 = fx / 2
                 if x >= mmmx:
@@ -143,6 +144,9 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                     y = y + fx
                     x = x + fx1
                 elif eq(u,"‘"):
+                    mmx = x + fx
+                    if mmx > mmmx: mmx = mmmx
+                    if mmx > mx:   mx = mmx
                     x = 0
                     y = y + fx
                 elif eq(u,"’"):
@@ -153,9 +157,6 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                     pass
                 else:
                     x = x + fx1
-                    mmx = x
-                    if mmx > mx and mx < mmmx - fx1:
-                        mx = mmx
     else:
         mx = mmmx
         my = mmmy
@@ -165,81 +166,27 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
     if y == 0:
         mx = x + 3
         my = fx + 3
-    mx = round(mx) + fx
-    my = round(my) + fx
+    mx = round(mx)
+    my = round(my) + fx / 2 
     print('mx:' + str(mx) + "|my:" + str(my))
-    fillColor = "#000000"
     if ism >= 1:
-        print(imgp)
         img = Im.open(imgp)
         x = mx #707 x 1000
         y = my
         ly = ( 1000 - y ) / 2 
         if cm == 0:
-            im1 = img.crop((0, ly, x, y + ly))
+            im1 = img.crop((0, ly, mx, my + ly))
         else: 
             im1 = img
     else:   
         im1 = Im.new("RGB" ,(mx,my),(255,255,255))
-    x = y = ghs = qaq =0
+    x = y = ghs = qaq = 0
     fx = fx0
     fx2 = fx0
-    outghs = outqaq = []
-    print("for2")
-    for j in msg :
-        if ghs >= 1:
-            ghs = ghs + 1
-            ghslist.append(j)
-            if ghs >= 8:
-                fillColor = "#000000"
-                ghs = 0
-                outghs = ""
-                ghslist = []
-        elif qaq >= 1:
-            qaq = qaq + 1
-            qaqlist.append(j)
-            if qaq >= 3:
-                outqaq = ''.join(qaqlist)
-                qaq = 0
-                fx2 = int(outqaq)
-                fx = int(outqaq)
-                font = ImageFont.truetype(fontl,fx)
-                outqaq = ""
-                qaqlist = []
-        else:
-            if '\u4e00' <= j <= '\u9fff':
-                fx2 = fx
-            else:
-                fx2 = fx / 2
-                font = ImageFont.truetype(fonty,fx)
-            if x >= mx - fx2:
-                x = 0
-                y = y + fx
-                ImageDraw.Draw(im1).text((x, y),j,font=font,fill=fillColor,direction=None)
-                font = ImageFont.truetype(fontl,fx)
-                x = x + fx2
-            elif eq(j,"‘"):
-                x = 0
-                y = y + fx
-            elif eq(j,"’"):
-                ghs = 1
-            elif eq(j,"；"):
-                qaq = 1
-            elif eq(j,'·'):
-                pass
-            else:
-                ImageDraw.Draw(im1).text((x, y),j,font=font,fill=fillColor,direction=None)
-                font = ImageFont.truetype(fontl,fx)
-                x = x + fx2
-    x = y = ghs = qaq =0
-    x= -2
-    y = -2
-    mx = mx -2
-    fx = fx0
-    fx2 = fx0
-    outghs = outqaq = []
+    outghs = []
+    outqaq = []
     fillColor = "#ffffff"
-    print("for3")
+    print("for2")
     for j in msg :
         if ghs >= 1:
             ghs = ghs + 1
@@ -248,7 +195,6 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                 outghs = ''.join(ghslist)
                 ghs = 0
                 fillColor = outghs
-                outghs = ""
                 ghslist = []
         elif qaq >= 1:
             qaq = qaq + 1
@@ -262,19 +208,21 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                 outqaq = ""
                 qaqlist = []
         else:
-            if '\u4e00' <= j <= '\u9fff':
-                fx2 = fx
+            if j >= u'\u4e00' and j <= u'\u9fa5' or j >= u'\u3040' and j <= u'\u31FF':
+                font = ImageFont.truetype(fontl,fx)
+                fx2 = fx 
             else:
                 fx2 = fx / 2
                 font = ImageFont.truetype(fonty,fx)
             if x >= mx - fx2:
-                x = -2
+                x = 0
                 y = y + fx
+                ImageDraw.Draw(im1).text((x+2, y+2),j,font=font,fill='#000000',direction=None)
                 ImageDraw.Draw(im1).text((x, y),j,font=font,fill=fillColor,direction=None)
                 font = ImageFont.truetype(fontl,fx)
                 x = x + fx2
             elif eq(j,"‘"):
-                x = -2
+                x = 0
                 y = y + fx
             elif eq(j,"’"):
                 ghs = 1
@@ -283,6 +231,7 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
             elif eq(j,'·'):
                 pass
             else:
+                ImageDraw.Draw(im1).text((x+2, y+2),j,font=font,fill='#000000',direction=None)
                 ImageDraw.Draw(im1).text((x, y),j,font=font,fill=fillColor,direction=None)
                 font = ImageFont.truetype(fontl,fx)
                 x = x + fx2
@@ -668,7 +617,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 if n == 0:
                     for i in res[n]:
                         r = random.randint(0,18)
-                        out = out + '#' + hsomap[r] + ''.join(i)
+                        out = out + '#' + hsomap[r] + ' ' + ''.join(i)
                     res[n] = '\\b30##FF0000' + out
                 if n == 1:
                     res[n] = '\\b25##FF0000' + res[n]
@@ -682,7 +631,11 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                     res[n] = '##FFCC00'+ res[n]
                 if n == 15:
                     res[n] = '##FFFF00'+ res[n]
-                if n == 19:
+                if n == 18:
+                    res[n] = '##FFFF66'+ res[n]
+                if n == 21:
+                    res[n] = '##FFFFCC'+ res[n]
+                if n == 24:
                     res[n] = '##FFFFFF'+ res[n]
                 n = n + 1
             a = '‘'.join(res)

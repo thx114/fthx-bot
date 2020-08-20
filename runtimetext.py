@@ -17,26 +17,25 @@ listtype = ["1",'2','3','4','5','6','7','8','9','10','11','12','13','14','15','1
 istomsg = {"\\n":"‘","##":"’#","\\b":"；",'【':'[','】':']','《':'<','》':'>','？':'?','”':'"','“':'"'}
 hsomap = ['#FFFF00','#FFCC00','#FF9900','#FF6600','#FF3300','#FF0000','#00FF00','#0000FF','#FF00FF','#66FFFF','#6600FF','#6633FF','#6666FF','#6699FF','#66CCFF','#66FFFF','#3300FF','#FFCCFF','#CC9900']
 mainmap="""
- ╭ ──────────────── ；20  ；40菜单；20  ；30──────────────── ╮‘
-│    ；15by F_thx；30                  ；15-使用’#99FFFFh ’#CCFF33[指令]’#FFFFFF:查看相应用法；30    │‘
-│ ’#99FFFFping’#FFFFFF    :ping ip    ’#99FFFFimg’#FFFFFF     :生成文字图片 │‘
-│ ’#99FFFF来份色图’#FFFFFF:获取色图  ’#99FFFF 统计色图’#FFFFFF:统计色图个数 │‘
-│ ’#99FFFFh 扫雷’#FFFFFF  :扫雷游戏  ’#99FFFF setu+’#CCFF33[图片]’#FFFFFF:加入色图库│‘
-│ ’#99FFFF舔狗日记’#FFFFFF:舔狗日记 ’#99FFFF  历史’#FFFFFF    :历史上的今天 │‘
-│ ’#99FFFF百科 ’#CCFF33[信息]’#FFFFFF:查找百科’#99FFFFrep’#CCFF33 [id]’#FFFFFF:这图不够色   │‘
-│ ’#99FFFF直链 ’#CCFF33[链接]’#FFFFFF:网盘直链’#99FFFF群直链’#CCFF33 [id]’#FFFFFF:加群链接  │‘
-│’#99FFFF 热榜’#CCFF33 [接口/id]’#FFFFFF:热榜’#99FFFF 网抑云’#FFFFFF:网易云热评     │‘
-│’#99FFFF 签到’#FFFFFF:签到获取色图  ’#99FFFF @我 ’#CCFF33[图片]’#FFFFFF:以图搜图   │‘
-│ ’#99FFFF短链 ’#CCFF33[接口] [链接]’#FFFFFF:生成短链 (接口选填)    │‘
-╰ ───────────────────────────────────────── ╯‘
-╭ ──────────── ；20  ；40管理员功能；20  ；30──────────── ╮‘
-│    ；15        ；30                                   │‘
-│ ’#99FFFFhsolv’#FFFFFF:色图限制相关,’#99FFFFh hsolv’#FFFFFF 查看用法       │‘
-│ ’#99FFFFsg+’#FFFFFF/’#99FFFFsg-’#FFFFFF’#FFFFFF:给予或删除某群的色图权限          │‘
-│ ’#99FFFFban’#FFFFFF:禁用某人色图权限                      │‘
-│ ##99FFFFsetu+ ##CCFF33[pid]##FFFFFF:从以图搜图或pid添加色图       │‘
-│ ##99FFFF@我 setu+ ##CCFF33[图片]##FFFFFF:从以图搜图直接添加色图   │‘
-╰ ───────────────────────────────────────── ╯‘
+╭ ──────────────── ；20  ；40菜单；20  ；30─────────────── ╮‘
+│    ；15by F_thx；30                  ；15-使用’#99FFFFh ’#CCFF33[指令]’#FFFFFF:查看相应用法；30   │‘
+│ ’#99FFFFping’#FFFFFF    :ping ip    ’#99FFFFimg’#FFFFFF     :生成文字图片│‘
+│ ’#99FFFF来份色图’#FFFFFF:获取色图  ’#99FFFF 统计色图’#FFFFFF:统计色图个数│‘
+│ ’#99FFFF舔狗日记’#FFFFFF:舔狗日记 ’#99FFFF  历史’#FFFFFF    :历史上的今天│‘
+│ ’#99FFFF百科 ’#CCFF33[信息]’#FFFFFF:查找百科’#99FFFFrep’#CCFF33 [id]’#FFFFFF:这图不够色  │‘
+│ ’#99FFFF直链 ’#CCFF33[链接]’#FFFFFF:网盘直链’#99FFFF群直链’#CCFF33 [id]’#FFFFFF:加群链接 │‘
+│’#99FFFF 热榜’#CCFF33 [接口/id]’#FFFFFF:热榜’#99FFFF 网抑云’#FFFFFF:网易云热评    │‘
+│’#99FFFF 签到’#FFFFFF:签到获取色图  ’#99FFFF @我 ’#CCFF33[图片]’#FFFFFF:以图搜图  │‘
+│ ’#99FFFF短链 ’#CCFF33[接口] [链接]’#FFFFFF:生成短链 (接口选填)   │‘
+╰ ──────────────────────────────────────── ╯‘
+╭ ──────────── ；20  ；40管理员功能；20  ；30─────────── ╮‘
+│    ；15        ；30                                  │‘
+│ ’#99FFFFhsolv’#FFFFFF:色图限制相关,’#99FFFFh hsolv’#FFFFFF 查看用法      │‘
+│ ’#99FFFFsg+’#FFFFFF/’#99FFFFsg-’#FFFFFF’#FFFFFF:给予或删除某群的色图权限         │‘
+│ ’#99FFFFban’#FFFFFF:禁用某人色图权限                     │‘
+│ ##99FFFFsetu+ ##CCFF33[pid]##FFFFFF:从以图搜图或pid添加色图      │‘
+│ ##99FFFF@我 setu+ ##CCFF33[图片]##FFFFFF:从以图搜图直接添加色图  │‘
+╰ ──────────────────────────────────────── ╯‘
 """
 sl = """；20##FFFFFF
 ╭ ──────────────────── ；20  ；40扫雷；20  ；20─ ╮‘
