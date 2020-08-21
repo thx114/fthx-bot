@@ -23,7 +23,8 @@ from PIL import Image as Im
 from pixivpy3 import *
 
 api = AppPixivAPI()
-api.login(pixiv_name, pixiv_pw) #如果不想用请#此行
+api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
+
 print("初始化完成")
 #读取配置...
 feback_data = feback['data']
@@ -40,7 +41,7 @@ qd_data = cfg['qd']
 hsolvmax_data = cfg['hsolvmax']
 hsolvch_data = cfg['hsolvch']
 null_data = cfg['null']
-relist_data = cfg['relist']
+rel_data = cfg['relist']
 sg_data = cfg['sg']
 ban_data = cfg['ban']
 setuadd = cfg['setuadd']
@@ -846,7 +847,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 qaq = True
                 ta = int(msg)
                 n = 0
-                data = relist_data['data']
+                data = rel_data['data']
                 listdata = data['list']
                 for i in listdata:
                     n = n + 1
@@ -886,7 +887,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 imgmsg = '\\b20' + imgmsg
                 cfg['relist'] = data
                 toimg(imgmsg,l,y,ism,imgp,cm)   
-        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))   
+            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))   
 #百科
     elif msg.startswith('百科'):
         msg = msg.replace('百科','')
