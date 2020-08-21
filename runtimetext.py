@@ -5,6 +5,7 @@ pixiv_name = "" #在此填入你的pixiv账号
 pixiv_pw = "" #在此填入你的pixiv密码
 setu_ = 'C:/outsetu/'  #你的色图文件夹路径
 setu_remove_ = 'C:/setu/' #你的移除暂存文件夹路径
+setu_add_ = 'C:/setuadd/' #你的增加色图文件夹
 apikey = "" #你的saucenao apikey 没有请注册
 
 admin = []  #主人的qq号 
