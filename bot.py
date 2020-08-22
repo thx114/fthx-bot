@@ -26,8 +26,8 @@ from PIL import Image as Im
 from pixivpy3 import *
 import sys
 api = AppPixivAPI()
-print('登录pixiv中....')
 try:
+    print('登录pixiv中....')
     api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
 except Exception:
     print('PixivAPI:登录失败\n会导致:无法使用setu+ [pid]下载色图')
