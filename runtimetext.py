@@ -1,18 +1,22 @@
+######填入信息:
 bot_qq = 11111111 #在此填入bot_qq号
 authkey = "87654321" #在此填入http api 中的 authkey
 host_ = "http://127.0.0.1:8080" #在此填入http api 中的 host
 pixiv_name = "" #在此填入你的pixiv账号
 pixiv_pw = "" #在此填入你的pixiv密码
+
 setu_ = 'C:/outsetu/'  #你的色图文件夹路径
 setu_remove_ = 'C:/setu/' #你的移除暂存文件夹路径
 setu_add_ = 'C:/setuadd/' #你的增加色图文件夹
 apikey = "" #你的saucenao apikey 没有请注册
-
 admin = []  #主人的qq号 
 op = [] #可移除色图的op的qq号
+
+f1 = "C:\\WINDOWS\\Fonts\\ResourceHanRoundedCN-Heavy.ttf" #你的绘图中文字体
+f2 = "C:\\WINDOWS\\Fonts\\GenShinGothic-Monospace-Heavy.ttf" #你的绘图英文字体
+#######此文件更新后通常下方内容也会更新
+
 thetypes = [1,2,3,4,5,6,7,8]
-f1 = "C:\\WINDOWS\\Fonts\\ResourceHanRoundedCN-Heavy.ttf"
-f2 = "C:\\WINDOWS\\Fonts\\GenShinGothic-Monospace-Heavy.ttf"
 resotypes = ['zhihu','weibo','weixin','baidu','toutiao','163','xl','36k','hitory','sspai','csdn','juejin','bilibili','douyin','52pojie','v2ex','hostloc']
 listtype = ["1",'2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19',"20"]
 istomsg = {"\\n":"‘","##":"’#","\\b":"；",'【':'[','】':']','《':'<','》':'>','？':'?','”':'"','“':'"'}
@@ -33,8 +37,9 @@ mainmap="""
 │    ；15        ；30                                  │‘
 │ ’#99FFFFhsolv’#FFFFFF:色图限制相关,’#99FFFFh hsolv’#FFFFFF 查看用法      │‘
 │ ’#99FFFFsg+’#FFFFFF/’#99FFFFsg-’#FFFFFF’#FFFFFF:给予或删除某群的色图权限         │‘
-│ ’#99FFFFban’#FFFFFF:禁用某人色图权限                     │‘
-│ ##99FFFFsetu+ ##CCFF33[pid]##FFFFFF:从以图搜图或pid添加色图      │‘
+│ ’#99FFFFban’#FFFFFF:禁用某人色图权限  ’#99FFFFbackup’#FFFFFF:备份cfg.json│‘
+│ ##99FFFFsetu+ ##CCFF33[pid]##FFFFFF:从pid添加色图                │‘
+│ ##99FFFFsetu+sf##CCFF33[pid]##FFFFFF:从pid与缓存图添加色图       │‘
 │ ##99FFFF@我 setu+ ##CCFF33[图片]##FFFFFF:从以图搜图直接添加色图  │‘
 ╰ ──────────────────────────────────────── ╯‘
 """

@@ -3,6 +3,9 @@ import json
 from operator import eq
 import re
 import shutil
+from dateutil import rrule
+from datetime import datetime
+import time
 import urllib
 from runtimetext import imgh,admin,op,setu_add_,hsomap,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw,apikey
 from urllib.request import urlretrieve
@@ -21,10 +24,10 @@ import random
 import os
 from PIL import Image as Im
 from pixivpy3 import *
+import sys
 
 api = AppPixivAPI()
-api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
-
+#api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
 print("初始化完成")
 #读取配置...
 feback_data = feback['data']
@@ -45,6 +48,11 @@ rel_data = cfg['relist']
 sg_data = cfg['sg']
 ban_data = cfg['ban']
 setuadd = cfg['setuadd']
+t_data = cfg['time']
+if t_data.startswith("20") == False:
+    print('!')
+    cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
+t_data = cfg['time']
 print('读取配置完成')
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
@@ -57,7 +65,9 @@ app = GraiaMiraiApplication(
         websocket=True
     )
 )
-
+def restart_program():
+    python = sys.executable
+    os.execl(python, python, * sys.argv)
 def savecfg():
     jsonfile=open("cfg.json","w")
     json.dump(cfg,jsonfile)
@@ -283,7 +293,11 @@ def getimg():
         file_path = './chace/imgchace.jpg'
         urlretrieve(outurl, file_path)
         print("getimg done")
-
+def csh(id):
+    datas = [id_data,fr_data,stlist_data]
+    for i in datas :
+        if id not in i:
+            i[id] = 0
 @bcc.receiver("GroupMessage")
 async def group_message_handler(app: GraiaMiraiApplication, message: MessageChain, group: Group, member: Member):
     id = str(member.id)
@@ -305,6 +319,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         hash2= "1101100001010100100000101100001010000010111001011100000010100000"
         n=cmpHash(hash1,hash2)
         if n == 0 :
+            csh(id)
             outmsg="未知错误"
             gr = group.id
             mb = member.id
@@ -378,6 +393,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 for i in feback_data:
                     n = n + 1
                     newdata[str(n)] = i
+                csh(id)
                 hsolv = stlist_data[id]
                 if hsolv >= 60:
                     r1 = 20
@@ -546,9 +562,12 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
 #色图群权限
     elif msg.startswith("sg") and member.id in admin != 0:
         setugroup = message.asDisplay().replace('sg','')
-        sg_data
         outmsg = "发生未知错误"
         theg = setugroup.replace('-','').replace('+','').replace(' ','')
+        if theg.isdigit():
+            theg = theg
+        else:
+            theg = str(group.id)
         if int(theg) in sg_data:
             if setugroup.startswith('-'):
                 p = sg_data.index(int(theg))
@@ -562,9 +581,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             if setugroup.startswith('-'):
                 outmsg = "此群不存在"
             else:
-                new = int(setugroup.replace('-','').replace('+','').replace(' ',''))
+                new = int(theg)
                 sg_data.append(new)
-                outcfg = ','.join(str(i) for i in sg_data)
                 cfg['sg'] = sg_data
                 outmsg = "已将此群变更为色图群"
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
@@ -603,12 +621,25 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 qd_data[i] = 0
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
             savecfg()
+            srcfile='./cfg.json'
+            name = time.strftime('%Y-%m-%d-%H',time.localtime(time.time()))
+            dstfile='./backups/'+ name + '.json'
+            shutil.move(srcfile,dstfile)
         elif msg.startswith('-'):
             id = int(msg.replace("-","").replace(' ',''))
             id_data[id] = 0
             outmsg = str(id) + "的hso等级已降到0"
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
             savecfg()
+#backup
+    elif msg.startswith('backup') and member.id in admin:
+        savecfg()
+        srcfile='./cfg.json'
+        name = time.strftime('%Y-%m-%d-%H',time.localtime(time.time()))
+        dstfile='./backups/'+ name + '.json'
+        shutil.move(srcfile,dstfile)
+        outmsg = name + '已备份'
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #lsp排行榜
         if msg.startswith('list'):
             print("list读取")
@@ -936,6 +967,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #来份色图
     elif msg.startswith("来份色图") or msg.startswith('色图来'):
+        csh(id)
         outmsg="未知错误"
         gr = group.id
         mb = member.id
@@ -964,11 +996,36 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             print(dirpath,file_count)
         msg = "共有$sl张色图".replace("$sl",str(file_count))
         await app.sendGroupMessage(group,MessageChain.create([Plain(msg)]))
+#后执行项目
     savecfg()
+    initDate = datetime.strptime(t_data,'%Y-%m-%d %H:%M:%S')
+    y1 = initDate.year
+    m1 = initDate.month
+    d1 = initDate.day
+    timedata = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    timedata2 = datetime.strptime(timedata,'%Y-%m-%d %H:%M:%S')
+    y2 = timedata2.year
+    m2 = timedata2.month
+    d2 = timedata2.day
+    firstDay = datetime(y1,m1,d1)
+    endDay = datetime(y2,m2,d2)
+    days = rrule.rrule(freq = rrule.DAILY,dtstart=firstDay,until=endDay)
+    if days.count() >= 2:
+        if not os.path.exists('./backups'):
+            os.makedirs('./backups')
+        srcfile='./cfg.json'
+        name = time.strftime('%Y-%m-%d-%H',time.localtime(time.time()))
+        dstfile='./backups/'+ name + '.json'
+        shutil.move(srcfile,dstfile)
+        timenow = datetime.now().strftime('%Y-%m-%d 10:10:10')
+        cfg['time'] = timenow
+        savecfg()
+        restart_program()
 
 @bcc.receiver("FriendMessage")
 async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,message:MessageChain):
 #qaq
+    frid = str(friend.id)
     ban = ban_data
     if str(friend.id) in ban >=1:
         return
@@ -989,6 +1046,7 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,me
         await app.sendFriendMessage(friend,MessageChain.create([Plain(outmsg)]))
 #色图
     elif msg.startswith('来份色图'):
+        csh(frid)
         outmsg="未知错误"
         gr = 'none'
         mb = friend.id
