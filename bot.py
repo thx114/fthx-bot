@@ -25,30 +25,47 @@ import os
 from PIL import Image as Im
 from pixivpy3 import *
 import sys
-
 api = AppPixivAPI()
-#api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
+print('登录pixiv中....')
+try:
+    api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
+except Exception:
+    print('PixivAPI:登录失败\n会导致:无法使用setu+ [pid]下载色图')
+    pass
+try:
+    fx = 1
+    fontl = f1
+    fonty = f2
+    font = ImageFont.truetype(fontl,fx)
+    font = ImageFont.truetype(fonty,fx)
+except IOError:
+    print('没有找到配置中字体的路径 或 你安装了字体后没有重启\n会导致:任何需要文字到图片的指令将引起崩溃')
+    pass
+
 print("初始化完成")
 #读取配置...
-feback_data = feback['data']
-jsonfile = open("cfg.json","r")
-cfg = json.load(jsonfile)
-jsonfile.close()
-id_data = cfg['id']
-fr_data = cfg['fr']
-stlist_data = cfg['stlist']
-lstfr_data = cfg['lstfr']
-lstgr_data = cfg['lstgr']
-qdlist_data = cfg['qdlist']
-qd_data = cfg['qd']
-hsolvmax_data = cfg['hsolvmax']
-hsolvch_data = cfg['hsolvch']
-null_data = cfg['null']
-rel_data = cfg['relist']
-sg_data = cfg['sg']
-ban_data = cfg['ban']
-setuadd = cfg['setuadd']
-t_data = cfg['time']
+try:
+   feback_data = feback['data']
+   jsonfile = open("cfg.json","r")
+   cfg = json.load(jsonfile)
+   jsonfile.close()
+   id_data = cfg['id']
+   fr_data = cfg['fr']
+   stlist_data = cfg['stlist']
+   lstfr_data = cfg['lstfr']
+   lstgr_data = cfg['lstgr']
+   qdlist_data = cfg['qdlist']
+   qd_data = cfg['qd']
+   hsolvmax_data = cfg['hsolvmax']
+   hsolvch_data = cfg['hsolvch']
+   null_data = cfg['null']
+   rel_data = cfg['relist']
+   sg_data = cfg['sg']
+   ban_data = cfg['ban']
+   setuadd = cfg['setuadd']
+   t_data = cfg['time']
+except Exception:
+    print('严重问题:cfg载入失败,请尝试重置cfg')
 if t_data.startswith("20") == False:
     print('!')
     cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
@@ -114,7 +131,6 @@ def setu(group,id,g):
         print('色图请求完成' + outmsg)
         return outmsg
 def toimg(msg,fontl,fonty,ism,imgp,cm):
-    string = "~!@#$%^&*()_+-*/<>,.[]\/"
     img = Im.open(imgp)
     mmmx = 700
     mmmx = img.size[0]
@@ -126,7 +142,6 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
     fx = fx1 = fx2 = fx0 = 30
     ghslist = [] 
     qaqlist = []
-    font = ImageFont.truetype(fontl,fx)
     fillColor = "#ffffff"
     print("for1")
     if cm == 0:
