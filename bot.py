@@ -1053,7 +1053,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         tag = ''
         print(1)
         for i in tags:
-            tag = ''.join(i['name'])
+            tag = tag + i['name']
         print(tag)
         ptime = data['create_date']
         try:
@@ -1076,7 +1076,12 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             print(tag)
             await app.sendGroupMessage(group,MessageChain.create([Plain('r18图不支持tp')]))
         else:
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg1),Image.fromLocalFile(dstfile),Plain(outmsg2)]))
+            st = cfg['hsolvch']
+            botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg1),Image.fromLocalFile(dstfile),Plain(outmsg2)]))
+            if int(st) > 0:
+                st = int(st)
+                await asyncio.sleep(st)
+                await app.revokeMessage(botmsg)
 #不够色
     elif msg.startswith('不够色'):
         await app.sendGroupMessage(group,MessageChain.create([Plain('那你发')]))
