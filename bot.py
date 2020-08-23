@@ -5,7 +5,6 @@ import re
 import shutil
 from dateutil import rrule
 from datetime import datetime
-import time
 import urllib
 from runtimetext import hash2,imgh,admin,op,setu_add_,hsomap,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw,apikey
 from urllib.request import urlretrieve
@@ -21,14 +20,16 @@ from graia.application.message.chain import MessageChain
 import asyncio
 import requests
 import random
+from pathlib import Path
 import os
 from PIL import Image as Im
 from pixivpy3 import *
 import sys
+import time
 api = AppPixivAPI()
 try:
     print('登录pixiv中....')
-    #api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
+    api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
 except Exception:
     print('PixivAPI:登录失败\n会导致:无法使用setu+ [pid]下载色图')
     pass
@@ -58,6 +59,7 @@ try:
    qd_data = cfg['qd']
    null_data = cfg['null']
    rel_data = cfg['relist']
+   sl_data = cfg['slist']
    if cfg['time'].startswith("20") == False:
         print('!')
         cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
@@ -968,6 +970,108 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             if int(st) > 0:
                 await asyncio.sleep(int(st))
                 await app.revokeMessage(botmsg)
+#搜
+    elif msg.startswith('搜'):
+        csh(id)
+        if fr_data[id] >= 3:
+            await app.sendGroupMessage(group,MessageChain.create([Plain('你消耗了3个色图进行搜索....')]))
+            url = 'https://api.imjad.cn/pixiv/v2/?type=search&word=' + msg.replace('搜','')
+            headers = {}
+            text = requests.get(url, headers=headers)
+            print('getdone')
+            data = json.loads(text.text)
+            data = data['illusts']
+            outmsg = ''
+            n = 0
+            msglist = []
+            for i in data:
+                if n <= 6:
+                    r18 = 0
+                    surl = i['image_urls']['medium']
+                    tags = i['tags']
+                    pid = i['id']
+                    title = i['title']
+                    print(type(title),title,':',tags)
+                    for i in tags:
+                        if i['name'].find('18') >=1:
+                            r18 = 1
+                    if r18 == 0:
+                        srcfile= './' + str(pid) + "_p0_master1200.jpg"
+                        dstfile='./chace/s/' + str(pid) + "_p0_master1200.jpg"
+                        my_file = Path(dstfile)
+                        print(n,pid,'下载中')
+                        try:
+                           if my_file.is_file() == False:
+                               print(1)
+                               api.download(surl)
+                               print('下载完成')
+                               shutil.move(srcfile,dstfile)
+                           else:
+                               print('略过')
+                        except Exception:
+                            print('none')
+                            pass
+                        outmsg ='\n-' + str(n) + ':' + title 
+                        print('append')
+                        msglist.append(Plain(outmsg))
+                        msglist.append(Image.fromLocalFile(dstfile))
+                        print('appdone')
+                    else:
+                        print(n,pid,'r18被屏蔽')
+                        outmsg ='\n-' + str(n) + ':' + title + '-r18图不显示预览'
+                        msglist.append(Plain(outmsg))
+                    n = n + 1
+                else:
+                    break
+            msglist.append(Plain('\n通过tp[id]来查看详细信息'))
+            print('done')
+            st = cfg['hsolvch']
+            botmsg = await app.sendGroupMessage(group,MessageChain.create(msglist))
+            cfg['slist'] = data
+            if int(st) > 0:
+                st = int(st)
+                st = st * 5
+                await asyncio.sleep(st)
+                await app.revokeMessage(botmsg)
+                cfg['slist'] = null_data
+        else:await app.sendGroupMessage(group,MessageChain.create([Plain('你的剩余色图不足3')]))
+#搜 - p
+    if msg.startswith('tp'):
+        msg = msg.replace('tp','').replace(' ','')
+        setid = int(msg)
+        print('选择tp',setid)
+        data = cfg['slist'][setid]
+        pid = data['id']
+        title = data['title']
+        user = data['user']['name']
+        tags = data['tags']
+        tag = ''
+        print(1)
+        for i in tags:
+            tag = ''.join(i['name'])
+        print(tag)
+        ptime = data['create_date']
+        try:
+            imgurl = data['meta_single_page']['original_image_url']
+        except Exception:
+            imgurl = data['meta_pages'][0]['image_urls']['original']
+        await app.sendGroupMessage(group,MessageChain.create([Plain('原图下载中..')]))
+        api.download(imgurl)
+        print('下载完成')
+        if imgurl.find('png') >=1:
+            srcfile='./' + str(pid) + "_p0.png"
+            dstfile='./chace/s/tp.png'
+        else:
+            srcfile='./' + str(pid) + "_p0.jpg"
+            dstfile='./chace/s/tp.jpg'
+        shutil.move(srcfile,dstfile)
+        outmsg1 = "id:" + str(pid) + '|标题:' + title + '|by - ' + user
+        outmsg2 = 'tags:' + tag + '\n创建时间:' + ptime
+        if tag.find('18') >=1:
+            print(tag)
+            await app.sendGroupMessage(group,MessageChain.create([Plain('r18图不支持tp')]))
+        else:
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg1),Image.fromLocalFile(dstfile),Plain(outmsg2)]))
 #不够色
     elif msg.startswith('不够色'):
         await app.sendGroupMessage(group,MessageChain.create([Plain('那你发')]))

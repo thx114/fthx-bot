@@ -29,9 +29,10 @@ mainmap="""
 │ ’#99FFFF来份色图’#FFFFFF:获取色图  ’#99FFFF 统计色图’#FFFFFF:统计色图个数│‘
 │ ’#99FFFF舔狗日记’#FFFFFF:舔狗日记 ’#99FFFF  历史’#FFFFFF    :历史上的今天│‘
 │ ’#99FFFF百科 ’#CCFF33[信息]’#FFFFFF:查找百科’#99FFFFrep’#CCFF33 [id]’#FFFFFF:这图不够色  │‘
-│ ’#99FFFF直链 ’#CCFF33[链接]’#FFFFFF:网盘直链’#99FFFF群直链’#CCFF33 [id]’#FFFFFF:加群链接 │‘
-│’#99FFFF 热榜’#CCFF33 [接口/id]’#FFFFFF:热榜’#99FFFF 网抑云’#FFFFFF:网易云热评    │‘
+│ ’#99FFFF直链 ’#CCFF33[链接]’#FFFFFF:网盘直链’#99FFFF网抑云’#FFFFFF  :网易云热评  │‘
+│’#99FFFF 热榜’#CCFF33 [接口/id]’#FFFFFF:热榜’#99FFFF tp’#CCFF33[id]’#FFFFFF  :搜图跳转详情│‘
 │’#99FFFF 签到’#FFFFFF:签到获取色图  ’#99FFFF @我 ’#CCFF33[图片]’#FFFFFF:以图搜图  │‘
+│’#99FFFF 搜’#CCFF33 [信息]’#FFFFFF:p站搜图   ’#99FFFF群直链’#CCFF33 [id]’#FFFFFF:加群链接 │‘
 │ ’#99FFFF短链 ’#CCFF33[接口] [链接]’#FFFFFF:生成短链 (接口选填)   │‘
 ╰ ──────────────────────────────────────── ╯‘
 ╭ ──────────── ；20  ；40管理员功能；20  ；30─────────── ╮‘
