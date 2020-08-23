@@ -622,17 +622,8 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             outmsg = str(id) + "的hso等级已降到0"
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
             savecfg()
-#backup
-    elif msg.startswith('backup') and member.id in admin:
-        savecfg()
-        srcfile='./cfg.json'
-        name = time.strftime('%Y-%m-%d-%H',time.localtime(time.time()))
-        dstfile='./backups/'+ name + '.json'
-        shutil.move(srcfile,dstfile)
-        outmsg = name + '已备份'
-        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #lsp排行榜
-        if msg.startswith('list'):
+        elif msg.startswith('list'):
             print("list读取")
             groupids = []
             hsolvlist = []
@@ -691,6 +682,14 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             mid = int(stlist_data[str(id)])
             outmsg = str(id) + "的hso等级为" + str(mid)
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+    elif msg.startswith('backup') and member.id in admin:
+        savecfg()
+        srcfile='./cfg.json'
+        name = time.strftime('%Y-%m-%d-%H',time.localtime(time.time()))
+        dstfile='./backups/'+ name + '.json'
+        shutil.move(srcfile,dstfile)
+        outmsg = name + '已备份'
+        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #签到
     elif msg.startswith('签到'):
         stadd = random.randint(5,20)
