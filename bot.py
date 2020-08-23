@@ -7,14 +7,14 @@ from dateutil import rrule
 from datetime import datetime
 import time
 import urllib
-from runtimetext import imgh,admin,op,setu_add_,hsomap,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw,apikey
+from runtimetext import hash2,imgh,admin,op,setu_add_,hsomap,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw,apikey
 from urllib.request import urlretrieve
 from PIL import ImageFont,ImageDraw
 import cv2
 from graia.application import Group,Friend
 from graia.application.event.messages import GroupMessage,FriendMessage
 from graia.application.group import Member
-from graia.application.message.elements.internal import App, Image, Plain
+from graia.application.message.elements.internal import App, At, Image, Plain, Source
 from graia.broadcast import Broadcast
 from graia.application import GraiaMiraiApplication, Session
 from graia.application.message.chain import MessageChain
@@ -28,7 +28,7 @@ import sys
 api = AppPixivAPI()
 try:
     print('登录pixiv中....')
-    api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
+    #api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
 except Exception:
     print('PixivAPI:登录失败\n会导致:无法使用setu+ [pid]下载色图')
     pass
@@ -56,20 +56,14 @@ try:
    lstgr_data = cfg['lstgr']
    qdlist_data = cfg['qdlist']
    qd_data = cfg['qd']
-   hsolvmax_data = cfg['hsolvmax']
-   hsolvch_data = cfg['hsolvch']
    null_data = cfg['null']
    rel_data = cfg['relist']
-   sg_data = cfg['sg']
-   ban_data = cfg['ban']
-   setuadd = cfg['setuadd']
-   t_data = cfg['time']
+   if cfg['time'].startswith("20") == False:
+        print('!')
+        cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
 except Exception:
     print('严重问题:cfg载入失败,请尝试重置cfg')
-if t_data.startswith("20") == False:
-    print('!')
-    cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
-t_data = cfg['time']
+
 print('读取配置完成')
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
@@ -92,9 +86,10 @@ def savecfg():
 def setu(group,id,g):
     id = str(id)
     hsolv = id_data[id]
-    if group in sg_data: 
+    if group in cfg['sg']: 
         print('in')
-        hsolvmax = int(str(hsolvmax_data))
+        hsolvmax = cfg['hsolvmax']
+        print(cfg['hsolvmax'],id_data[id])
         if hsolv <= hsolvmax or int(id) in admin:
             rootdir = setu_
             file_names = []
@@ -313,25 +308,28 @@ def csh(id):
     for i in datas :
         if id not in i:
             i[id] = 0
+
 @bcc.receiver("GroupMessage")
 async def group_message_handler(app: GraiaMiraiApplication, message: MessageChain, group: Group, member: Member):
+    tmsg = ""
+    timg = ""
+    tat = 0
     id = str(member.id)
-    if int(id) in ban_data:
+    if int(id) in cfg['ban']:
         return
+    if message.has((Plain)):tmsg = str(message.get((Plain))[0].text)
+    tsource = int(str(message.get((Source))[0].id))
     file_count = x = 0
     msg = message.asDisplay()
-    txt = str(message)
-    out1 = txt[txt.rfind('url='):].replace(", path=None, type=<ImageType.Group: \'Group\'>)]","").replace('url=','').replace('\'','')
 #@聊天图片检测
-    if out1.startswith('http://gchat.qpic.cn') :
-        print(out1)
-        name = out1.replace('http://gchat.qpic.cn/gchatpic_new/',"").replace("/","").replace('?term=2','')
+    if message.has((Image)):
+        timg = str(message.get(Image)[0].url)
+        print(timg)
         file_path = './chace/' + str(group.id) + ".jpg"
         d = file_path
-        urlretrieve(out1, d)
+        urlretrieve(timg, d)
         img1=cv2.imread(file_path)
         hash1= dHash(img1)
-        hash2= "1101100001010100100000101100001010000010111001011100000010100000"
         n=cmpHash(hash1,hash2)
         if n == 0 :
             csh(id)
@@ -340,7 +338,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             mb = member.id
             g = 1
             outmsg = setu(gr,mb,g)
-            st = int(str(hsolvch_data))
+            st = cfg['hsolvch']
             if outmsg.startswith('https:') or outmsg.startswith('你'):
                 botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
                 if st > 0:
@@ -351,99 +349,76 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 if st > 0:
                     await asyncio.sleep(st)
                     await app.revokeMessage(botmsg)
-    if txt.find('target=' + str(bot_qq)) >= 1:
-        print('发现@')
+        if message.has((At)):
+            tat = int(str(message.get((At))[0].target))
+            if tat == bot_qq:
 #@以图搜图
-        if out1.startswith('http://gchat.qpic.cn') :
-            print('以图搜图')
-            url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=1&url=$url".replace('$url',out1).replace('$key',apikey)
-            headers = {}
-            text = requests.get(url, headers=headers) 
-            data = json.loads(text.text)
-            data = data['results']
-            data = data[0]
-            data = data["data"]
-            n = 0
-            outmsg = ""
-            print('done')
-            for i in data:
-                outmsg = outmsg + '\n' + str(i) + ":" + str(data[i])
-            if outmsg.find('urls:[\'https://www.pixiv') >= 1:
-                data = data['pixiv_id']
-                cfg['setuadd'] = str(data)
-            print(msg)
-            if msg.find('setu+') >= 1 and member.id in op:
-                print('find')
-                text = txt.replace('__root__=','').replace('[','').replace(']','')
-                arr = text.split('),')
-                print(arr)
-                for i in arr:
-                    if i.find('lain') >=1:
-                        arr1 = i.split(', ')
-                        truemsg = arr1[1].replace('text=\'','').replace(')','').replace('\'','')
-                        newdata = {}
-                        print(truemsg)
-                        truemsg = truemsg.replace('setu+','').replace(' ','')
-                        pid = cfg['setuadd']
-                        srcfile= './chace/' + str(group.id) + ".jpg"
-                        dstfile=setu_add_ + pid + "_p0.jpg"
-                        shutil.move(srcfile,dstfile)
-                        outmsg = 'pid:' + pid + '\n已被从qq下载图片并加入色图库'
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-#@机器人
-        text = txt.replace('__root__=','').replace('[','').replace(']','')
-        arr = text.split('),')
-        for i in arr:
-            if i.find('ource') >=1:
-                arr1 = i.split(', ')
-                sourceid = int(arr1[0].replace('Source(id=',''))
-            if i.find('t(') >=1:
-                arr1 = i.split(', ')
-                atid = int(arr1[1].replace('target=',''))
-            if i.find('lain') >=1:
-                arr1 = i.split(', ')
-                truemsg = arr1[1].replace('text=\'','').replace(')','').replace('\'','')
-                newdata = {}
+                print('以图搜图')
+                url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=1&url=$url".replace('$url',timg).replace('$key',apikey)
+                headers = {}
+                text = requests.get(url, headers=headers) 
+                data = json.loads(text.text)
+                data = data['results']
+                data = data[0]
+                data = data["data"]
                 n = 0
-                for i in feback_data:
-                    n = n + 1
-                    newdata[str(n)] = i
-                csh(id)
-                hsolv = stlist_data[id]
-                if hsolv >= 60:
-                    r1 = 20
-                    r2 = 100
-                    r3 = 101
-                elif member.id in admin:
-                    r1 = 10
-                    r2 = 30
-                    r3 = 100
-                else:
-                    r1 = 100
-                    r2 = 101
-                    r3 = 102
-                r = random.randint(1,100)
-                if r <= r1:
-                    data = newdata['1']
-                elif r <= r2:
-                    data = newdata['2']
-                elif r <= r3:
-                    data = newdata['3']
-                else:
-                    print('几率设置错误')
-                    data = newdata['1']
-                truemsg = truemsg.replace(' ','')
+                outmsg = ""
+                print('done')
                 for i in data:
-                    if truemsg.startswith(i):
-                        outmsg = 'truemsg in data'
-                        text = data[truemsg]
-                        arr = text.split('|')
-                        max = len(arr) - 1
-                        r = random.randint(0,max)
-                        outmsg = str(arr[r])
-                        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+                    outmsg = outmsg + '\n' + str(i) + ":" + str(data[i])
+                if outmsg.find('urls:[\'https://www.pixiv') >= 1:
+                    data = data['pixiv_id']
+                    cfg['setuadd'] = str(data)
+                tmsg = tmsg.replace(' ','')
+                if tmsg.startswith('setu+') and member.id in op:
+                    tmsg = tmsg.replace('setu+','')
+                    pid = cfg['setuadd']
+                    srcfile= './chace/' + str(group.id) + ".jpg"
+                    dstfile=setu_add_ + pid + "_p0.jpg"
+                    shutil.move(srcfile,dstfile)
+                    outmsg = 'pid:' + pid + '\n已被从qq下载图片并加入色图库'
+                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+#@机器人
+        newdata = {}
+        n = 0
+        for i in feback_data:
+            n = n + 1
+            newdata[str(n)] = i
+        csh(id)
+        hsolv = stlist_data[id]
+        if hsolv >= 60:
+            r1 = 20
+            r2 = 96
+            r3 = 101
+        elif member.id in admin:
+            r1 = 10
+            r2 = 30
+            r3 = 100
+        else:
+            r1 = 100
+            r2 = 101
+            r3 = 102
+        r = random.randint(1,100)
+        if r <= r1:
+            data = newdata['1']
+        elif r <= r2:
+            data = newdata['2']
+        elif r <= r3:
+            data = newdata['3']
+        else:
+            print('几率设置错误')
+            data = newdata['1']
+        tmsg = tmsg.replace(' ','')
+        for i in data:
+            if tmsg.startswith(i):
+                outmsg = 'truemsg in data'
+                text = data[tmsg]
+                arr = text.split('|')
+                max = len(arr) - 1
+                r = random.randint(0,max)
+                outmsg = str(arr[r])
+                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #早
-    print(msg)
     if msg.startswith('早') and member.id in admin:
         outmsg = '啊啊啊，主人睡傻了QAQ'
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
@@ -583,12 +558,10 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             theg = theg
         else:
             theg = str(group.id)
-        if int(theg) in sg_data:
+        if int(theg) in cfg['sg']:
             if setugroup.startswith('-'):
-                p = sg_data.index(int(theg))
-                del sg_data[p]
-                outcfg = ','.join(str(i) for i in sg_data)
-                cfg['sg'] = sg_data
+                p = cfg['sg'].index(int(theg))
+                del cfg['sg'][p]
                 outmsg = "已禁用此群的色图权限"
             else:
                 outmsg = "此群已是色图群"
@@ -597,8 +570,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 outmsg = "此群不存在"
             else:
                 new = int(theg)
-                sg_data.append(new)
-                cfg['sg'] = sg_data
+                cfg['sg'].append(new)
                 outmsg = "已将此群变更为色图群"
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #ban
@@ -607,16 +579,13 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         msg = msg.replace('ban','').replace(' ','')
         if msg.startswith('-'):
             msg = msg.replace('-','')
-            ban_data.remove(int(msg))
+            cfg['ban'].remove(int(msg))
             outmsg = msg + "ban-"
-            cfg['ban'] = ban_data
         else:
-            if int(msg) in ban_data != 0:
+            if int(msg) in cfg['ban'] != 0:
                 outmsg = "已存在"
             else:
-                ban_data.append(int(msg))
-                outcfg = ','.join(str(i) for i in ban_data)
-                cfg['ban'] = ban_data
+                cfg['ban'].append(int(msg))
                 outmsg = msg + "ban+"
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #hsolvmax 色图限制
@@ -988,7 +957,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         mb = member.id
         g = 1
         outmsg = setu(gr,mb,g)
-        st = int(str(hsolvch_data))
+        st = cfg['hsolvch']
         if outmsg.startswith('https:') or outmsg.startswith('你'):
             botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
             if int(st) > 0:
@@ -1012,8 +981,9 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         msg = "共有$sl张色图".replace("$sl",str(file_count))
         await app.sendGroupMessage(group,MessageChain.create([Plain(msg)]))
 #后执行项目
+    print(msg)
     savecfg()
-    initDate = datetime.strptime(t_data,'%Y-%m-%d %H:%M:%S')
+    initDate = datetime.strptime(cfg['time'],'%Y-%m-%d %H:%M:%S')
     y1 = initDate.year
     m1 = initDate.month
     d1 = initDate.day
@@ -1041,7 +1011,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
 async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,message:MessageChain):
 #qaq
     frid = str(friend.id)
-    ban = ban_data
+    ban = cfg['ban']
     if str(friend.id) in ban >=1:
         return
     msg = message.asDisplay()
@@ -1067,7 +1037,7 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,me
         mb = friend.id
         g = 0
         outmsg = setu(gr,mb,g)
-        st = int(str(hsolvch_data))
+        st = cfg['hsolvch']
         if outmsg.startswith('https:'):
             botmsg = await app.sendFriendMessage(friend,MessageChain.create([Plain(outmsg)]))
             if int(st) > 0:
