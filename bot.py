@@ -27,6 +27,9 @@ from pixivpy3 import *
 import sys
 import time
 api = AppPixivAPI()
+dirs = './chace/s'
+if not os.path.exists(dirs):
+    os.makedirs(dirs)
 try:
     print('登录pixiv中....')
     api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
@@ -381,6 +384,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                     outmsg = 'pid:' + pid + '\n已被从qq下载图片并加入色图库'
                 await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #@机器人
+    elif message.has((At)):
         newdata = {}
         n = 0
         for i in feback_data:
@@ -411,6 +415,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             print('几率设置错误')
             data = newdata['1']
         tmsg = tmsg.replace(' ','')
+        print(tmsg)
         for i in data:
             if tmsg.startswith(i):
                 outmsg = 'truemsg in data'
@@ -974,11 +979,12 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
     elif msg.startswith('搜'):
         csh(id)
         if fr_data[id] >= 3:
+            fr_data[id] = fr_data[id] - 3
+            savecfg()
             await app.sendGroupMessage(group,MessageChain.create([Plain('你消耗了3个色图进行搜索....')]))
             url = 'https://api.imjad.cn/pixiv/v2/?type=search&word=' + msg.replace('搜','')
             headers = {}
             text = requests.get(url, headers=headers)
-            print('getdone')
             data = json.loads(text.text)
             data = data['illusts']
             outmsg = ''
@@ -1033,7 +1039,6 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 st = st * 5
                 await asyncio.sleep(st)
                 await app.revokeMessage(botmsg)
-                cfg['slist'] = null_data
         else:await app.sendGroupMessage(group,MessageChain.create([Plain('你的剩余色图不足3')]))
 #搜 - p
     if msg.startswith('tp'):
