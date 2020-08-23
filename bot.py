@@ -3,6 +3,7 @@ import json
 from operator import eq
 import re
 import shutil
+from tkinter.constants import OUTSIDE
 from dateutil import rrule
 from datetime import datetime
 import urllib
@@ -88,48 +89,36 @@ def savecfg():
     jsonfile=open("cfg.json","w")
     json.dump(cfg,jsonfile)
     jsonfile.close()
-def setu(group,id,g):
+def setu(group,id):
     id = str(id)
     hsolv = id_data[id]
-    if group in cfg['sg']: 
-        print('in')
-        hsolvmax = cfg['hsolvmax']
-        print(cfg['hsolvmax'],id_data[id])
-        if hsolv <= hsolvmax or int(id) in admin:
-            rootdir = setu_
-            file_names = []
-            for parent,dirnames, filenames in os.walk(rootdir):
-                file_names = filenames
-            x = random.randint(0, len(file_names)-1)
-            df = rootdir + "/" + file_names[x]
-            print("选中色图" + df)
-            savename = df.replace(setu_,"").replace('.jpg','')
-            lstgr_data[id] = savename
-            print('done' + df)
-            id_data[id] = id_data[id] + 1
-            stlist_data[id] = stlist_data[id] + 1
-            return df
-    print("2级色图")
-    if fr_data[id] >= 1:
-        rootdir = setu_
-        file_names = []
-        for parent,dirnames, filenames in os.walk(rootdir):
-            file_names = filenames
-        x = random.randint(0, len(file_names)-1)
-        df = rootdir + "/" + file_names[x]
-        savename = df.replace(setu_,"").replace('.jpg','')
-        outmsg = 'https://www.pixivdl.net/artworks' + savename
-        if g == 1: lstgr_data[id] = savename
-        else:      lstfr_data[id] = savename
-        fr_data[id] = fr_data[id] - 1
-        outmsg = outmsg + "剩余色图：" + str(fr_data[id])
-        print('色图请求完成' + outmsg)
-        savecfg()
-        return outmsg
-    else:
-        outmsg = "你没有剩余色图或其他错误"
-        print('色图请求完成' + outmsg)
-        return outmsg
+    parent_names = []
+    file_names = []
+    outmsg = [(Plain("你没有剩余色图或其他错误"))]
+    if group in cfg['sg'] or fr_data[id] >= 1:
+        for parent,dirnames, filenames in os.walk(setu_):parent_names.append(parent)
+        x = random.randint(1, len(parent_names)-1)
+        for parent,dirnames, filenames in os.walk(parent_names[x]):   file_names = filenames
+        y = random.randint(0, len(file_names)-1)
+        outdf =str(parent_names[x] + '/' + file_names[y]).replace('\\','/')
+        savename = str(file_names[y]).replace('.jpg','').replace('.png','')
+        print("选中色图" + outdf)
+        if group in cfg['sg']: 
+            hsolvmax = cfg['hsolvmax']
+            if hsolv <= hsolvmax or int(id) in admin:
+                lstgr_data[id] = savename
+                id_data[id] = id_data[id] + 1
+                stlist_data[id] = stlist_data[id] + 1
+                outmsg = [Image.fromLocalFile(outdf)]
+        elif fr_data[id] >= 1:
+            df = 'https://www.pixivdl.net/artworks' + savename
+            if group == 1: lstfr_data[id] = savename
+            else:          lstgr_data[id] = savename
+            fr_data[id] = fr_data[id] - 1
+            print('色图请求完成' + outmsg)
+            savecfg()
+            outmsg = [(Plain(df + "剩余色图：" + str(fr_data[id])))]
+    return outmsg
 def toimg(msg,fontl,fonty,ism,imgp,cm):
     img = Im.open(imgp)
     mmmx = 700
@@ -341,19 +330,11 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             outmsg="未知错误"
             gr = group.id
             mb = member.id
-            g = 1
-            outmsg = setu(gr,mb,g)
+            outmsg = setu(gr,mb)
             st = cfg['hsolvch']
-            if outmsg.startswith('https:') or outmsg.startswith('你'):
-                botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-                if st > 0:
-                    await asyncio.sleep(60)
-                    await app.revokeMessage(botmsg)
-            else:
-                botmsg = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg)]))
-                if st > 0:
-                    await asyncio.sleep(st)
-                    await app.revokeMessage(botmsg)
+            botmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg))
+            await asyncio.sleep(int(st))
+            await app.revokeMessage(botmsg)
         if message.has((At)):
             tat = int(str(message.get((At))[0].target))
             if tat == bot_qq:
@@ -961,25 +942,15 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         outmsg="未知错误"
         gr = group.id
         mb = member.id
-        g = 1
-        outmsg = setu(gr,mb,g)
+        outmsg = setu(gr,mb)
         st = cfg['hsolvch']
-        if outmsg.startswith('https:') or outmsg.startswith('你'):
-            botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-            if int(st) > 0:
-                await asyncio.sleep(60)
-                await app.revokeMessage(botmsg)
-        else:
-            botmsg = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg)]))
-            if int(st) > 0:
-                await asyncio.sleep(int(st))
-                await app.revokeMessage(botmsg)
+        botmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg))
+        await asyncio.sleep(int(st))
+        await app.revokeMessage(botmsg)
 #搜
     elif msg.startswith('搜'):
         csh(id)
         if fr_data[id] >= 3:
-            fr_data[id] = fr_data[id] - 3
-            savecfg()
             await app.sendGroupMessage(group,MessageChain.create([Plain('你消耗了3个色图进行搜索....')]))
             url = 'https://api.imjad.cn/pixiv/v2/?type=search&word=' + msg.replace('搜','')
             headers = {}
@@ -1032,10 +1003,12 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             print('done')
             st = cfg['hsolvch']
             botmsg = await app.sendGroupMessage(group,MessageChain.create(msglist))
+            fr_data[id] = fr_data[id] - 3
+            savecfg()
             cfg['slist'] = data
             if int(st) > 0:
                 st = int(st)
-                st = st * 5
+                st = st * 8
                 await asyncio.sleep(st)
                 await app.revokeMessage(botmsg)
         else:await app.sendGroupMessage(group,MessageChain.create([Plain('你的剩余色图不足3')]))
@@ -1078,7 +1051,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             st = cfg['hsolvch']
             botmsg = await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg1),Image.fromLocalFile(dstfile),Plain(outmsg2)]))
             if int(st) > 0:
-                st = int(st)
+                st = int(st) * 3
                 await asyncio.sleep(st)
                 await app.revokeMessage(botmsg)
 #不够色
@@ -1109,6 +1082,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
     endDay = datetime(y2,m2,d2)
     days = rrule.rrule(freq = rrule.DAILY,dtstart=firstDay,until=endDay)
     if days.count() >= 2:
+        await app.sendGroupMessage(group,MessageChain.create([Plain('执行自动重启项目----')]))
         if not os.path.exists('./backups'):
             os.makedirs('./backups')
         srcfile='./cfg.json'
@@ -1117,6 +1091,10 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         shutil.move(srcfile,dstfile)
         timenow = datetime.now().strftime('%Y-%m-%d 10:10:10')
         cfg['time'] = timenow
+        for i in id_data:
+            id_data[i] = 0
+        for i in qdlist_data:
+            qd_data[i] = 0
         savecfg()
         restart_program()
 
@@ -1146,23 +1124,13 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,me
     elif msg.startswith('来份色图'):
         csh(frid)
         outmsg="未知错误"
-        gr = 'none'
+        gr = 0
         mb = friend.id
-        g = 0
-        outmsg = setu(gr,mb,g)
+        outmsg = setu(gr,mb)
         st = cfg['hsolvch']
-        if outmsg.startswith('https:'):
-            botmsg = await app.sendFriendMessage(friend,MessageChain.create([Plain(outmsg)]))
-            if int(st) > 0:
-                await asyncio.sleep(60)
-                await app.revokeMessage(botmsg)  
-            return
-        else:
-            botmsg = await app.sendFriendMessage(friend,MessageChain.create([Image.fromLocalFile(outmsg)]))
-            if int(st) > 0:
-                await asyncio.sleep(int(st))
-                await app.revokeMessage(botmsg)  
-            return
+        botmsg = await app.sendFriendMessage(friend,MessageChain.create(outmsg))
+        await asyncio.sleep(int(st))
+        await app.revokeMessage(botmsg)
     savecfg()
 
 
