@@ -108,20 +108,20 @@ def setu(group,id):
         for parent,dirnames, filenames in os.walk(parent_names[x]):   file_names = filenames
         y = random.randint(0, len(file_names)-1)
         outdf =str(parent_names[x] + '/' + file_names[y]).replace('\\','/')
-        savename = str(file_names[y]).replace('.jpg','').replace('.png','')
+        savename = str(file_names[y]).replace('.jpg','').replace('.png','').replace('_p0','')
         print("选中色图" + outdf)
-        if group in cfg['sg']: 
-            hsolvmax = cfg['hsolvmax']
-            if hsolv <= hsolvmax or int(id) in admin:
-                lstgr_data[id] = savename
-                id_data[id] = id_data[id] + 1
-                stlist_data[id] = stlist_data[id] + 1
-                outmsg = [Image.fromLocalFile(outdf)]
+        hsolvmax = cfg['hsolvmax']
+        if group in cfg['sg'] and hsolv <= hsolvmax: 
+            lstgr_data[id] = savename
+            id_data[id] = id_data[id] + 1
+            stlist_data[id] = stlist_data[id] + 1
+            outmsg = [Image.fromLocalFile(outdf)]
         elif fr_data[id] >= 1:
-            df = 'https://www.pixivdl.net/artworks' + savename
+            df = 'https://pixiv.lxns.org/i/' + savename
             if group == 0: lstfr_data[id] = savename
             else:          lstgr_data[id] = savename
             fr_data[id] = fr_data[id] - 1
+            stlist_data[id] = stlist_data[id] + 1
             savecfg()
             outmsg = [(Plain(df + "剩余色图：" + str(fr_data[id])))]
     return outmsg
@@ -685,7 +685,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 if n == 0:
                     for i in res[n]:
                         r = random.randint(0,18)
-                        out = out + '#' + hsomap[r] + ' ' + ''.join(i)
+                        out = out + '#' + hsomap[r] + ''.join(i)
                     res[n] = '\\b30##FF0000' + out
                 if n == 1:
                     res[n] = '\\b25##FF0000' + res[n]
