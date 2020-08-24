@@ -82,13 +82,20 @@ app = GraiaMiraiApplication(
         websocket=True
     )
 )
+def sdir(tdir):
+    if not os.path.exists(tdir):
+        print('新建目录:',tdir)
+        os.makedirs(tdir)
 def restart_program():
     python = sys.executable
     os.execl(python, python, * sys.argv)
 def savecfg():
-    jsonfile=open("cfg.json","w")
-    json.dump(cfg,jsonfile)
-    jsonfile.close()
+    try:
+        jsonfile=open("cfg.json","w")
+        json.dump(cfg,jsonfile)
+        jsonfile.close()
+    except Exception:
+        print('save cfg 出现错误')
 def setu(group,id):
     id = str(id)
     hsolv = id_data[id]
@@ -112,10 +119,9 @@ def setu(group,id):
                 outmsg = [Image.fromLocalFile(outdf)]
         elif fr_data[id] >= 1:
             df = 'https://www.pixivdl.net/artworks' + savename
-            if group == 1: lstfr_data[id] = savename
+            if group == 0: lstfr_data[id] = savename
             else:          lstgr_data[id] = savename
             fr_data[id] = fr_data[id] - 1
-            print('色图请求完成' + outmsg)
             savecfg()
             outmsg = [(Plain(df + "剩余色图：" + str(fr_data[id])))]
     return outmsg
@@ -302,6 +308,56 @@ def csh(id):
     for i in datas :
         if id not in i:
             i[id] = 0
+def papi(url):
+    headers = {}
+    text = requests.get(url, headers=headers)
+    data = json.loads(text.text)
+    data = data['illusts']
+    outmsg = ''
+    n = 0
+    msglist = []
+    for i in data:
+        if n <= 6:
+            r18 = 0
+            surl = i['image_urls']['medium']
+            tags = i['tags']
+            pid = i['id']
+            title = i['title']
+            print(type(title),title,':',tags)
+            for i in tags:
+                if i['name'].find('18') >=1:
+                    r18 = 1
+            if r18 == 0:
+                srcfile= './' + str(pid) + "_p0_master1200.jpg"
+                dstfile='./chace/s/' + str(pid) + "_p0_master1200.jpg"
+                my_file = Path(dstfile)
+                print(n,pid,'下载中')
+                try:
+                   if my_file.is_file() == False:
+                       print(1)
+                       api.download(surl)
+                       print('下载完成')
+                       shutil.move(srcfile,dstfile)
+                   else:
+                       print('略过')
+                except Exception:
+                    print('none')
+                    pass
+                outmsg ='\n-' + str(n) + ':' + title 
+                print('append')
+                msglist.append(Plain(outmsg))
+                msglist.append(Image.fromLocalFile(dstfile))
+                print('appdone')
+            else:
+                print(n,pid,'r18被屏蔽')
+                outmsg ='\n-' + str(n) + ':' + title + '-r18图不显示预览'
+                msglist.append(Plain(outmsg))
+            n = n + 1
+        else:
+            break
+    msglist.append(Plain('\n通过tp[id]来查看详细信息'))
+    cfg['slist'] = data
+    return msglist
 
 @bcc.receiver("GroupMessage")
 async def group_message_handler(app: GraiaMiraiApplication, message: MessageChain, group: Group, member: Member):
@@ -344,25 +400,32 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 headers = {}
                 text = requests.get(url, headers=headers) 
                 data = json.loads(text.text)
-                data = data['results']
-                data = data[0]
-                data = data["data"]
+                datadata = data['results'][0]["data"]
                 n = 0
                 outmsg = ""
                 print('done')
-                for i in data:
-                    outmsg = outmsg + '\n' + str(i) + ":" + str(data[i])
+                uid = "justsetu"
+                for i in datadata:
+                    outmsg = outmsg + '\n' + str(i) + ":" + str(datadata[i])
                 if outmsg.find('urls:[\'https://www.pixiv') >= 1:
-                    data = data['pixiv_id']
-                    cfg['setuadd'] = str(data)
+                    pid = str(datadata['pixiv_id'])
+                    uid = str(data['results'][0]['data']['member_id'])
+                    cfg['setuadd'] = pid
+                    dstfile=setu_ + uid + '/' +  pid + "_p0.jpg"
+                    sdir(setu_+ '/' + uid)
                 tmsg = tmsg.replace(' ','')
-                if tmsg.startswith('setu+') and member.id in op:
+                print(tmsg)
+                if msg.find('setu+') >=1 and member.id in op:
+                    print('setu+')
                     tmsg = tmsg.replace('setu+','')
                     pid = cfg['setuadd']
+                    print(1)
                     srcfile= './chace/' + str(group.id) + ".jpg"
-                    dstfile=setu_add_ + pid + "_p0.jpg"
+                    dstfile=setu_ + '/' + uid + '/' +  pid + "_p0.jpg"
+                    print(dstfile)
                     shutil.move(srcfile,dstfile)
-                    outmsg = 'pid:' + pid + '\n已被从qq下载图片并加入色图库'
+                    print(2)
+                    outmsg = 'pid:' + pid + 'by' + uid + '\n已被从qq下载图片并加入色图库'
                 await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #@机器人
     elif message.has((At)):
@@ -417,16 +480,12 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             msg = msg.replace('setu+','').replace(' ','')
         print(msg)
         if msg.startswith('sf'):
-            print(1)
             msg=msg.replace('sf','')
             pid = int(msg)
-            print(1.1)
             pach = './chace/' + str(group.id) + ".jpg"
             srcfile=pach
-            dstfile=setu_ + str(pid) + "_p0.jpg"
-            print(2)
+            dstfile=setu_ + 'justsetu' + '/' +  str(pid) + "_p0.jpg"
             shutil.move(srcfile,dstfile)
-            print('done')
             await app.sendGroupMessage(group,MessageChain.create([Plain(str(pid) + '已从缓存下载并加入色图库')]))
         else:
             pid = int(msg)
@@ -437,6 +496,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             print('getdone')
             data = json.loads(text.text)
             data = data['illust']
+            userid = data['user']['id']
             data1 = data['meta_pages']
             if data1 == []:
                 print('null')
@@ -444,19 +504,18 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 data = data1['original_image_url']
             else:
                 data1 = data['meta_pages']
-                data = data1[0]
-                data = data["image_urls"]
-                data = data["original"]
+                data = data1[0]["image_urls"]["original"]
             print(data)
             print('下载开始')
             api.download(data)
             print('下载完成')
             if data.find('png') >=1:
                 srcfile='./' + str(pid) + "_p0.png"
-                dstfile=setu_ + str(pid) + "_p0.png"
+                dstfile=setu_  + userid + '/' + str(pid) + "_p0.png"
             else:
                 srcfile='./' + str(pid) + "_p0.jpg"
-                dstfile=setu_ + str(pid) + "_p0.jpg"
+                dstfile=setu_ + userid + '/' +  str(pid) + "_p0.jpg"
+            sdir(setu_ + userid + '/')
             shutil.move(srcfile,dstfile)
             await app.sendGroupMessage(group,MessageChain.create([Plain(str(pid) + '已加入色图库')]))
 #菜单
@@ -852,58 +911,76 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         t = "bilibili"
         outmsg = "发生未知错误"
         msg = msg.replace('热榜','').replace(' ','')
-        for i in resotypes:
-            if msg.startswith(i):
-                t = i
-                msg = msg.replace(i,'')
-        print(t)
-        print(msg)
-        for i in listtype:
-            if msg.startswith(i):
-                qaq = True
-                ta = int(msg)
-                n = 0
-                data = rel_data['data']
-                listdata = data['list']
-                for i in listdata:
-                    n = n + 1
-                    if ta == n:
-                        outmsg = str(i["link"])
-                print(2)
-                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-        if qaq == False:
-            print('type=',t)
-            url = "https://v1.alapi.cn/api/tophub/get?type=$t".replace('$t',t)
-            print(url)
-            headers = {'Content-Type': "application/x-www-form-urlencoded"}
-            response = requests.request("POST", url, headers=headers)
-            print('请求完成')
-            data = json.loads(response.text)
-            if data["code"] != 200:
-                outmsg = "发生错误" + str(data["msg"])
-            else :
-                data1 = data['data']
-                listname = str(data1['name'])
-                lastupdate = str(data1['last_update'])
-                listdata = data1['list']
-                imgmsg = listname + '     最后更新时间：' + lastupdate 
-                n = 0
-                for i in listdata:
-                    n = n + 1
-                    if n >= 21:
-                        break
-                    title = str(i['title'])
-                    rd = str(i["other"])
-                    imgmsg =  imgmsg + '\\n' + str(n) + "_" + rd + "_"  + title 
-                l = f1
-                y = f2
-                ism = 1
-                imgp = "./chace/mainbg.jpg"
-                cm = 0
-                imgmsg = '\\b20' + imgmsg
-                cfg['relist'] = data
-                toimg(imgmsg,l,y,ism,imgp,cm)   
-            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))   
+        if msg.startswith('p'):
+            csh(id)
+            if fr_data[id] >= 3:
+                await app.sendGroupMessage(group,MessageChain.create([Plain('你消耗了3个色图进行搜索....')]))
+                url = 'https://api.imjad.cn/pixiv/v2/?type=rank'
+                msglist = papi(url)
+                st = cfg['hsolvch']
+                botmsg = await app.sendGroupMessage(group,MessageChain.create(msglist))
+                fr_data[id] = fr_data[id] - 3
+                savecfg()
+                if int(st) > 0:
+                    st = int(st)
+                    st = st * 8
+                    await asyncio.sleep(st)
+                    await app.revokeMessage(botmsg)
+            else:await app.sendGroupMessage(group,MessageChain.create([Plain('你的剩余色图不足3')]))
+        else:
+            for i in resotypes:
+                if msg.startswith(i):
+                    t = i
+                    msg = msg.replace(i,'')
+    
+            print(t)
+            print(msg)
+            for i in listtype:
+                if msg.startswith(i):
+                    qaq = True
+                    ta = int(msg)
+                    n = 0
+                    data = rel_data['data']
+                    listdata = data['list']
+                    for i in listdata:
+                        n = n + 1
+                        if ta == n:
+                            outmsg = str(i["link"])
+                    print(2)
+                    await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            if qaq == False:
+                print('type=',t)
+                url = "https://v1.alapi.cn/api/tophub/get?type=$t".replace('$t',t)
+                print(url)
+                headers = {'Content-Type': "application/x-www-form-urlencoded"}
+                response = requests.request("POST", url, headers=headers)
+                print('请求完成')
+                data = json.loads(response.text)
+                if data["code"] != 200:
+                    outmsg = "发生错误" + str(data["msg"])
+                else :
+                    data1 = data['data']
+                    listname = str(data1['name'])
+                    lastupdate = str(data1['last_update'])
+                    listdata = data1['list']
+                    imgmsg = listname + '     最后更新时间：' + lastupdate 
+                    n = 0
+                    for i in listdata:
+                        n = n + 1
+                        if n >= 21:
+                            break
+                        title = str(i['title'])
+                        rd = str(i["other"])
+                        imgmsg =  imgmsg + '\\n' + str(n) + "_" + rd + "_"  + title 
+                    l = f1
+                    y = f2
+                    ism = 1
+                    imgp = "./chace/mainbg.jpg"
+                    cm = 0
+                    imgmsg = '\\b20' + imgmsg
+                    cfg['relist'] = data
+                    toimg(imgmsg,l,y,ism,imgp,cm)   
+                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))   
 #百科
     elif msg.startswith('百科'):
         msg = msg.replace('百科','')
@@ -953,59 +1030,11 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         if fr_data[id] >= 3:
             await app.sendGroupMessage(group,MessageChain.create([Plain('你消耗了3个色图进行搜索....')]))
             url = 'https://api.imjad.cn/pixiv/v2/?type=search&word=' + msg.replace('搜','')
-            headers = {}
-            text = requests.get(url, headers=headers)
-            data = json.loads(text.text)
-            data = data['illusts']
-            outmsg = ''
-            n = 0
-            msglist = []
-            for i in data:
-                if n <= 6:
-                    r18 = 0
-                    surl = i['image_urls']['medium']
-                    tags = i['tags']
-                    pid = i['id']
-                    title = i['title']
-                    print(type(title),title,':',tags)
-                    for i in tags:
-                        if i['name'].find('18') >=1:
-                            r18 = 1
-                    if r18 == 0:
-                        srcfile= './' + str(pid) + "_p0_master1200.jpg"
-                        dstfile='./chace/s/' + str(pid) + "_p0_master1200.jpg"
-                        my_file = Path(dstfile)
-                        print(n,pid,'下载中')
-                        try:
-                           if my_file.is_file() == False:
-                               print(1)
-                               api.download(surl)
-                               print('下载完成')
-                               shutil.move(srcfile,dstfile)
-                           else:
-                               print('略过')
-                        except Exception:
-                            print('none')
-                            pass
-                        outmsg ='\n-' + str(n) + ':' + title 
-                        print('append')
-                        msglist.append(Plain(outmsg))
-                        msglist.append(Image.fromLocalFile(dstfile))
-                        print('appdone')
-                    else:
-                        print(n,pid,'r18被屏蔽')
-                        outmsg ='\n-' + str(n) + ':' + title + '-r18图不显示预览'
-                        msglist.append(Plain(outmsg))
-                    n = n + 1
-                else:
-                    break
-            msglist.append(Plain('\n通过tp[id]来查看详细信息'))
-            print('done')
+            msglist = papi(url)
             st = cfg['hsolvch']
             botmsg = await app.sendGroupMessage(group,MessageChain.create(msglist))
             fr_data[id] = fr_data[id] - 3
             savecfg()
-            cfg['slist'] = data
             if int(st) > 0:
                 st = int(st)
                 st = st * 8
@@ -1070,16 +1099,10 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
     print(msg)
     savecfg()
     initDate = datetime.strptime(cfg['time'],'%Y-%m-%d %H:%M:%S')
-    y1 = initDate.year
-    m1 = initDate.month
-    d1 = initDate.day
     timedata = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     timedata2 = datetime.strptime(timedata,'%Y-%m-%d %H:%M:%S')
-    y2 = timedata2.year
-    m2 = timedata2.month
-    d2 = timedata2.day
-    firstDay = datetime(y1,m1,d1)
-    endDay = datetime(y2,m2,d2)
+    firstDay = datetime(initDate.year,initDate.month,initDate.day)
+    endDay = datetime(timedata2.year,timedata2.month,timedata2.day)
     days = rrule.rrule(freq = rrule.DAILY,dtstart=firstDay,until=endDay)
     if days.count() >= 2:
         await app.sendGroupMessage(group,MessageChain.create([Plain('执行自动重启项目----')]))
@@ -1132,8 +1155,6 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend ,me
         await asyncio.sleep(int(st))
         await app.revokeMessage(botmsg)
     savecfg()
-
-
 
 
 app.launch_blocking()
