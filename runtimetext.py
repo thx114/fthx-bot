@@ -12,18 +12,18 @@ apikey = "" #你的saucenao apikey 没有请注册
 admin = []  #主人的qq号 
 op = [] #可移除色图的op的qq号
 
-f1 = "C:\\WINDOWS\\Fonts\\ResourceHanRoundedCN-Heavy.ttf" #你的绘图中文字体
-f2 = "C:\\WINDOWS\\Fonts\\GenShinGothic-Monospace-Heavy.ttf" #你的绘图英文字体
+f1 = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf" #你的绘图中文字体
+f2 = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf" #你的绘图英文字体
+hash2= "1101100001010100100000101100001010000010111001011100000010100000" #色图来表情的哈希值
 #######此文件更新后通常下方内容也会更新
 
 thetypes = [1,2,3,4,5,6,7,8]
-resotypes = ['zhihu','weibo','weixin','baidu','toutiao','163','xl','36k','hitory','sspai','csdn','juejin','bilibili','douyin','52pojie','v2ex','hostloc']
-listtype = ["1",'2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19',"20"]
-istomsg = {"\\n":"‘","##":"’#","\\b":"；",'【':'[','】':']','《':'<','》':'>','？':'?','”':'"','“':'"'}
-hsomap = ['#FFFF00','#FFCC00','#FF9900','#FF6600','#FF3300','#FF0000','#00FF00','#0000FF','#FF00FF','#66FFFF','#6600FF','#6633FF','#6666FF','#6699FF','#66CCFF','#66FFFF','#3300FF','#FFCCFF','#CC9900']
-hash2= "1101100001010100100000101100001010000010111001011100000010100000"
 stag = ['10000users入り','5000users入り','1000users入り','500users入り','100users入り','']
 stag2 = ['进行[10000收藏]搜索....','进行[5000收藏]搜索....','进行[1000收藏]搜索....','进行[500收藏]搜索....','进行[100收藏]搜索....','进行[无收藏]搜索....']
+resotypes = ['zhihu','weibo','weixin','baidu','toutiao','163','xl','36k','hitory','sspai','csdn','juejin','bilibili','douyin','52pojie','v2ex','hostloc']
+listtype = ["1",'2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19',"20"]
+istomsg = {"\\n":"‘","##":"’#","\\b":"；","：":':','【':'[','】':']','《':'<','》':'>','？':'?','”':'"','“':'"','\\[':'【','\\]':'】',"\\d":"："}
+hsomap = ['#FFFF00','#FFCC00','#FF9900','#FF6600','#FF3300','#FF0000','#00FF00','#0000FF','#FF00FF','#66FFFF','#6600FF','#6633FF','#6666FF','#6699FF','#66CCFF','#66FFFF','#3300FF','#FFCCFF','#CC9900']
 mainmap="""
 ╭ ──────────────── ；20  ；40菜单；20  ；30─────────────── ╮‘
 │    ；15by F_thx；30                  ；15-使用’#99FFFFh ’#CCFF33[指令]’#FFFFFF:查看相应用法；30   │‘
@@ -43,7 +43,7 @@ mainmap="""
 │ ’#99FFFFsg+’#FFFFFF/’#99FFFFsg-’#FFFFFF’#FFFFFF:给予或删除某群的色图权限         │‘
 │ ’#99FFFFban’#FFFFFF:禁用某人色图权限  ’#99FFFFbackup’#FFFFFF:备份cfg.json│‘
 │ ##99FFFFsetu+ ##CCFF33[pid]##FFFFFF:从pid添加色图                │‘
-│ ##99FFFFsetu+sf##CCFF33[pid]##FFFFFF:从pid与缓存图添加色图       │‘
+│ ##99FFFFsetu+sf##CCFF33[pid]##FFFFFF:从缓存直接添加色图          │‘
 │ ##99FFFF@我 setu+ ##CCFF33[图片]##FFFFFF:从以图搜图直接添加色图  │‘
 ╰ ──────────────────────────────────────── ╯‘
 """
@@ -89,28 +89,31 @@ dlmsg = """；20##FFFFFF
 """
 
 rb= """；20##FFFFFF
-╭ ─────────────────── ；20  ；30 热榜帮助；20  ；10 ；20── ╮‘
+╭ ───────────────────   ；30 热榜帮助；20  ；10 ；20── ╮‘
 │                                          │‘
 │##99FFFF 热榜 ##FFFFFF:获取Bilibili的每日排行榜           │‘
 │##99FFFF 热榜 ##CCFF33[id]##FFFFFF:获取热榜指定id的跳转链接       │‘
 │##99FFFF 热榜 ##CCFF33[接口]##FFFFFF:获取指定接口的热榜           │‘
-│ 接口:zhihu,weibo,weixin,baidu,toutiao    │‘
-│ 163,xl,36k,hitory,sspai,csdn,juejin      │‘
+│ 接口:zhihu,weibo,weixin,baidu,toutiao,163│‘
+│ xl,36k,hitory,sspai,csdn,juejin,pixiv    │‘
 │ bilibili,douyin,52pojie,v2ex,hostloc     │‘
 ╰ ──────────────────────────────────────── ╯   ‘         
 """
 
 imgh ="""；20
-╭ ─────────────────── ；20  ；30img帮助；20  ；10─；20── ╮‘
-│                                       │‘
-│ ’#99FFFFimg ’#CCFF33[信息] ’#FFFFFF:将信息内容生成为图像          │‘
-│                                       │‘
-│ 以下为信息内的内容的解释：             │‘
-│ ’#CCFF33#·#’#FFFFFF:修改后面的字体颜色 例: #·#FF0000    │‘
-│ ’#CCFF33\·b’#FFFFFF:修改后面的字体的大小 例: \·b20      │‘
-│ ’#CCFF33符号(点) ’#FFFFFF:忽略符,阻断检测 例: \(点)n  │‘
-│ ’#CCFF33\·n’#FFFFFF:换行                               │‘
-╰ ───────────────────────────────────── ╯   ‘  
+╭ ────────────────────── ；20  ；30img帮助；20  ；10 ；20── ╮‘
+│                                          │‘
+│ ’#99FFFFimg ’#CCFF33[信息] ’#FFFFFF:将信息内容生成为图像         │‘
+│                                          │‘
+│ 以下为信息内的内容的解释:                │‘
+│ ’#CCFF33#·#’#FFFFFF:修改后面的字体颜色 例: #·#FF0000       │‘
+│ ’#CCFF33\·b’#FFFFFF:修改后面的字体的大小 例: \·b20         │‘
+│ ’#CCFF33符号(点) ’#FFFFFF:忽略符,阻断检测 例: \(点)n     │‘
+│ ’#CCFF33\·d’#FFFFFF:在图片底部输入文字(不可逆)            │‘
+│ ’#CCFF33\·[’#FFFFFF:居中文字的起始符 -里面无法改颜色与大小│‘
+│ ’#CCFF33\·]’#FFFFFF:居中文字的终止符 例: \·[居中文字\·]     │‘
+│ ’#CCFF33\·n’#FFFFFF:换行                                  │‘
+╰ ──────────────────────────────────────── ╯   ‘  
 """
 
 feback={

@@ -90,7 +90,7 @@ def restart_program():
 def savecfg():
     try:
         jsonfile=open("cfg.json","w")
-        json.dump(cfg,jsonfile)
+        json.dump(cfg,jsonfile,indent=4)
         jsonfile.close()
     except Exception:
         print('save cfg 出现错误')
@@ -133,7 +133,8 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
     print('绘图开始')
     for i in istomsg:
         msg = msg.replace(str(i),str(istomsg[i]))
-    x = y = my = mx = ghs = qaq = mmx = va = 0
+    print(msg)
+    x = y = my = mx = ghs = qaq = mmx = zx = zx_x = 0
     fx = fx1 = fx2 = fx0 = 30
     ghslist = [] 
     qaqlist = []
@@ -206,11 +207,12 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
             im1 = img
     else:   
         im1 = Im.new("RGB" ,(mx,my),(255,255,255))
-    x = y = ghs = qaq = va = 0
+    x = y = ghs = qaq = zx_x = zx = 0
     fx = fx0
     fx2 = fx0
     outghs = []
     outqaq = []
+    zxlist = []
     fillColor = "#ffffff"
     print("for2")
     for j in msg :
@@ -233,6 +235,32 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                 font = ImageFont.truetype(fontl,fx)
                 outqaq = ""
                 qaqlist = []
+        elif zx >=1:
+            zx = zx + 1
+            zxlist.append(j)
+            if j == u'\u3011':
+                zx = 0
+                x = (mx - zx_x) / 2
+                zxlist.remove(j)
+                for i in zxlist:
+                    if i >= u'\u4e00' and i <= u'\u9fa5' or i >= u'\u3040' and i <= u'\u31FF':
+                        font = ImageFont.truetype(fontl,fx)
+                        fx2 = fx
+                    else:
+                        fx2 = fx / 2
+                        font = ImageFont.truetype(fonty,fx)
+                    print(x,y)
+                    ImageDraw.Draw(im1).text((x+2, y+2),i,font=font,fill='#000000',direction=None)
+                    ImageDraw.Draw(im1).text((x, y),i,font=font,fill=fillColor,direction=None)
+                    x = x + fx2
+                x = zx = zx_x = 0
+                y = y + fx
+                zxlist = []
+            else:
+                if j >= u'\u4e00' and j <= u'\u9fa5' or j >= u'\u3040' and j <= u'\u31FF':
+                    zx_x = zx_x + fx
+                else:
+                    zx_x = zx_x + fx / 2
         else:
             if j >= u'\u4e00' and j <= u'\u9fa5' or j >= u'\u3040' and j <= u'\u31FF':
                 font = ImageFont.truetype(fontl,fx)
@@ -258,8 +286,11 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                 pass
             elif eq(j,'：'):
                 print(fx)
-                y = mmmmmy - 1.5 * fx 
+                y = my - 1.5 * fx 
                 print('跳转:',y)
+            elif eq(j,'【'):
+                x = 0
+                zx = 1
             else:
                 ImageDraw.Draw(im1).text((x+2, y+2),j,font=font,fill='#000000',direction=None)
                 ImageDraw.Draw(im1).text((x, y),j,font=font,fill=fillColor,direction=None)
@@ -360,10 +391,12 @@ def papi(url):
             n = n + 1
         else:
             break
+    
     msglist.append(Plain('\n通过tp[id]来查看详细信息'))
     cfg['slist'] = data
     if cfg['slist'] == []:
         msglist = [(Plain('没有搜索结果'))]
+        
     return msglist
 
 @bcc.receiver("GroupMessage")
@@ -505,7 +538,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             print('getdone')
             data = json.loads(text.text)
             data = data['illust']
-            userid = data['user']['id']
+            userid = str(data['user']['id'])
             data1 = data['meta_pages']
             if data1 == []:
                 print('null')
@@ -515,18 +548,25 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 data1 = data['meta_pages']
                 data = data1[0]["image_urls"]["original"]
             print(data)
-            print('下载开始')
-            api.download(data)
-            print('下载完成')
             if data.find('png') >=1:
                 srcfile='./' + str(pid) + "_p0.png"
-                dstfile=setu_  + userid + '/' + str(pid) + "_p0.png"
+                dstfile=setu_ + "/"  + userid + '/' + str(pid) + "_p0.png"
             else:
                 srcfile='./' + str(pid) + "_p0.jpg"
-                dstfile=setu_ + userid + '/' +  str(pid) + "_p0.jpg"
-            sdir(setu_ + userid + '/')
-            shutil.move(srcfile,dstfile)
-            await app.sendGroupMessage(group,MessageChain.create([Plain(str(pid) + '已加入色图库')]))
+                dstfile=setu_ + "/" + userid + '/' +  str(pid) + "_p0.jpg"
+            print(srcfile,dstfile)
+            my_file = Path(dstfile)
+            print(pid,'下载中')
+            if my_file.is_file() == False:
+                sdir(setu_ + '/' + userid)
+                print(1)
+                api.download(data)
+                print('下载完成'.en)
+                shutil.move(srcfile,dstfile)
+                await app.sendGroupMessage(group,MessageChain.create([Plain(str(pid) + '已加入色图库')]))
+            else:
+                print('略过')
+                await app.sendGroupMessage(group,MessageChain.create([Plain(dstfile + '已存在')]))
 #菜单
     elif msg.startswith("/help") or msg.startswith('菜单') or msg.startswith('main'):
         print("main")
@@ -716,7 +756,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                     res[n] = '##FFFFFF'+ res[n]
                 n = n + 1
             a = '‘'.join(res)
-            msg = "-lsp排行榜：‘\\b20" + a + "‘    ‘______________________"
+            msg = "-lsp排行榜:‘\\b20" + a + "‘    ‘______________________"
             fontl = f1
             fonty = f2
             ism = 1
