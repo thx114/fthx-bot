@@ -1,13 +1,11 @@
 from http.client import METHOD_NOT_ALLOWED
 import json
 from operator import eq
-import re
 import shutil
 from tkinter.constants import OUTSIDE
 from dateutil import rrule
 from datetime import datetime
-import urllib
-from runtimetext import hash2,imgh,admin,op,setu_add_,hsomap,sl,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw,apikey
+from runtimetext import stag,hash2,imgh,admin,op,setu_add_,hsomap,sl, stag2,thetypes,resotypes,listtype,istomsg,mainmap,f1,f2,hsolvtext,dlmsg,rb,feback,setu_,bot_qq,authkey,host_,setu_remove_,pixiv_name,pixiv_pw,apikey
 from urllib.request import urlretrieve
 from PIL import ImageFont,ImageDraw
 import cv2
@@ -130,10 +128,12 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
     mmmx = 700
     mmmx = img.size[0]
     mmmy = img.size[1]
+    mmmmmx = img.size[0]
+    mmmmmy = img.size[1]
     print('绘图开始')
     for i in istomsg:
         msg = msg.replace(str(i),str(istomsg[i]))
-    x = y = my = mx = ghs = qaq = mmx = 0
+    x = y = my = mx = ghs = qaq = mmx = va = 0
     fx = fx1 = fx2 = fx0 = 30
     ghslist = [] 
     qaqlist = []
@@ -174,21 +174,26 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                     ghs = 1
                 elif eq(u,"；"):
                     qaq = 1
+                elif eq(u,'：'):
+                    y = mmmmmy - 1.5 * fx 
+                    print(y)
                 elif eq(u,'·'):
                     pass
                 else:
                     x = x + fx1
+        my = y + fx
+        if y == 0:
+            mx = x + 3
+            my = fx + 3
+        mx = round(mx)
+        my = round(my) + fx / 2 
     else:
         mx = mmmx
         my = mmmy
         x = mmmx
         y = mmmy
-    my = y + fx
-    if y == 0:
-        mx = x + 3
-        my = fx + 3
-    mx = round(mx)
-    my = round(my) + fx / 2 
+        mx = round(mx)
+        my = round(my)
     print('mx:' + str(mx) + "|my:" + str(my))
     if ism >= 1:
         img = Im.open(imgp)
@@ -201,7 +206,7 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
             im1 = img
     else:   
         im1 = Im.new("RGB" ,(mx,my),(255,255,255))
-    x = y = ghs = qaq = 0
+    x = y = ghs = qaq = va = 0
     fx = fx0
     fx2 = fx0
     outghs = []
@@ -251,6 +256,10 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
                 qaq = 1
             elif eq(j,'·'):
                 pass
+            elif eq(j,'：'):
+                print(fx)
+                y = mmmmmy - 1.5 * fx 
+                print('跳转:',y)
             else:
                 ImageDraw.Draw(im1).text((x+2, y+2),j,font=font,fill='#000000',direction=None)
                 ImageDraw.Draw(im1).text((x, y),j,font=font,fill=fillColor,direction=None)
@@ -259,12 +268,9 @@ def toimg(msg,fontl,fonty,ism,imgp,cm):
     im1.save('chace/1.png')
     print("done")
 def dHash(img):
-    #缩放8*8
     img=cv2.resize(img,(9,8),interpolation=cv2.INTER_CUBIC)
-    #转换灰度图
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     hash_str=''
-    #每行前一个像素大于后一个像素为1，相反为0，生成哈希
     for i in range(8):
         for j in range(8):
             if   gray[i,j]>gray[i,j+1]:
@@ -344,7 +350,6 @@ def papi(url):
                     print('none')
                     pass
                 outmsg ='\n-' + str(n) + ':' + title 
-                print('append')
                 msglist.append(Plain(outmsg))
                 msglist.append(Image.fromLocalFile(dstfile))
                 print('appdone')
@@ -357,6 +362,8 @@ def papi(url):
             break
     msglist.append(Plain('\n通过tp[id]来查看详细信息'))
     cfg['slist'] = data
+    if cfg['slist'] == []:
+        msglist = [(Plain('没有搜索结果'))]
     return msglist
 
 @bcc.receiver("GroupMessage")
@@ -429,46 +436,48 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #@机器人
     elif message.has((At)):
-        newdata = {}
-        n = 0
-        for i in feback_data:
-            n = n + 1
-            newdata[str(n)] = i
-        csh(id)
-        hsolv = stlist_data[id]
-        if hsolv >= 60:
-            r1 = 20
-            r2 = 96
-            r3 = 101
-        elif member.id in admin:
-            r1 = 10
-            r2 = 30
-            r3 = 100
-        else:
-            r1 = 100
-            r2 = 101
-            r3 = 102
-        r = random.randint(1,100)
-        if r <= r1:
-            data = newdata['1']
-        elif r <= r2:
-            data = newdata['2']
-        elif r <= r3:
-            data = newdata['3']
-        else:
-            print('几率设置错误')
-            data = newdata['1']
-        tmsg = tmsg.replace(' ','')
-        print(tmsg)
-        for i in data:
-            if tmsg.startswith(i):
-                outmsg = 'truemsg in data'
-                text = data[tmsg]
-                arr = text.split('|')
-                max = len(arr) - 1
-                r = random.randint(0,max)
-                outmsg = str(arr[r])
-                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        tat = int(str(message.get((At))[0].target))
+        if tat == bot_qq:
+            newdata = {}
+            n = 0
+            for i in feback_data:
+                n = n + 1
+                newdata[str(n)] = i
+            csh(id)
+            hsolv = stlist_data[id]
+            if hsolv >= 60:
+                r1 = 20
+                r2 = 96
+                r3 = 101
+            elif member.id in admin:
+                r1 = 10
+                r2 = 30
+                r3 = 100
+            else:
+                r1 = 100
+                r2 = 101
+                r3 = 102
+            r = random.randint(1,100)
+            if r <= r1:
+                data = newdata['1']
+            elif r <= r2:
+                data = newdata['2']
+            elif r <= r3:
+                data = newdata['3']
+            else:
+                print('几率设置错误')
+                data = newdata['1']
+            tmsg = tmsg.replace(' ','')
+            print(tmsg)
+            for i in data:
+                if tmsg.startswith(i):
+                    outmsg = 'truemsg in data'
+                    text = data[tmsg]
+                    arr = text.split('|')
+                    max = len(arr) - 1
+                    r = random.randint(0,max)
+                    outmsg = str(arr[r])
+                    await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #早
     if msg.startswith('早') and member.id in admin:
         outmsg = '啊啊啊，主人睡傻了QAQ'
@@ -762,9 +771,16 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             msg = msg.replace('!main','')
         elif msg.find('!cimg') >=1:
             ism = 1
-            msg = msg[0:msg.rfind('text=')].replace("/r",'').replace('!cimg','')
+            msg = msg.replace('!cimg','').replace('[图片','')
+            msg = msg[0:msg.rfind('text=')].replace("/r",'')
             cm = 1
             img = './chace/' + str(group.id) + ".jpg"
+        elif msg.find('!xm') >=1:
+            ism = 1
+            msg = msg.replace('!xm','')
+            msg = msg[0:msg.rfind('text=')].replace("/r",'')
+            cm = 1
+            img = './chace/xm.jpg'
         else:
             ism = 0
             img = ""
@@ -1027,13 +1043,30 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
 #搜
     elif msg.startswith('搜'):
         csh(id)
+        n = 0
         if fr_data[id] >= 3:
-            await app.sendGroupMessage(group,MessageChain.create([Plain('你消耗了3个色图进行搜索....')]))
-            url = 'https://api.imjad.cn/pixiv/v2/?type=search&word=' + msg.replace('搜','')
-            msglist = papi(url)
+            if msg.find('入り')>=1:
+                url = 'https://api.imjad.cn/pixiv/v2/?type=search&word=' + msg.replace('搜索','').replace('搜','')
+                msglist = papi(url)
+                await app.sendGroupMessage(group,MessageChain.create([Plain('你消耗了3个色图进行[指定收藏数]搜索....')]))
+            else:
+                msglist = [(Plain('没有搜索结果'))]
+                for i in stag:
+                    imsg = await app.sendGroupMessage(group,MessageChain.create([Plain(stag2[n])]))
+                    url = 'https://api.imjad.cn/pixiv/v2/?type=search&word=' + msg.replace('搜索','').replace('搜','') +' ' + stag[n]
+                    msglist = papi(url)
+                    n = n + 1
+                    if msglist != [(Plain('没有搜索结果'))]:
+                        print(len(msglist))
+                        await app.revokeMessage(imsg)
+                        break
+                    else:await app.revokeMessage(imsg)
             st = cfg['hsolvch']
             botmsg = await app.sendGroupMessage(group,MessageChain.create(msglist))
             fr_data[id] = fr_data[id] - 3
+            if msglist == [(Plain('没有搜索结果'))]:
+                fr_data[id] = fr_data[id] + 3
+                print('backfr')
             savecfg()
             if int(st) > 0:
                 st = int(st)
@@ -1041,7 +1074,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
                 await asyncio.sleep(st)
                 await app.revokeMessage(botmsg)
         else:await app.sendGroupMessage(group,MessageChain.create([Plain('你的剩余色图不足3')]))
-#搜 - p
+#搜 - tp
     if msg.startswith('tp'):
         msg = msg.replace('tp','').replace(' ','')
         setid = int(msg)
@@ -1054,7 +1087,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
         tag = ''
         print(1)
         for i in tags:
-            tag = tag + i['name']
+            tag = tag + '|' + i['name']
         print(tag)
         ptime = data['create_date']
         try:
