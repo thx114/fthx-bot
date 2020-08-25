@@ -1,6 +1,7 @@
 from http.client import METHOD_NOT_ALLOWED
 import json
 from operator import eq
+from random import randint
 import shutil
 from tkinter.constants import OUTSIDE
 from dateutil import rrule
@@ -31,7 +32,7 @@ if not os.path.exists(dirs):
     os.makedirs(dirs)
 try:
     print('登录pixiv中....')
-    api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
+    #api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
 except Exception:
     print('PixivAPI:登录失败\n会导致:无法使用setu+ [pid]下载色图')
     pass
@@ -67,7 +68,20 @@ try:
         cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
 except Exception:
     print('严重问题:cfg载入失败,请尝试重置cfg')
-
+try:
+    folders = os.listdir(setu_)
+    allfolderspach = []
+    filepachs = []
+    for i in folders:
+        folderspach=setu_ +'/' + i  
+        for dirpath, dirnames, filenames in os.walk(folderspach):
+            for file in filenames:
+                filepachs.append(folderspach + '/' + file)
+    setulen = len(filepachs)
+    if filepachs == []:print('没有找到色图')
+    else:print('色图载入成功')
+except Exception:
+    print('色图载入错误')
 print('读取配置完成')
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
@@ -95,34 +109,34 @@ def savecfg():
     except Exception:
         print('save cfg 出现错误')
 def setu(group,id):
+    print('开始请求色图')
     id = str(id)
+    gr = str(group)
     hsolv = id_data[id]
-    parent_names = []
-    file_names = []
     outmsg = [(Plain("你没有剩余色图或其他错误"))]
     if group in cfg['sg'] or fr_data[id] >= 1:
-        for parent,dirnames, filenames in os.walk(setu_):parent_names.append(parent)
-        x = random.randint(1, len(parent_names)-1)
-        for parent,dirnames, filenames in os.walk(parent_names[x]):   file_names = filenames
-        y = random.randint(0, len(file_names)-1)
-        outdf =str(parent_names[x] + '/' + file_names[y]).replace('\\','/')
-        savename = str(file_names[y]).replace('.jpg','').replace('.png','').replace('_p0','')
-        print("选中色图" + outdf)
+        x = randint(0,setulen)
+        filepach = str(filepachs[x])
+        filename = filepach.replace(setu_ + '/','')
+        print("选中色图" + filepach)
         hsolvmax = cfg['hsolvmax']
         if group in cfg['sg'] and hsolv <= hsolvmax: 
-            lstgr_data[id] = savename
+            lstgr_data[id] = filename
             id_data[id] = id_data[id] + 1
             stlist_data[id] = stlist_data[id] + 1
-            outmsg = [Image.fromLocalFile(outdf)]
+            outmsg = [Image.fromLocalFile(filepach)]
         elif fr_data[id] >= 1:
-            df = 'https://pixiv.lxns.org/i/' + savename
-            if group == 0: lstfr_data[id] = savename
-            else:          lstgr_data[id] = savename
+            df = 'https://pixiv.lxns.org/i/' + filename
+            if group == 0: lstfr_data[id] = filename
+            else:          
+                lstgr_data[gr] = filename
+                print(lstgr_data[gr])
             fr_data[id] = fr_data[id] - 1
             stlist_data[id] = stlist_data[id] + 1
             savecfg()
             outmsg = [(Plain(df + "剩余色图：" + str(fr_data[id])))]
     return outmsg
+    
 def toimg(msg,fontl,fonty,ism,imgp,cm):
     img = Im.open(imgp)
     mmmx = 700
@@ -605,39 +619,26 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
         else:
             await app.sendGroupMessage(group,MessageChain.create([Plain('帮助文本不存在')]))
-#汇报不够色rep
+#汇报不够色 - rep
     elif msg.startswith("rep"):
+        gr = str(group.id)
+        msg = msg.replace('rep','')
         hsolv = stlist_data[id]
-        outmsg = "出现未知问题"
-        if msg.startswith('rep '):
-            if hsolv >= 80 or member.id in op != 0:
-                thetext = msg.replace("rep ","")
-                file_names = []
-                rootdir = setu_
-                for filenames in os.walk(rootdir):
-                    file_names = filenames
-                print(thetext + ".jpg")
-                for item in file_names:
-                    if thetext + ".jpg" in item != 0:
-                        srcfile=setu_ + thetext + ".jpg"
-                        dstfile=setu_remove_ + thetext + ".jpg"
-                        fpath,fname=os.path.split(dstfile)    
-                        if not os.path.exists(fpath):
-                            os.makedirs(fpath)                
-                        shutil.move(srcfile,dstfile)          
-                        outmsg = thetext + "已汇报且暂时移出色图库"
-                    else:outmsg = "文件不存在或出现未知问题"
-            else:outmsg = "你没有权限执行此操作"
-        else:
-            print('未知rep')
-            gr = str(group.id)
-            if hsolv >= 80 or member.id in op != 0:
-                name = str(lstgr_data[gr])
-                srcfile=setu_ + name + ".jpg"
-                dstfile=setu_remove_ + name + ".jpg"
-                shutil.move(srcfile,dstfile)
-                outmsg = name + "已汇报且暂时移出色图库"
-            else:outmsg = "你没有权限执行此操作"
+        if msg.startswith('- ') and member.id in op:
+            msg = msg.replace('- ','')
+            dstfile=setu_ +'/' + msg.replace('-','/')
+            srcfile=setu_remove_ +'/' + msg
+            print(srcfile,'to',dstfile,':',gr + '-' + str(member.id))
+            shutil.move(srcfile,dstfile)
+            outmsg = msg.replace('-','/') + "已恢复"
+        elif hsolv >= 80 or member.id in op:
+            name = str(lstgr_data[gr])
+            srcfile=setu_ +'/' + name
+            dstfile=setu_remove_ +'/' + name.replace('/','-')
+            print(srcfile,'to',dstfile,':',gr + '-' + str(member.id))
+            shutil.move(srcfile,dstfile)
+            outmsg = name + "已汇报且暂时移出色图库"
+        else:outmsg = "你没有权限执行此操作"
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #撤回时间
     elif msg.startswith("hsolvch") and member.id in admin != 0:
