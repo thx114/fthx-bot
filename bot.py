@@ -32,7 +32,7 @@ if not os.path.exists(dirs):
     os.makedirs(dirs)
 try:
     print('登录pixiv中....')
-    #api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
+    api.login(pixiv_name, pixiv_pw) #如果不想用 请#此行
 except Exception:
     print('PixivAPI:登录失败\n会导致:无法使用setu+ [pid]下载色图')
     pass
@@ -127,6 +127,9 @@ def setu(group,id):
             outmsg = [Image.fromLocalFile(filepach)]
         elif fr_data[id] >= 1:
             df = 'https://pixiv.lxns.org/i/' + filename
+            for i in folders:
+                df = df.replace('/' + str(i),'')
+            df = df[:-7]
             if group == 0: lstfr_data[id] = filename
             else:          
                 lstgr_data[gr] = filename
@@ -544,7 +547,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             shutil.move(srcfile,dstfile)
             await app.sendGroupMessage(group,MessageChain.create([Plain(str(pid) + '已从缓存下载并加入色图库')]))
         else:
-            pid = int(msg)
+            pid = int(msg.replace('p0','').replace('p1','').replace('p2','').replace('p3',''))
             print(pid)
             url = 'https://api.imjad.cn/pixiv/v2/?type=illust&id=$id'.replace('$id',str(pid))
             headers = {}
@@ -554,6 +557,7 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             data = data['illust']
             userid = str(data['user']['id'])
             data1 = data['meta_pages']
+            _p = 'p0'
             if data1 == []:
                 print('null')
                 data1 = data['meta_single_page']
@@ -561,21 +565,30 @@ async def group_message_handler(app: GraiaMiraiApplication, message: MessageChai
             else:
                 data1 = data['meta_pages']
                 data = data1[0]["image_urls"]["original"]
+                if msg.find('p1') >=1:
+                    data = data1[1]["image_urls"]["original"]
+                    _p = 'p1'
+                if msg.find('p2') >=1:
+                    data = data1[2]["image_urls"]["original"]
+                    _p = 'p2'
+                if msg.find('p3') >=1:
+                    data = data1[3]["image_urls"]["original"]
+                    _p = 'p3'
             print(data)
             if data.find('png') >=1:
-                srcfile='./' + str(pid) + "_p0.png"
-                dstfile=setu_ + "/"  + userid + '/' + str(pid) + "_p0.png"
+                srcfile='./' + str(pid) + "_p0.png".replace('p0',_p)
+                dstfile=setu_ + "/"  + userid + '/' + str(pid) + "_p0.png".replace('p0',_p)
             else:
-                srcfile='./' + str(pid) + "_p0.jpg"
-                dstfile=setu_ + "/" + userid + '/' +  str(pid) + "_p0.jpg"
+                srcfile='./' + str(pid) + "_p0.jpg".replace('p0',_p)
+                dstfile=setu_ + "/" + userid + '/' +  str(pid) + "_p0.jpg".replace('p0',_p)
             print(srcfile,dstfile)
             my_file = Path(dstfile)
             print(pid,'下载中')
             if my_file.is_file() == False:
                 sdir(setu_ + '/' + userid)
-                print(1)
+                print('开始下载',data)
                 api.download(data)
-                print('下载完成'.en)
+                print('下载完成')
                 shutil.move(srcfile,dstfile)
                 await app.sendGroupMessage(group,MessageChain.create([Plain(str(pid) + '已加入色图库')]))
             else:
