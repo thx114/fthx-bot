@@ -1,4 +1,5 @@
 # fthx-bot
+/色图 以图搜图 明日方舟关卡物品查询/
 这是一个使用Mirai,[`Application/Graia Framework`](https://github.com/GraiaProject/Application)编写的机器人
 
 
