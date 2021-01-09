@@ -1,7 +1,7 @@
-opencv_python==4.3.0.38
 requests==2.24.0
-Pillow==7.2.0
-graia-application-mirai>=0.1.10
-graia-broadcast>=0.0.12
-pixivpy>=3.5.9
-python-dateutil>=2.8.1
+aiohttp==3.6.2
+typing_extensions==3.7.4.2
+Pillow==8.1.0
+python_dateutil==2.8.1
+graia-application-mirai==0.11.0
+graia-broadcast==0.5.3
