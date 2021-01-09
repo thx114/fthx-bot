@@ -24,7 +24,7 @@
 # 使用
 
 
-  1.安装[**Application**](https://github.com/GraiaProject/Application)以及前置包括mirai等
+  1.安装[**Graia Application**](https://github.com/GraiaProject/Application)以及前置包括mirai等
 
   2.`git clone https://github.com/thx114/fthx-bot.git`
 
