@@ -518,7 +518,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
                     except:pass
                     return
-                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpach'])]))
+                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
                 try:
                     if outmsg['extmsg'] != '':
                         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
