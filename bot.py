@@ -65,10 +65,26 @@ try:#初始化
         jsonfile.close()
         print('初始化完成，你需要在群聊内输入akra来获取明日方舟的数据')
 except Exception:print('初始化出现错误')
-try:#配置cfg.json读取
+try:#配置cfg.json读取与补全
+    cfgdlist = ['hsolvlist','hsolv','qd','qdlist','last_setu']
+    cfgilist = ['setu_l','xml']
     jsonfile = open("cfg.json","r")
     cfg = json.load(jsonfile)
     jsonfile.close()
+    for i in cfgdlist:
+        try: 
+            load = cfg[i]
+        except: 
+            print('不存在:',i)
+            cfg[i] = {}
+    for i in cfgilist:
+        try: 
+            load = cfg[i]
+        except: 
+            print('不存在:',i)
+            cfg[i] = 0
+except:pass
+try:#配置cfg.json数据转换
     hsolvlist_data = {}
     hsolvlist_data = cfg['hsolvlist']
     hsolv_data = cfg['hsolv']
