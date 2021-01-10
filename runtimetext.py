@@ -13,10 +13,6 @@ fl2 = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf" #你的绘图(默认)
 #######此文件更新后通常下方内容也会更新
 
 thetypes = [1,2,3,4,5,6,7,8]
-#stag = ['10000users入り','5000users入り','1000users入り','500users入り','100users入り','']
-#stag2 = ['进行[10000收藏]搜索....','进行[5000收藏]搜索....','进行[1000收藏]搜索....','进行[500收藏]搜索....','进行[100收藏]搜索....','进行[无收藏]搜索....']
-#resotypes = ['zhihu','weibo','weixin','baidu','toutiao','163','xl','36k','hitory','sspai','csdn','juejin','bilibili','douyin','52pojie','v2ex','hostloc']
-#listtype = ["1",'2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19',"20"]
 hsomap = ['#FFFF00','#FFCC00','#FF9900','#FF6600','#FF3300','#FF0000','#00FF00','#0000FF','#FF00FF','#66FFFF','#6600FF','#6633FF','#6666FF','#6699FF','#66CCFF','#66FFFF','#3300FF','#FFCCFF','#CC9900']
 
 aks_map=""" ╭ ────────────────── \\b15\ \\b45\关卡掉落\\b15\   \\b30\──────────────────── ╮ \\n0\\
@@ -35,4 +31,30 @@ aki_map="""
 │ \\#99FFFF\别名\\#FFFFFF\:stime(49)////////////////////////////////////////│\\n0\\
 ├ ───────────────────────────────────────────────────── ┤\\n0\\
 │ \\#FFFFFF\关卡名称\\#FFFFFF\          \\#FFFFFF\数量\\#FFFFFF\    \\#FFFFFF\掉率     期望理智  期望用时 │\\n0\\
+"""
+
+helptext = """admin:
+  test :test
+  restart :重启机器人
+  akra :更新全部明日方舟数据并重启机器人
+  akri :更新 明日方舟 物品 数据
+  akrs :更新 明日方舟 关卡 数据
+  akrm :更新 明日方舟 掉落 数据
+  hsolvr :重置色图签到
+  hsolv+ <qqid> :为<qqid>增加10色图
+  backup :备份cfg.json
+  sg setu +/- :开启/关闭 此群色图权限
+  sg r18 +/- :开启/关闭 此群r18权限
+
+普通:
+  /help :help
+  <@机器人> <图片> :以图搜图
+  <图片:色图来> :普通色图
+  色图来 :普通色图
+  不够色 :r18色图
+  info :获取此群最后一个色图的详细信息
+  Experimental_xml_setu on/off :开启/关闭 全局色图xml
+  hsolvlist :LSP排行榜
+  aks <关卡名字> :查询此关卡
+  aki <物品名字> :查询此物品
 """
