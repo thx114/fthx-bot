@@ -5,3 +5,4 @@ Pillow==8.1.0
 python_dateutil==2.8.1
 graia-application-mirai==0.11.0
 graia-broadcast==0.5.3
+pixivpy3==3.5.10
