@@ -1,3 +1,4 @@
+from os.path import join
 import random
 import aiohttp
 import math
@@ -233,6 +234,7 @@ async def setu(r18,iid,g): #获取色图
             pid_ing = i['pid']
             if r18 == 1:path_ing = './r18/' + str(pid_ing) + '.png'
             else:path_ing = './setu/' + str(pid_ing) + '.png'
+            outmsg['pid'] = pid_ing
             hsolvlist_data[id] = hsolvlist_data[id] + 1
             hsolv_data[id] = hsolv_data[id] - 1
             print(url_ing,pid_ing,'开始下载')
@@ -273,7 +275,15 @@ async def setu(r18,iid,g): #获取色图
         for i in datamsg:
             outdata = outdata + i + str(datamsg[i]) 
         outdata = outdata.replace('pid','pid:').replace('p0',' p0 - ').replace('uid','uid:').replace('title','\n标题:').replace('author','   作者:').replace('url','\n').replace('r18False','').replace('r18True','').replace('width','\n').replace('height','x').replace('tags','\n标签:')
+        print(datamsg)
+        outmsg['pid'] = datamsg['pid']
+        outmsg['uid'] = datamsg['uid']
+        outmsg['title'] = datamsg['title']
+        outmsg['author'] = datamsg['author']
+        outmsg['url'] = datamsg['url']
+        outmsg['tags'] = datamsg['tags']
         last_setu[gr] = outdata
+        outmsg['info'] = outdata
     elif hsolv_data[id] >= 1 and cfg['setu_l'] == 1:
         if r18 == 0: setu_ = './setu'
         else: setu_ = './r18'
@@ -503,14 +513,25 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                     inputimg = Im.open(filepach)
                     mmx = inputimg.size[0]
                     mmy = inputimg.size[1]
+                    tags = ' '.join(outmsg['tags'])
+
+                    ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
+                    .replace('$title',outmsg['title'])\
+                    .replace('$author',outmsg['author'])\
+                    .replace('$pid',str(outmsg['pid']))\
+                    .replace('$uid',str(outmsg['uid']))\
+                    .replace('$tags',tags)
+
                     dxy = str(1000)
                     print(pmd5)
-                    textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="2BFB0CD37435F8F52659435EFB9A8396.png" md5="2BFB0CD37435F8F52659435EFB9A8396" GroupFiledid="0" filesize="38504" local_path="/storage/emulated/0/Android/data/com.tencent.mobileqq/Tencent/MobileQQ/chatpic/chatimg/832/Cache_-18f6a103c6617832" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="" icon="" action="test" appid="-1" /></msg>'''
+                    textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="2BFB0CD37435F8F52659435EFB9A8396.png" md5="2BFB0CD37435F8F52659435EFB9A8396" GroupFiledid="0" filesize="38504" local_path="/storage/emulated/0/Android/data/com.tencent.mobileqq/Tencent/MobileQQ/chatpic/chatimg/832/Cache_-18f6a103c6617832" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
                     textxml = textxml.replace('2BFB0CD37435F8F52659435EFB9A8396',pmd5)\
                         .replace('$x',str(mmx))\
                         .replace('$y',str(mmy))\
                         .replace('$mx',str(mmx))\
-                        .replace('$my',str(mmy))
+                        .replace('$my',str(mmy))\
+                        .replace('$ext',ext)\
+                        .replace('$url',outmsg['url'])
                     outxml = [Xml(textxml)]
                     await app.sendGroupMessage(group,MessageChain.create(outxml))
                     try:
@@ -551,6 +572,15 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
 #test
     elif msg.startswith('test'):
+        path = './setu/81766690.png'
+        fd = open(path, "rb")
+        f = fd.read()
+        pmd5 = hashlib.md5(f).hexdigest()
+
+        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="2BFB0CD37435F8F52659435EFB9A8396.png" md5="2BFB0CD37435F8F52659435EFB9A8396" GroupFiledid="0" filesize="38504" local_path="/storage/emulated/0/Android/data/com.tencent.mobileqq/Tencent/MobileQQ/chatpic/chatimg/832/Cache_-18f6a103c6617832" minWidth="444" minHeight="444" maxWidth="444" maxHeight="444" /></item><item layout="3"><button>示例5.3</button><button>示例5.4</button></item><source name="这是个测试" icon="" action="" appid="-1" /></msg>
+        '''
+        textxml = textxml.replace('2BFB0CD37435F8F52659435EFB9A8396',pmd5)
+        await app.sendGroupMessage(group,MessageChain.create([Xml(textxml)]))
         print(0)
 #restart
     elif msg.startswith('restart') and member.id in admin:
@@ -815,11 +845,6 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             mid = int(hsolvlist_data[str(id)])
             outmsg = str(id) + "的hso等级为" + str(mid)
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-#排行榜
-    elif msg.startswith('排行榜'):
-        json_result = api.illust_ranking()
-        for i in json_result.illusts[:3]:
-            api.download(i.image_urls.large)
 #备份
     elif msg.startswith('backup') and member.id in admin:
         savecfg()
