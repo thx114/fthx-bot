@@ -3,10 +3,14 @@ bot_qq = 1000100010 #在此填入bot_qq号
 authKey = "qaq1234" #在此填入http api 中的 authKey
 host_ = "http://127.0.0.1:8080" #在此填入http api 中的 host
 
+piv_username = 'xxxxxxxx' #你的p站账号
+piv_password = 'xxxxxxxx' #你的p站密码
 
 lolicon_key = "12345ioawd" #你的lolicon apikey
 saucenao_key = "67890oasof" #你的saucenao apikey
 admin = [20002000]  #主人的qq号 
+
+maxx_img = 1080 #下载后的色图最大宽度 0为无限
 
 fl1 = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf" #你的绘图(默认)中文字体
 fl2 = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf" #你的绘图(默认)英文字体
@@ -54,6 +58,9 @@ helptext = """admin:
   不够色 :r18色图
   info :获取此群最后一个色图的详细信息
   Experimental_xml_setu on/off :开启/关闭 全局色图xml
+  排行榜 <mode>:获取p站排行榜
+    -mode : day week month day_r18 week_r18 week_r18g
+  tp <数字1~5> 获取排行榜目标详细信息
   hsolvlist :LSP排行榜
   aks <关卡名字> :查询此关卡
   aki <物品名字> :查询此物品

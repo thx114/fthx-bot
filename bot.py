@@ -1,5 +1,7 @@
 from os.path import join
+from pathlib import Path
 import random
+import re
 import aiohttp
 import math
 from PIL import ImageFile
@@ -17,19 +19,21 @@ from graia.application.message.chain import MessageChain
 import asyncio
 import aiohttp
 from graia.application.group import Group, Member
-from graia.application.message.elements.internal import At, Image, Plain, Xml
+from graia.application.message.elements.internal import At, Image, Plain, Xml,Json,App
 from graia.application.friend import Friend
 from operator import eq
 from datetime import datetime
 import time as Time
 from dateutil import rrule
 from PIL import Image as Im
-
+from pixivpy3 import *
 import sys
 import requests
 import os
-from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext
-
+from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img
+api = ByPassSniApi()
+api = AppPixivAPI()
+api.login(piv_username, piv_password)   # Not required
 loop = asyncio.get_event_loop() 
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True)) #机器人启动
@@ -39,10 +43,6 @@ def sdir(tdir): #新建目录
         os.makedirs(tdir)
 try:#初始化
     if not os.path.exists('cfg.json'):
-        sdir('./r18')
-        sdir('./setu')
-        sdir('./chace')
-        sdir('./backups')
         if not os.path.exists('./chace/mainbg.png'):
             print('错误:没有找到主界面背景')
         cfg = {}
@@ -67,11 +67,16 @@ try:#初始化
         print('初始化完成，你需要在群聊内输入akra来获取明日方舟的数据')
 except Exception:print('初始化出现错误')
 try:#配置cfg.json读取与补全
-    cfgdlist = ['hsolvlist','hsolv','qd','qdlist','last_setu']
+    cfgdlist = ['hsolvlist','hsolv','qd','qdlist','last_setu','plinfodata']
     cfgilist = ['setu_l','xml']
     jsonfile = open("cfg.json","r")
     cfg = json.load(jsonfile)
     jsonfile.close()
+    sdir('./r18')
+    sdir('./setu')
+    sdir('./chace')
+    sdir('./backups')
+    sdir('./listpiv')
     for i in cfgdlist:
         try: 
             load = cfg[i]
@@ -109,6 +114,7 @@ except:print('错误，方舟数据读取失败')
 
 class DF(object): #下载
     async def adf(url,pach):#异步下载
+        url = url.replace('i.pximg.net','i.pixiv.cat')
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'}
         async with aiohttp.ClientSession() as session:
             response = await session.get(headers=headers, url=url)
@@ -118,6 +124,19 @@ class DF(object): #下载
             with open(pach, 'wb') as f:
                 f.write(content_img)
             await session.close()
+            if pach.endswith('png'):
+                inputimg = Im.open(pach)
+                mmx = inputimg.size[0]
+                mmy = inputimg.size[1]
+                if mmx > maxx_img and maxx_img != 0:
+                    xyb = mmx / mmy
+                    new_mmx = maxx_img
+                    new_mmy = math.floor(new_mmx / xyb)
+                    inputimg = inputimg.resize((new_mmx, new_mmy),Im.ANTIALIAS)
+                    mmx = inputimg.size[0]
+                    mmy = inputimg.size[1]
+                    print('新图片大小:',mmx,'|',mmy)
+                    inputimg.save(pach, 'png')
 class CHS(object): #数据初始化
     def chs(id): 
         datas = [hsolv_data,hsolvlist_data,qd_data,qdlist_data]
@@ -210,10 +229,10 @@ async def setu(r18,iid,g): #获取色图
     if qd_data[id] == 0:
         if qdlist_data[id] == 0:
             stadd = random.randint(10,28)
-            exmsg = "这是你第一次获取色图,随机获取色图$张".replace('$',str(stadd))
+            outmsg['extmsg'] = "这是你第一次获取色图,随机获取色图$张".replace('$',str(stadd))
         else:
             stadd = random.randint(6,15)
-            exmsg = "今天第一次获取色图，随机获取色图$张".replace('$',str(stadd))
+            outmsg['extmsg'] = "今天第一次获取色图，随机获取色图$张".replace('$',str(stadd))
         hsolv_data[id] = hsolv_data[id] + stadd
         qdlist_data[id] = qdlist_data[id] + 1
         qd_data[id] = 1
@@ -252,23 +271,6 @@ async def setu(r18,iid,g): #获取色图
                     hsolv_data[id] = hsolv_data[id] + 1
                     hsolvlist_data[id] = hsolvlist_data[id] - 1
                     outmsg['extmsg'] = "连接错误，已退回色图。"
-            if code == True :
-                print('下载成功',path_ing)
-                inputimg = Im.open(path_ing)
-                mmx = inputimg.size[0]
-                mmy = inputimg.size[1]
-                print()
-                print('下载成功',path_ing,'图片尺寸:',mmx,'x',mmy)
-                if mmx > 1080:
-                    print('图片过大，处理中..')
-                    xyb = mmx / mmy
-                    new_mmx = 1080
-                    new_mmy = math.floor(new_mmx / xyb)
-                    inputimg = inputimg.resize((new_mmx, new_mmy),Im.ANTIALIAS)
-                    mmx = inputimg.size[0]
-                    mmy = inputimg.size[1]
-                    print('新图片大小:',mmx,'|',mmy)
-                    inputimg.save(path_ing, 'png')
         gr = str(g)
         outdata = ""
         datamsg = res_json['data'][0]
@@ -445,6 +447,15 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2): #文字转图片
 @bcc.receiver("GroupMessage")
 async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, group: Group, member:Member): #群聊监听
     msg = MessageChain.asDisplay()
+    if MessageChain.has(Xml):
+        txml = str(MessageChain.get(Xml))
+        print(txml)
+    if MessageChain.has(Json):
+        tjson = str(MessageChain.get(Json))
+        print(tjson)
+    if MessageChain.has(App):
+        tapp = str(MessageChain.get(App))
+        print(tapp)
     if MessageChain.has(Plain):
         tmsg = str(MessageChain.get(Plain)[0].text)
 #图片
@@ -524,8 +535,8 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
 
                     dxy = str(1000)
                     print(pmd5)
-                    textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="2BFB0CD37435F8F52659435EFB9A8396.png" md5="2BFB0CD37435F8F52659435EFB9A8396" GroupFiledid="0" filesize="38504" local_path="/storage/emulated/0/Android/data/com.tencent.mobileqq/Tencent/MobileQQ/chatpic/chatimg/832/Cache_-18f6a103c6617832" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
-                    textxml = textxml.replace('2BFB0CD37435F8F52659435EFB9A8396',pmd5)\
+                    textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
+                    textxml = textxml.replace('$md5',pmd5)\
                         .replace('$x',str(mmx))\
                         .replace('$y',str(mmy))\
                         .replace('$mx',str(mmx))\
@@ -559,7 +570,50 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         else:
             for i in range(num):
                 outmsg = await setu(1,member.id,group.id)
-                await app.sendGroupMessage(group,MessageChain.create(outmsg))
+                if cfg['xml'] == 1:
+                    print(outmsg)
+                    chace1 = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
+                    await asyncio.sleep(1)
+                    await app.revokeMessage(chace1)
+                    filepach = outmsg['imgpath']
+                    fd = open(filepach, "rb")
+                    f = fd.read()
+                    pmd5 = hashlib.md5(f).hexdigest()
+                    inputimg = Im.open(filepach)
+                    mmx = inputimg.size[0]
+                    mmy = inputimg.size[1]
+                    tags = ' '.join(outmsg['tags'])
+
+                    ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
+                    .replace('$title',outmsg['title'])\
+                    .replace('$author',outmsg['author'])\
+                    .replace('$pid',str(outmsg['pid']))\
+                    .replace('$uid',str(outmsg['uid']))\
+                    .replace('$tags',tags)
+
+                    dxy = str(1000)
+                    print(pmd5)
+                    textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
+                    textxml = textxml.replace('$md5',pmd5)\
+                        .replace('$x',str(mmx))\
+                        .replace('$y',str(mmy))\
+                        .replace('$mx',str(mmx))\
+                        .replace('$my',str(mmy))\
+                        .replace('$ext',ext)\
+                        .replace('$url',outmsg['url'])
+                    outxml = [Xml(textxml)]
+                    await app.sendGroupMessage(group,MessageChain.create(outxml))
+                    try:
+                        if outmsg['extmsg'] != '':
+                            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
+                    except:pass
+                    return
+                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
+                try:
+                    if outmsg['extmsg'] != '':
+                        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
+                except:pass
+                await asyncio.sleep(1)
 #Experimental_xml_setu
     elif msg.startswith('Experimental_xml_setu'):
         msg = msg.replace('Experimental_xml_setu','').replace(' ','')
@@ -577,11 +631,91 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         f = fd.read()
         pmd5 = hashlib.md5(f).hexdigest()
 
-        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="2BFB0CD37435F8F52659435EFB9A8396.png" md5="2BFB0CD37435F8F52659435EFB9A8396" GroupFiledid="0" filesize="38504" local_path="/storage/emulated/0/Android/data/com.tencent.mobileqq/Tencent/MobileQQ/chatpic/chatimg/832/Cache_-18f6a103c6617832" minWidth="444" minHeight="444" maxWidth="444" maxHeight="444" /></item><item layout="3"><button>示例5.3</button><button>示例5.4</button></item><source name="这是个测试" icon="" action="" appid="-1" /></msg>
-        '''
-        textxml = textxml.replace('2BFB0CD37435F8F52659435EFB9A8396',pmd5)
-        await app.sendGroupMessage(group,MessageChain.create([Xml(textxml)]))
+        textapp = '''{"app":"com.tencent.miniapp","desc":"","view":"notification","ver":"0.0.0.1","prompt":"最新消息","meta":{"notification":{"appInfo":{"appName":"华雨啦资源网","appType":4,"ext":"","img":"https://dwz.cn/OPozsg95","img_s":"","appid":1108249016,"iconUrl":"https://huayula.com/content/templates/fee/static/img/logo.png "},"button":[{"action":"https://huayula.com/?sort=10","name":"前往下载html源码"},{"action":"https://huayula.com/?sort=11","name":"前往下载php源码"},{"action":"https://huayula.com/?sort=12","name":"前往下载net源码"},{"action":"https://huayula.com/?sort=3","name":"前往下载电脑软件"},{"action":"https://huayula.com/?sort=9","name":"前往查看技术教程"}],"emphasis_keyword":""}}}'''
+        await app.sendGroupMessage(group,MessageChain.create([(Json(textapp))]))
         print(0)
+#排行榜
+    elif msg.startswith('排行榜'):
+        msg = msg.replace('排行榜','').replace(' ','')
+        if msg.startswith('day_r18'):mo = 'day_r18'
+        elif msg.startswith('week_r18'):mo = 'week_r18'
+        elif msg.startswith('week_r18g'):mo = 'week r18g'
+        elif msg.startswith('week'):mo = 'week'
+        elif msg.startswith('month'):mo = 'month'
+        else:mo = 'day'
+        rank_list = api.illust_ranking(mode=mo)
+        rank_list = rank_list['illusts']
+        n = 0
+        infodata = []
+        p_ing = {}
+        msglist = [[(Plain('pixiv排行榜:'))]]
+        for i in rank_list :
+            print(i)
+            if n == 5 : break
+            n = n + 1
+            p_ing['pid'] = i['id']
+            p_ing['uid'] = i['user']['id']
+            p_ing['title'] = i['title']
+            p_ing['user'] = i['user']['name']
+            p_ing['tags'] = []
+            for tag in i['tags']:
+                p_ing['tags'].append(tag['name'])
+            try:
+                p_ing['url'] = i['meta_single_page']["original_image_url"]
+            except :
+                p_ing['url'] = i['meta_pages'][0]["image_urls"]['original']
+            savepath = './listpiv/'+ str(group.id) + '/' + str(n) + '.png'
+            savefl = './listpiv/'+ str(group.id) 
+            sdir(savefl)
+            p_ing['path'] = savepath
+
+            await DF.adf(p_ing['url'],savepath)
+            fd = open(savepath, "rb")
+            f = fd.read()
+            pmd5 = hashlib.md5(f).hexdigest()
+            p_ing['md5'] = pmd5
+            infodata.append(p_ing)
+            ioutmsg = (Plain('\n' + str(n) + '.' + p_ing['title']))
+            iimg = (Image.fromLocalFile(savepath))
+            msglist.append([ioutmsg,iimg])
+
+        cfg['plinfodata'][str(group.id)] = infodata
+        msglist.append([(Plain('使用tp 1~5来查看色图详情'))])
+        for i in msglist:
+            await app.sendGroupMessage(group,MessageChain.create(i))
+            await asyncio.sleep(3)
+
+    elif msg.startswith('tp'):
+        msg = msg.replace(' ','').replace('tp','')
+        try:
+            mint = int(msg)
+        except:return
+        p_ing = cfg['plinfodata'][str(group.id)][mint]
+        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
+        inputimg = Im.open(p_ing['path'])
+        mmx = inputimg.size[0]
+        mmy = inputimg.size[1]
+        tags = ' '.join(p_ing['tags'])
+        ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
+                .replace('$title',p_ing['title'])\
+                .replace('$author',p_ing['user'])\
+                .replace('$pid',str(p_ing['pid']))\
+                .replace('$uid',str(p_ing['user']))\
+                .replace('$tags',tags)
+        textxml = textxml.replace('$md5',p_ing['md5'])\
+            .replace('$x',str(mmx))\
+            .replace('$y',str(mmy))\
+            .replace('$mx',str(mmx))\
+            .replace('$my',str(mmy))\
+            .replace('$ext',ext)\
+            .replace('$url',p_ing['url'])
+        outxml = [Xml(textxml)]
+        await app.sendGroupMessage(group,MessageChain.create(outxml))
+
+
+
+
+
 #restart
     elif msg.startswith('restart') and member.id in admin:
         await app.sendGroupMessage(group,MessageChain.create([Plain('执行重启项目----')]))
