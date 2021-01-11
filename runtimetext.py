@@ -18,7 +18,12 @@ fl2 = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf" #你的绘图(默认)
 
 thetypes = [1,2,3,4,5,6,7,8]
 hsomap = ['#FFFF00','#FFCC00','#FF9900','#FF6600','#FF3300','#FF0000','#00FF00','#0000FF','#FF00FF','#66FFFF','#6600FF','#6633FF','#6666FF','#6699FF','#66CCFF','#66FFFF','#3300FF','#FFCCFF','#CC9900']
-
+infomap = '''标题:title pid:$pid
+作者:author uid:$uid
+url
+大小: mxxmy
+标签:tags
+'''
 aks_map=""" ╭ ────────────────── \\b15\ \\b45\关卡掉落\\b15\   \\b30\──────────────────── ╮ \\n0\\
 │    \\b15\\by F_thx\\b30\                                   \\b15\\-数据来自企鹅物流 \\b30\\   │\\n0\\
 │ \\#99FFFF\关卡名称\\#FFFFFF\:sname(12)/// \\#99FFFF\理智消耗\\#FFFFFF\:scost(23)//////////////│\\n0\\
@@ -51,7 +56,7 @@ helptext = """admin:
   sg r18 +/- :开启/关闭 此群r18权限
 
 普通:
-  /help :help
+  /帮助 :帮助
   <@机器人> <图片> :以图搜图
   <图片:色图来> :普通色图
   色图来 :普通色图

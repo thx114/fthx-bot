@@ -30,7 +30,7 @@ from pixivpy3 import *
 import sys
 import requests
 import os
-from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img
+from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img,infomap
 api = ByPassSniApi()
 api = AppPixivAPI()
 api.login(piv_username, piv_password)   # Not required
@@ -617,8 +617,12 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
 #Experimental_xml_setu
     elif msg.startswith('Experimental_xml_setu'):
         msg = msg.replace('Experimental_xml_setu','').replace(' ','')
-        if msg == 'on':cfg['xml'] = 1
-        elif msg == 'off':cfg['xml'] = 0
+        if msg == 'on':
+            cfg['xml'] = 1
+            await app.sendGroupMessage(group,MessageChain.create([(Plain('已开启'))]))
+        elif msg == 'off':
+            cfg['xml'] = 0
+            await app.sendGroupMessage(group,MessageChain.create([(Plain('已关闭'))]))
         else :pass
 #help
     elif msg.startswith('/帮助'):
@@ -635,21 +639,24 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         await app.sendGroupMessage(group,MessageChain.create([(Json(textapp))]))
         print(0)
 #排行榜
-    elif msg.startswith('排行榜'):
+    elif msg.startswith('排行榜') and group.id in setu_group:
         msg = msg.replace('排行榜','').replace(' ','')
-        if msg.startswith('day_r18'):mo = 'day_r18'
-        elif msg.startswith('week_r18'):mo = 'week_r18'
-        elif msg.startswith('week_r18g'):mo = 'week r18g'
-        elif msg.startswith('week'):mo = 'week'
-        elif msg.startswith('month'):mo = 'month'
-        else:mo = 'day'
+        mo = 'day'
+        if group.id in r18_group:
+            if msg.startswith('day_r18'):mo = 'day_r18'
+            if msg.startswith('week_r18'):mo = 'week_r18'
+            if msg.startswith('week_r18g'):mo = 'week_r18g'
+        else:
+            if msg.startswith('week'):mo = 'week'
+            if msg.startswith('month'):mo = 'month'
         rank_list = api.illust_ranking(mode=mo)
         rank_list = rank_list['illusts']
         n = 0
-        infodata = []
-        p_ing = {}
         msglist = [[(Plain('pixiv排行榜:'))]]
+        cfg['plinfodata'][str(group.id)] = []
         for i in rank_list :
+            p_ing = {}
+            p_ing['url'] = []
             print(i)
             if n == 5 : break
             n = n + 1
@@ -661,25 +668,30 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             for tag in i['tags']:
                 p_ing['tags'].append(tag['name'])
             try:
-                p_ing['url'] = i['meta_single_page']["original_image_url"]
+                p_ing['url'].append(i['meta_single_page']["original_image_url"])
             except :
-                p_ing['url'] = i['meta_pages'][0]["image_urls"]['original']
+                for u in i['meta_pages']:
+                    p_ing['url'].append( u["image_urls"]['original'])
             savepath = './listpiv/'+ str(group.id) + '/' + str(n) + '.png'
             savefl = './listpiv/'+ str(group.id) 
             sdir(savefl)
             p_ing['path'] = savepath
+            print(p_ing['url'])
 
-            await DF.adf(p_ing['url'],savepath)
+            await DF.adf(p_ing['url'][0],savepath)
             fd = open(savepath, "rb")
             f = fd.read()
             pmd5 = hashlib.md5(f).hexdigest()
-            p_ing['md5'] = pmd5
-            infodata.append(p_ing)
+            p_ing['md5'] = pmd5 
+            cfg['plinfodata'][str(group.id)].append(p_ing)
+            print(str(p_ing))
             ioutmsg = (Plain('\n' + str(n) + '.' + p_ing['title']))
             iimg = (Image.fromLocalFile(savepath))
             msglist.append([ioutmsg,iimg])
+            p_ing = {}
+        
 
-        cfg['plinfodata'][str(group.id)] = infodata
+
         msglist.append([(Plain('使用tp 1~5来查看色图详情'))])
         for i in msglist:
             await app.sendGroupMessage(group,MessageChain.create(i))
@@ -688,34 +700,56 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
     elif msg.startswith('tp'):
         msg = msg.replace(' ','').replace('tp','')
         try:
-            mint = int(msg)
+            mint = int(msg) - 1
         except:return
         p_ing = cfg['plinfodata'][str(group.id)][mint]
-        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
+        tags = ' '.join(p_ing['tags'])
         inputimg = Im.open(p_ing['path'])
         mmx = inputimg.size[0]
         mmy = inputimg.size[1]
-        tags = ' '.join(p_ing['tags'])
-        ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
-                .replace('$title',p_ing['title'])\
-                .replace('$author',p_ing['user'])\
+        if cfg['xml'] == 1:
+            textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
+            ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
+                    .replace('$title',p_ing['title'])\
+                    .replace('$author',p_ing['user'])\
+                    .replace('$pid',str(p_ing['pid']))\
+                    .replace('$uid',str(p_ing['user']))\
+                    .replace('$tags',tags)
+            textxml = textxml.replace('$md5',p_ing['md5'])\
+                .replace('$x',str(mmx))\
+                .replace('$y',str(mmy))\
+                .replace('$mx',str(mmx))\
+                .replace('$my',str(mmy))\
+                .replace('$ext',ext)\
+                .replace('$url',p_ing['url'])
+            outmsg = [Xml(textxml)]
+        else:
+            print(len(p_ing['url']))
+            outmsg = []
+            if len(p_ing['url']) > 1:
+                n = 0
+                for i in p_ing['url']:
+                    n += 1
+                    savepath = p_ing['path'].replace('.png','_' + str(n) + '.png')
+                    print(savepath)
+                    await DF.adf(i,savepath)
+                    outmsg.append((Image.fromLocalFile(savepath)))
+            else:outmsg = [].append((Image.fromLocalFile(p_ing['path'])))
+            urlstr = p_ing['url'][0]
+            urlstr = urlstr[:-3]
+            outmsg.append((Plain(infomap\
+                .replace('title',p_ing['title'])\
+                .replace('author',p_ing['user'])\
+                .replace('$uid',str(p_ing['uid']))\
                 .replace('$pid',str(p_ing['pid']))\
-                .replace('$uid',str(p_ing['user']))\
-                .replace('$tags',tags)
-        textxml = textxml.replace('$md5',p_ing['md5'])\
-            .replace('$x',str(mmx))\
-            .replace('$y',str(mmy))\
-            .replace('$mx',str(mmx))\
-            .replace('$my',str(mmy))\
-            .replace('$ext',ext)\
-            .replace('$url',p_ing['url'])
-        outxml = [Xml(textxml)]
-        await app.sendGroupMessage(group,MessageChain.create(outxml))
-
-
-
-
-
+                .replace('tags',tags)\
+                .replace('mx',str(mmx))\
+                .replace('my',str(mmy))\
+                .replace('url',urlstr))))
+        print(outmsg)
+        for i in outmsg:
+            await app.sendGroupMessage(group,MessageChain.create([i]))
+            await asyncio.sleep(2)
 #restart
     elif msg.startswith('restart') and member.id in admin:
         await app.sendGroupMessage(group,MessageChain.create([Plain('执行重启项目----')]))
