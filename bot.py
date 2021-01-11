@@ -216,7 +216,7 @@ async def daks(): #明日方舟s数据获取
     json.dump(aks,jsonfile,indent=4)
     jsonfile.close()
     print('json save done')
-async def setu(r18,iid,g): #获取色图
+async def setu(r18,iid,g,s=''): #获取色图
     outmsg = {}
     id = str(iid)
     if id not in hsolvlist_data:
@@ -239,6 +239,8 @@ async def setu(r18,iid,g): #获取色图
 
     if hsolv_data[id] >= 1 and cfg['setu_l'] == 0:
         apiurl = 'https://api.lolicon.app/setu/?apikey=$APIKEY&r18=$R18&num=$NUM'.replace('$APIKEY',lolicon_key).replace('$R18',str(r18)).replace('$NUM',str(1))
+        if s != '':
+            apiurl = apiurl + '&keyword=' + s
         print('与api沟通中...')
         async with aiohttp.ClientSession() as session:
             async with session.get(apiurl) as resp:
@@ -500,18 +502,21 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
     if msg.startswith('色图来') and group.id in cfg['setu_group']:
         msg = msg.replace('色图来','').replace(' ','')
         print(msg)
+        sc = ''
         if msg == '':
             num = 1
         else:
             try:
                 num = int(msg)
-            except:num = 0
+            except:
+                num = 1
+                sc = msg
         print(num)
         if num == 0:pass
         elif num > 10:pass
         else:
             for i in range(num):
-                outmsg = await setu(0,member.id,group.id)
+                outmsg = await setu(0,member.id,group.id,sc)
                 if cfg['xml'] == 1:
                     print(outmsg)
                     chace1 = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
@@ -550,7 +555,9 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
                     except:pass
                     return
-                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
+                try:
+                    await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
+                except:pass
                 try:
                     if outmsg['extmsg'] != '':
                         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
@@ -559,19 +566,21 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
 #R18色图
     elif msg.startswith('不够色') and group.id in cfg['r18_group']:
         msg = msg.replace('不够色','').replace(' ','')
+        sc = ''
         if msg == '':
             num = 1
         else:
             try:
                 num = int(msg)
-            except:num = 0
+            except:
+                num = 1
+                sc = msg
         if num == 0:pass
         elif num > 10:pass
         else:
             for i in range(num):
-                outmsg = await setu(1,member.id,group.id)
+                outmsg = await setu(0,member.id,group.id,sc)
                 if cfg['xml'] == 1:
-                    print(outmsg)
                     chace1 = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
                     await asyncio.sleep(1)
                     await app.revokeMessage(chace1)
@@ -608,7 +617,9 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
                     except:pass
                     return
-                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
+                try:
+                    await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
+                except:pass
                 try:
                     if outmsg['extmsg'] != '':
                         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
