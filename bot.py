@@ -31,13 +31,22 @@ import sys
 import requests
 import os
 from os.path import join, getsize
+import eventlet
 from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img,infomap
 api = ByPassSniApi()
 api = AppPixivAPI()
-#api.login(piv_username, piv_password)   # Not required
 loop = asyncio.get_event_loop() 
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True)) #机器人启动
+eventlet.monkey_patch()
+with eventlet.Timeout(4,False):
+    code = 0
+    try:
+        api.login(piv_username, piv_password)
+    except:
+        print('Pixiv登录失败')
+        code = 1
+if code == 0 : print('Pixiv登录超时')
 def sdir(tdir): #新建目录
     if not os.path.exists(tdir):
         print('目标不存在,新建目录:',tdir)
