@@ -30,10 +30,11 @@ from pixivpy3 import *
 import sys
 import requests
 import os
+from os.path import join, getsize
 from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img,infomap
 api = ByPassSniApi()
 api = AppPixivAPI()
-api.login(piv_username, piv_password)   # Not required
+#api.login(piv_username, piv_password)   # Not required
 loop = asyncio.get_event_loop() 
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True)) #机器人启动
@@ -530,6 +531,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                     mmx = inputimg.size[0]
                     mmy = inputimg.size[1]
                     tags = ' '.join(outmsg['tags'])
+                    size = getsize(filepach)
 
                     ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
                     .replace('$title',outmsg['title'])\
@@ -548,6 +550,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                         .replace('$my',str(mmy))\
                         .replace('$ext',ext)\
                         .replace('$url',outmsg['url'])
+                        #.replace('$size',str(size))
                     outxml = [Xml(textxml)]
                     await app.sendGroupMessage(group,MessageChain.create(outxml))
                     try:
@@ -579,7 +582,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         elif num > 10:pass
         else:
             for i in range(num):
-                outmsg = await setu(0,member.id,group.id,sc)
+                outmsg = await setu(1,member.id,group.id,sc)
                 if cfg['xml'] == 1:
                     chace1 = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
                     await asyncio.sleep(1)
@@ -645,9 +648,22 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         fd = open(path, "rb")
         f = fd.read()
         pmd5 = hashlib.md5(f).hexdigest()
+        inputimg = Im.open(path)
+        mmx = inputimg.size[0]
+        mmy = inputimg.size[1]
+        size = getsize(path)
 
-        textapp = '''{"app":"com.tencent.miniapp","desc":"","view":"notification","ver":"0.0.0.1","prompt":"最新消息","meta":{"notification":{"appInfo":{"appName":"华雨啦资源网","appType":4,"ext":"","img":"https://dwz.cn/OPozsg95","img_s":"","appid":1108249016,"iconUrl":"https://huayula.com/content/templates/fee/static/img/logo.png "},"button":[{"action":"https://huayula.com/?sort=10","name":"前往下载html源码"},{"action":"https://huayula.com/?sort=11","name":"前往下载php源码"},{"action":"https://huayula.com/?sort=12","name":"前往下载net源码"},{"action":"https://huayula.com/?sort=3","name":"前往下载电脑软件"},{"action":"https://huayula.com/?sort=9","name":"前往查看技术教程"}],"emphasis_keyword":""}}}'''
-        await app.sendGroupMessage(group,MessageChain.create([(Json(textapp))]))
+        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="$size" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
+
+        textxml = textxml.replace('$md5',pmd5)\
+            .replace('$x',str(mmx))\
+            .replace('$y',str(mmy))\
+            .replace('$mx',str(mmx))\
+            .replace('$my',str(mmy))\
+            .replace('$size',str(size))
+
+        print(mmx,mmy,pmd5)
+        await app.sendGroupMessage(group,MessageChain.create([(Xml(textxml))]))
         print(0)
 #排行榜
     elif msg.startswith('排行榜') and group.id in setu_group:
@@ -978,7 +994,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                         for i in mlist:
                             if i.id == int(item) != 0:
                                 itemid = await app.getMember(group,int(item))
-                                inmsg = '|$item:$int'.replace('$item',itemid.name).replace('$int',str(hsolvlist_data[item]))
+                                inmsg = '$item:$int'.replace('$item',itemid.name).replace('$int',str(hsolvlist_data[item]))
                                 hsolvlist.append(str(inmsg))
                 except:
                     print('err')
@@ -991,29 +1007,35 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                 if n == 0:
                     for i in res[n]:
                         r = random.randint(0,18)
-                        out = out + '#' + hsomap[r] + ''.join(i)
-                    res[n] = '\\b30\\\\#FF0000\\' + out
+                        out = out + '\\' + hsomap[r] + '\\' + ''.join(i)
+                    
+                    res[n] = out + '\\b25\\ \\#FF0000\\'
                 elif n == 1:
-                    res[n] = '\\b25\\\\#FF0000\\' + res[n]
+                    res[n] = res[n] + '\\b20\\ \\#FF3300\\'
                 elif n == 3:
-                    res[n] = '\\b20\\\\#FF3300\\'+ res[n]
+                    res[n] =  res[n] + '\\#FF6600\\'
                 elif n == 6:
-                    res[n] = '\\#FF6600\\'+ res[n]
+                    res[n] = res[n] + '\\#FF9900\\'
                 elif n == 9:
-                    res[n] = '\\#FF9900\\'+ res[n]
+                    res[n] = res[n] + '\\#FFCC00\\'
                 elif n == 12:
-                    res[n] = '\\#FFCC00\\'+ res[n]
+                    res[n] = res[n] + '\\#FFFF00\\'
                 elif n == 15:
-                    res[n] = '\\#FFFF00\\'+ res[n]
+                    res[n] = res[n] + '\\#FFFF66\\'
                 elif n == 18:
-                    res[n] = '\\#FFFF66\\'+ res[n]
+                    res[n] = res[n] + '\\#FFFFCC\\'
                 elif n == 21:
-                    res[n] = '\\#FFFFCC\\'+ res[n]
-                elif n == 24:
-                    res[n] = '\\#FFFFFF\\'+ res[n]
+                    res[n] = res[n] + '\\#FFFFFF\\'
+
+                res[n] = res[n] + ' \\n0\\ '
                 n = n + 1
-            a = '\\n\\'.join(res)
-            msg = "-lsp排行榜:‘\\b20\\" + a + "‘    ‘______________________"
+            a = ''.join(res)
+            msg = "-lsp排行榜: \\#FF0000\\  \\n0\\|" + a + "\\n0\\    \\n0\ \\y0\\ \\b20\\ \\#FFFFFF\\ "
+            for i in res:
+                msg = msg + '\\n0\\|'
+            for i in range(3):
+                msg = msg + '\\n0\\|'
+            print(msg)
             toimg(msg)
             await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #-显示hsolv等级
