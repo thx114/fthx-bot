@@ -1044,7 +1044,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                         elif rarity == 4: cl = '#EDCB26\\'
                         else: cl = '#FFFFFF\\'
                         try:
-                            aimg = '\\p./aki_30/id.png\\'.replace('id',i['itemId'])
+                            aimg = '\\p./aki_30/id.png\\  '.replace('id',i['itemId'])
                             aimg_p = './aki_30/id.png'.replace('id',i['itemId'])
                             img = Im.open(aimg_p)
                         except:
