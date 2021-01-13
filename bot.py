@@ -32,8 +32,7 @@ import requests
 import os
 from os.path import join, getsize
 import eventlet
-from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img,infomap
-api = ByPassSniApi()
+from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img,infomap,maximgpass
 api = AppPixivAPI()
 loop = asyncio.get_event_loop() 
 bcc = Broadcast(loop=loop) 
@@ -42,10 +41,11 @@ eventlet.monkey_patch()
 with eventlet.Timeout(4,False):
     code = 0
     try:
-        api.login(piv_username, piv_password)
+        api = AppPixivAPI()
+        #api.login(piv_username, piv_password)
     except:
         print('Pixiv登录失败')
-        code = 1
+    code = 1
 if code == 0 : print('Pixiv登录超时')
 def sdir(tdir): #新建目录
     if not os.path.exists(tdir):
@@ -349,111 +349,284 @@ def savecfg(): #保存cfg.json
     except Exception:
         print('save cfg 出现错误')
 def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2): #文字转图片
-    inputimg = Im.open(img)
-    if img != './chace/mainbg.png' : 
-        mmx = inputimg.size[0]
-        mmy = inputimg.size[1]
+    '''
+    input:
+      msg:str 输入文字
+      img:str 图片路径
+      f1:str 字体1路径
+      f2:str 字体2路径
+    '''
+    msg = msg.replace('\n','').replace('\r','')
+    image = Im.open(img)
 #rs
+    global x
+    global y
+    global mx
+    global my
+    global mmx
+    global mmy
+    global size
+    global color
+    lispuimg = []
+    xin = -200
+    xout = -100
+    yin = -200
+    yout = -100
     mmx = 2048
     mmy = 1278
     size = 30
-    y = 0
+    y = 0 
     x = 0
     my = 10
     mx = 10
     color = "#ffffff"
     efunction = False
     functionlist = []
+    f = ''
+    if img != './chace/mainbg.png' : 
+        mmx = image.size[0]
+        mmy = image.size[1]
+    '''变量:
+    x : 坐标x
+    y : 坐标y
+    mx :裁剪后图片宽度 (如果要设定必须在末尾)
+    my :裁剪后图片长度 (如果要设定必须在末尾)
+    mmx :原图大小(如果要设定必须在开头)
+    mmy :原图大小(如果要设定必须在开头)
+    # "y": y + size 是可行的
+    size:目前文字大小
+    color:颜色
+    '''
 #def1
-    for i in msg:
-        if efunction == False and eq(i,"\\"):
+    for i in msg: # 遍历所有文字,探测\指令,输出所有文字占图片最大宽 高
+        if efunction == False and eq(i,"\\"): #探测到 \ 则进入功能模式
             efunction=True
             functionlist=[] 
             continue
-        elif efunction == True:
-            if eq(i,"\\"):
+        elif efunction == True: #功能模式
+            if eq(i,"\\"): #在功能模式下再次探测到 \ 则退出功能模式
                 efunction = False
-                continue
-            functionlist.append(i)
-            continue
-        else:
-            if functionlist != []:
                 text = ''.join(functionlist)
-                if text.startswith("n"):
-                    if text.replace('n','') != '':x = int(text.replace('n',''))
+                if text.startswith("n"): #n:换行
+                    if x + size > mx: mx = x + size
+                    if y + size > my: my = y + size
+                    text = text[1:]
+                    if text.isdigit():x = int(text) #n<int> 换行并使x = int
+                    if text.startswith('s'):x = x  #ns 换行并保持x
+                    else: x = 0
                     y += size
-                    if x > mx : mx = x
-                    if y > my: my = y 
-                elif text.startswith("b"):size = int(text.replace('b',''))
-                elif text.startswith('#'):color = text
-                elif text.startswith('y'):y = int(text.replace('y',''))
+                    if x + size > mx: mx = x + size 
+                    if y + size > my: my = y + size
+                elif text.startswith("b"):size = int(text[1:]) #b<int>:文字大小
+                elif text.startswith('#'):color = text ##<16进制颜色>:文字颜色
+                elif text.startswith('y'):y = int(text[1:]) #y<int>:立即切换到y坐标
+                elif text.startswith('x'):#x<x/y>(-)<int> 
+                    """
+                    xx<int>: x += int
+                    xx-<int>: x -= int
+
+                    xy<int>: y += int
+                    xy-<int>: y -= int
+                    """
+                    text = text[1:]
+                    if text.startswith('x'):
+                        text = text[1:]
+                        if text.startswith('-'):x -= int(text[1:])
+                        else: x += int(text)
+                    elif text.startswith('y'):
+                        text = text[1:]
+                        if text.startswith('-'):y -= int(text[1:])
+                        else: x += int(text)
+                    if x + size > mx: mx = x + size 
+                    if y + size > my: my = y + size
+                elif text.startswith('p'): #p<图片路径>: 添加图片
+                    putpath = text[1:]
+                    print(putpath)
+                    putimg =  Image.open(putpath)
+                    putmx = putimg.size[0]
+                    putmy = putimg.size[1]
+                    xin = x
+                    xout = x + putmx
+                    yin = y
+                    yout = y + putmy
+                    if yout > my: my = yout + size
+                    if xout > mx: mx = xout + size
+                    print(mx,my)
+                    x = x + putmx + 1
+                    putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
+                    lispuimg.append(putdata) #所有图片的文字禁区
+                elif text.startswith('d'): #p<字典>: 变量修改(可用该功能一次性修改 x y color size 等等)
+                    if x + size > mx: mx = x + size
+                    if y + size > my: my = y + size
+                    testx = 0
+                    text = text[1:]
+                    print(text)
+                    dict_ing = json.loads(text)
+                    print('修改:',dict_ing)
+                    globals().update(dict_ing)
+                    print(testx)
                 functionlist=[] 
-        if i >= u'\u4e00' and i <= u'\u9fa5' or i >= u'\u3040' and i <= u'\u31FF':
+                continue
+            functionlist.append(i) #退出后保存功能模式下所探测的文字到 functionlist
+            continue
+        if i >= u'\u4e00' and i <= u'\u9fa5' or i >= u'\u3040' and i <= u'\u31FF':#中文
             fx = size
             f = f1
-        else: 
+        else:   #如果是英文，使用英文字体，并每次x跃进时只会跃进半个文字大小
             fx = size / 2 
             f = f2
         x += fx
-        if x > mx: mx = x
-        if x + size / 2 > mmx :
-            y += size
-            if y > my: my = y
-            x = 0
-    if y == 0:my += size 
-    my += 10
-    mx += 10
-    print('mx:' + str(mx) + "|my:" + str(my))
+        for r in range(maximgpass): #在 单个文字能跨过(图片中的)图片的最多次数 内循环
+            code = False
+            for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
+                if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
+                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                    x = i['xout'] + size
+                    code = True
+                    break
+                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
+                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                    x = i['xout'] + size
+                    code = True
+                    break
+                if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
+                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                    x = i['xout'] + size
+                    code = True
+                    break
+                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
+                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                    x = i['xout'] + size
+                    code = True
+                    break
+            if x + size / 2 > mmx : #文字撞到边缘则换行
+                print(x,y,mmx,mmy)
+                if x + size > mx: mx = x + size
+                if y + size > my: my = y + size
+                x = 0
+                y += size
+                code = True
+            if code == False : break #跳出循环
 #rs2
+    if x > mx: mx = x + size
+    if y > my: my = y + size
+    if my == 0:mx = x + size
+    if my == 0:my += size 
+    print('mx:' + str(mx) + "|my:" + str(my))
     ly =  (mmy - my) / 2
-    outimg = inputimg.crop((0,ly,mx,ly+my))
-    mmx = 2048
-    mmy = 1278
+    image = image.crop((0,ly,mx,ly+my))
+    mmx = mx
+    mmy = my
     size = 30
     y = 0
     x = 0
-    my = 10
-    mx = 10
     color = "#ffffff"
     efunction = False
     functionlist = []
+    lispuimg = []
+    f = ''
 #def2
-    for i in msg:
-        if efunction == False and eq(i,"\\"):
+    for i in msg: # 遍历文字,探测\指令, 在图片内写入 文字/图片
+        if efunction == False and eq(i,"\\"): #探测到 \ 则进入功能模式
             efunction=True
             functionlist=[] 
             continue
-        elif efunction == True:
-            if eq(i,"\\"):
+        elif efunction == True: #功能模式
+            if eq(i,"\\"): #在功能模式下再次探测到 \ 则退出功能模式
                 efunction = False
-                continue
-            functionlist.append(i)
-            continue
-        else:
-            if functionlist != []:
                 text = ''.join(functionlist)
-                if text.startswith("n"):
-                    if text.replace('n','') != '':x = int(text.replace('n',''))
+                if text.startswith("n"): #n:换行
+                    text = text[1:]
+                    if text.isdigit():x = int(text) #n<int> 换行并使x = int
+                    if text.startswith('s'):x = x  #ns 换行并保持x
+                    else: x = 0
                     y += size
-                    if x > mx : mx = x
-                    if y > my: my = y + size
-                elif text.startswith("b"):size = int(text.replace('b',''))
-                elif text.startswith('#'):color = text
-                elif text.startswith('y'):y = int(text.replace('y',''))
-                functionlist = []
-        if i >= u'\u4e00' and i <= u'\u9fa5' or i >= u'\u3040' and i <= u'\u31FF':
+                elif text.startswith("b"):size = int(text[1:]) #b<int>:文字大小
+                elif text.startswith('#'):color = text ##<16进制颜色>:文字颜色
+                elif text.startswith('y'):y = int(text[1:]) #y<int>:立即切换到y坐标
+                elif text.startswith('x'): 
+                    """
+                    xx<int>: x += int
+                    xx-<int>: x -= int
+
+                    xy<int>: y += int
+                    xy-<int>: y -= int
+                    """
+                    text = text[1:]
+                    if text.startswith('x'):
+                        text = text[1:]
+                        if text.startswith('-'):x -= int(text[1:])
+                        else: x += int(text)
+                    elif text.startswith('y'):
+                        text = text[1:]
+                        if text.startswith('-'):y -= int(text[1:])
+                        else: x += int(text)
+                elif text.startswith('p'): #p<图片路径>: 添加图片
+                    print(x,y)
+                    putpath = text[1:]
+                    putimg =  Image.open(putpath)
+                    putmx = putimg.size[0]
+                    putmy = putimg.size[1]
+                    image.paste(putimg,(math.floor(x),math.floor(y)))
+                    xin = x
+                    xout = x + putmx
+                    yin = y
+                    yout = y + putmy
+                    x = x + putmx + 1
+                    putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
+                    print(putdata,x,y)
+                    lispuimg.append(putdata) #所有图片的文字禁区
+                elif text.startswith('d'): #p<字典>: 变量修改(可用该功能一次性修改 x y color size 等等)
+                    testx = 0
+                    text = text[1:]
+                    print(text)
+                    dict_ing = json.loads(text)
+                    print('修改:',dict_ing)
+                    globals().update(dict_ing)
+                    print(testx)
+                functionlist=[] 
+                continue
+            functionlist.append(i) #退出后保存功能模式下所探测的文字到 functionlist
+            continue
+        if i >= u'\u4e00' and i <= u'\u9fa5' or i >= u'\u3040' and i <= u'\u31FF': #中文
             fx = size
             f = f1
-        else: 
+        else:  #如果是英文，使用英文字体，并每次x跃进时只会跃进半个文字大小
             fx = size / 2 
             f = f2
-        ImageDraw.Draw(outimg).text((x+2, y+2),i,font=ImageFont.truetype(f,size),fill='#000000',direction=None)
-        ImageDraw.Draw(outimg).text((x, y),i,font=ImageFont.truetype(f,size),fill=color,direction=None)
+        ImageDraw.Draw(image).text((x+2, y-6),i,font=ImageFont.truetype(f,size),fill='#000000',direction=None) #文字阴影
+        ImageDraw.Draw(image).text((x, y-8),i,font=ImageFont.truetype(f,size),fill=color,direction=None) #文字
         x += fx
-        if x + size / 2 > mmx :
-            x = 0
-            y += size
-    outimg.save('./chace/1.png')
+        for r in range(maximgpass): #在 单个文字能跨过(图片中的)图片的最多次数 内循环
+            code = False
+            for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
+                if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
+                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                    x = i['xout'] + size
+                    code = True
+                    break
+                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
+                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                    x = i['xout'] + size
+                    code = True
+                    break
+                if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
+                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                    x = i['xout'] + size
+                    code = True
+                    break
+                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
+                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                    x = i['xout'] + size
+                    code = True
+                    break
+            if x + size / 2 > mmx : #文字撞到边缘则换行
+                print('撞到墙啦:',x,y)
+                x = 0
+                y += size
+                code = True
+            if code == False : break #跳出循环
+    image.save('./chace/1.png')
     print("done")
 
 @bcc.receiver("GroupMessage")
@@ -653,27 +826,33 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
 #test
     elif msg.startswith('test'):
-        path = './setu/81766690.png'
+        path = './chace/ak.png'
         fd = open(path, "rb")
         f = fd.read()
-        pmd5 = hashlib.md5(f).hexdigest()
+        pmd5 = str.upper(hashlib.md5(f).hexdigest())
         inputimg = Im.open(path)
         mmx = inputimg.size[0]
         mmy = inputimg.size[1]
         size = getsize(path)
+        chace1 = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(path)]))
+        print(chace1)
+        url = 'http://gchat.qpic.cn/gchatpic_new/0/0-0-md5/0'.replace('md5',pmd5)
+        await app.revokeMessage(chace1)
 
-        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="$size" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
-
-        textxml = textxml.replace('$md5',pmd5)\
-            .replace('$x',str(mmx))\
-            .replace('$y',str(mmy))\
-            .replace('$mx',str(mmx))\
-            .replace('$my',str(mmy))\
-            .replace('$size',str(size))
-
+        #textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" #multiMsgFlag="0"><item><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="$size" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source #name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
+        #textxml = textxml.replace('$md5',pmd5)\
+        #    .replace('$x',str(mmx))\
+        #    .replace('$y',str(mmy))\
+        #    .replace('$mx',str(mmx))\
+        #    .replace('$my',str(mmy))\
+        #    .replace('$size',str(size))
+        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="23" templateID="1" action="web" brief="51神韵博客" sourceMsgId="0" url="跳转网址" flag="0" adverSign="0" multiMsgFlag="0"><item layout="5"><picture cover="$url" w="0" h="0" /></item><source name="" icon="" action="" appid="-1" /></msg>'''
+        textxml = textxml\
+            .replace('$url',url)
         print(mmx,mmy,pmd5)
-        await app.sendGroupMessage(group,MessageChain.create([(Xml(textxml))]))
-        print(0)
+
+ 
+        await app.sendGroupMessage(group,MessageChain.create([(Json(textxml))]))
 #排行榜
     elif msg.startswith('排行榜') and group.id in setu_group:
         msg = msg.replace('排行榜','').replace(' ','')
@@ -725,14 +904,10 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             iimg = (Image.fromLocalFile(savepath))
             msglist.append([ioutmsg,iimg])
             p_ing = {}
-        
-
-
         msglist.append([(Plain('使用tp 1~5来查看色图详情'))])
         for i in msglist:
             await app.sendGroupMessage(group,MessageChain.create(i))
             await asyncio.sleep(3)
-
     elif msg.startswith('tp'):
         msg = msg.replace(' ','').replace('tp','')
         try:
@@ -887,6 +1062,11 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                 toimg(outmsg,img = "./chace/ak.png" )
                 await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
         if msg.startswith('i'):
+            cost = 1
+            stime0 = 1
+            sname = ''
+            dnum = 0
+            iid = 0
             msg = msg.replace('i','')
             outdata = {}
             for i in aki_data:
@@ -912,7 +1092,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             for o in ilist:#要处理的akm数据 o
                 for p in aks_data:#读取物品此时的aks数据 p
                     if o['stageId'] == p['stageId']:
-                        sname = '#FFFFFF' + await rep(16,p['name'])
+                        sname = '#FFFFFF\\' + await rep(16,p['name'])
                         try:
                             cost = p['apCost']
                             stime0 = p['minClearTime']
@@ -938,7 +1118,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                 dtime = await rep(9,str(atime))
                 listp = str(math.floor(round(prate,0))).rjust(3,'0')
                 imsg = ''
-                imsg = listp + aks_map2.replace('#FFFFFFname(23)////////',sname)
+                imsg = listp + aks_map2.replace('#FFFFFF\\name(24)////////',sname)
                 imsg = imsg.replace('num(6)',dnum)
                 imsg = imsg.replace('rate(7)',str(drate + '%'))
                 imsg = imsg.replace('lz(8)////',str(dlz))
@@ -951,12 +1131,9 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                 outmsg = outmsg  + i + '\n'
             outmsg = outmsg + '\n' + aks_map3
             print(outmsg)
-            fontl = f1
-            fonty = f2
-            ism = 1
-            cm = 0
+
             img = "./chace/ak.png"
-            toimg(outmsg,fontl,fonty,ism,img,cm)
+            toimg(outmsg,img)
             await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))    
 #色图info
     elif msg.startswith('info'):
@@ -1018,9 +1195,9 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                         r = random.randint(0,18)
                         out = out + '\\' + hsomap[r] + '\\' + ''.join(i)
                     
-                    res[n] = out + '\\b25\\ \\#FF0000\\'
+                    res[n] = '\\b20\\ \\b30\\' + out + '\\b25\\\\#FF0000\\'
                 elif n == 1:
-                    res[n] = res[n] + '\\b20\\ \\#FF3300\\'
+                    res[n] = res[n] + '\\b20\\\\#FF3300\\'
                 elif n == 3:
                     res[n] =  res[n] + '\\#FF6600\\'
                 elif n == 6:
@@ -1039,7 +1216,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                 res[n] = res[n] + ' \\n0\\ '
                 n = n + 1
             a = ''.join(res)
-            msg = "-lsp排行榜: \\#FF0000\\  \\n0\\|" + a + "\\n0\\    \\n0\ \\y0\\ \\b20\\ \\#FFFFFF\\ "
+            msg = "-lsp排行榜:\\#FF0000\\ \\n0\\" + a + "\\n0\\    \\n0\\\y0\\\\b20\\\\#FFFFFF\\ "
             for i in res:
                 msg = msg + '\\n0\\|'
             for i in range(3):
