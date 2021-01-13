@@ -38,16 +38,11 @@ api = AppPixivAPI()
 loop = asyncio.get_event_loop() 
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True)) #机器人启动
-eventlet.monkey_patch()
-with eventlet.Timeout(4,False):
-    code = 0
-    try:
-        api = AppPixivAPI()
-        #api.login(piv_username, piv_password)
-    except:
-        print('Pixiv登录失败')
-    code = 1
-if code == 0 : print('Pixiv登录超时')
+try:
+    api = AppPixivAPI()
+    print('登录Pixiv中..... /如不需要请#此行')
+    api.login(piv_username, piv_password)
+except:print('Pixiv登录失败')
 def sdir(tdir): #新建目录
     if not os.path.exists(tdir):
         print('目标不存在,新建目录:',tdir)
@@ -266,13 +261,15 @@ async def setu(r18,iid,g,s=''): #获取色图
         qd_data[id] = 1
 
     if hsolv_data[id] >= 1 and cfg['setu_l'] == 0:
-        apiurl = 'https://api.lolicon.app/setu/?apikey=$APIKEY&r18=$R18&num=$NUM'.replace('$APIKEY',lolicon_key).replace('$R18',str(r18)).replace('$NUM',str(1))
+        apiurl = 'https://api.lolicon.app/setu/?apikey=$APIKEY&r18=$R18'.replace('$APIKEY',lolicon_key).replace('$R18',str(r18)).replace('$NUM',str(1))
         if s != '':
             apiurl = apiurl + '&keyword=' + s
         print('与api沟通中...')
+        print(apiurl)
         async with aiohttp.ClientSession() as session:
             async with session.get(apiurl) as resp:
                 res_json = await resp.json()
+        print('done')
         code = res_json['code']
         if code == 429:
             cfg['setu_l'] = 1
@@ -1289,8 +1286,8 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         else: cfg['setu_group'].append(group.id) ; outmsg = '已变成色图群'
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #r18群权限管理
-    elif msg.startswith('sg r18'):
-        if group.id in cfg['r18_group'] and member.id in admin:
+    elif msg.startswith('sg r18') and member.id in admin:
+        if group.id in cfg['r18_group'] :
             outmsg = '此群已经是r18群'
             if msg.endswith('-'):
                 cfg['r18_group'].remove(group.id);outmsg = '此群不再是r18群'
