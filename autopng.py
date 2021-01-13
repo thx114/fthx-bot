@@ -36,6 +36,8 @@ def run1():
     global mmy
     global size
     global color
+    global pz
+    pz = True
     lispuimg = []
     xin = -200
     xout = -100
@@ -146,27 +148,28 @@ def run1():
         x += fx
         for r in range(maximgpass): #在 单个文字能跨过(图片中的)图片的最多次数 内循环
             code = False
-            for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
-                if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
+            if pz == True:
+                for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
+                    if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
             if x + size / 2 > mmx : #文字撞到边缘则换行
                 print(x,y,mmx,mmy)
                 if x + size > mx: mx = x + size
@@ -230,10 +233,12 @@ def run1():
                 elif text.startswith('p'): #p<图片路径>: 添加图片
                     print(x,y)
                     putpath = text[1:]
-                    putimg =  Image.open(putpath)
+                    putimg =  Image.open(putpath).convert('RGBA')
                     putmx = putimg.size[0]
                     putmy = putimg.size[1]
-                    im1.paste(putimg,(math.floor(x),math.floor(y)))
+                    layer = Image.new('RGBA', im1.size, (0,0,0,0))
+                    layer.paste(putimg,(math.floor(x),math.floor(y)))
+                    im1 = Image.composite(layer, im1, layer)
                     xin = x
                     xout = x + putmx
                     yin = y
@@ -265,27 +270,28 @@ def run1():
         x += fx
         for r in range(maximgpass): #在 单个文字能跨过(图片中的)图片的最多次数 内循环
             code = False
-            for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
-                if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
+            if pz == True:
+                for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
+                    if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
             if x + size / 2 > mmx : #文字撞到边缘则换行
                 print('撞到墙啦:',x,y)
                 x = 0

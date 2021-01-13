@@ -348,7 +348,7 @@ def savecfg(): #保存cfg.json
         jsonfile.close()
     except Exception:
         print('save cfg 出现错误')
-def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2): #文字转图片
+def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2,pz=False): #文字转图片
     '''
     input:
       msg:str 输入文字
@@ -357,7 +357,7 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2): #文字转图片
       f2:str 字体2路径
     '''
     msg = msg.replace('\n','').replace('\r','')
-    image = Im.open(img)
+    image = Im.open(img).convert('RGBA')
 #rs
     global x
     global y
@@ -440,21 +440,22 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2): #文字转图片
                     if x + size > mx: mx = x + size 
                     if y + size > my: my = y + size
                 elif text.startswith('p'): #p<图片路径>: 添加图片
-                    putpath = text[1:]
-                    print(putpath)
-                    putimg =  Image.open(putpath)
-                    putmx = putimg.size[0]
-                    putmy = putimg.size[1]
-                    xin = x
-                    xout = x + putmx
-                    yin = y
-                    yout = y + putmy
-                    if yout > my: my = yout + size
-                    if xout > mx: mx = xout + size
-                    print(mx,my)
-                    x = x + putmx + 1
-                    putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
-                    lispuimg.append(putdata) #所有图片的文字禁区
+                    if pz == True:
+                        putpath = text[1:]
+                        print(putpath)
+                        putimg =  Im.open(putpath).convert('RGBA')
+                        putmx = putimg.size[0]
+                        putmy = putimg.size[1]
+                        xin = x
+                        xout = x + putmx
+                        yin = y
+                        yout = y + putmy
+                        if yout > my: my = yout + size
+                        if xout > mx: mx = xout + size
+                        print(mx,my)
+                        x = x + putmx + 1
+                        putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
+                        lispuimg.append(putdata) #所有图片的文字禁区
                 elif text.startswith('d'): #p<字典>: 变量修改(可用该功能一次性修改 x y color size 等等)
                     if x + size > mx: mx = x + size
                     if y + size > my: my = y + size
@@ -478,27 +479,28 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2): #文字转图片
         x += fx
         for r in range(maximgpass): #在 单个文字能跨过(图片中的)图片的最多次数 内循环
             code = False
-            for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
-                if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
+            if pz == True:
+                for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
+                    if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
             if x + size / 2 > mmx : #文字撞到边缘则换行
                 print(x,y,mmx,mmy)
                 if x + size > mx: mx = x + size
@@ -564,18 +566,22 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2): #文字转图片
                 elif text.startswith('p'): #p<图片路径>: 添加图片
                     print(x,y)
                     putpath = text[1:]
-                    putimg =  Image.open(putpath)
+                    putimg =  Im.open(putpath).convert('RGBA')
+                    putimg.mode 
                     putmx = putimg.size[0]
                     putmy = putimg.size[1]
-                    image.paste(putimg,(math.floor(x),math.floor(y)))
-                    xin = x
-                    xout = x + putmx
-                    yin = y
-                    yout = y + putmy
-                    x = x + putmx + 1
-                    putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
-                    print(putdata,x,y)
-                    lispuimg.append(putdata) #所有图片的文字禁区
+                    layer = Im.new('RGBA', image.size, (0,0,0,0))
+                    layer.paste(putimg,(math.floor(x),math.floor(y)))
+                    image = Im.composite(layer, image, layer)
+                    if pz == True:
+                        xin = x
+                        xout = x + putmx
+                        yin = y
+                        yout = y + putmy
+                        x = x + putmx + 1
+                        putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
+                        print(putdata,x,y)
+                        lispuimg.append(putdata) #所有图片的文字禁区
                 elif text.startswith('d'): #p<字典>: 变量修改(可用该功能一次性修改 x y color size 等等)
                     testx = 0
                     text = text[1:]
@@ -599,27 +605,28 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2): #文字转图片
         x += fx
         for r in range(maximgpass): #在 单个文字能跨过(图片中的)图片的最多次数 内循环
             code = False
-            for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
-                if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
-                if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
-                    print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                    x = i['xout'] + size
-                    code = True
-                    break
+            if pz == True:
+                for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
+                    if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
+                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
+                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
+                        x = i['xout'] + size
+                        code = True
+                        break
             if x + size / 2 > mmx : #文字撞到边缘则换行
                 print('撞到墙啦:',x,y)
                 x = 0
@@ -1017,8 +1024,14 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                         elif rarity == 2: cl = '#1AA5E1\\'
                         elif rarity == 3: cl = '#D282DA\\'
                         elif rarity == 4: cl = '#EDCB26\\'
-                        else: cl = '#FFFFFF'
-                        dname = cl + await rep(16,name)
+                        else: cl = '#FFFFFF\\'
+                        try:
+                            aimg = '\\p./aki_30/id.png\\'.replace('id',i['itemId'])
+                            aimg_p = './aki_30/id.png'.replace('id',i['itemId'])
+                            img = Im.open(aimg_p)
+                        except:
+                            aimg = '  '
+                        dname = cl + aimg + await rep(14,name)
                         num = str(i['bounds']['lower']) + '~' + str(i['bounds']['upper'])
                         if i['dropType'] == "EXTRA_DROP":num = num + 'ex'
                         dnum = await rep(6,num)
@@ -1059,6 +1072,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                     i = i[3:]
                     outmsg = outmsg + i
                 outmsg = outmsg + aks_map3
+                print(outmsg)
                 toimg(outmsg,img = "./chace/ak.png" )
                 await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
         if msg.startswith('i'):
@@ -1066,7 +1080,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             stime0 = 1
             sname = ''
             dnum = 0
-            iid = 0
+            iid = ''
             msg = msg.replace('i','')
             outdata = {}
             for i in aki_data:
@@ -1079,12 +1093,19 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             irarity = outdata['rarity']
             alias = outdata['alias']
             del alias[0]
-            ialias = await rep(49,str(alias))
+            ialias = await rep(45,str(alias))
             ilist = []
+            try:
+                aimg = '\\p./aki_64/id.png\\    '.replace('id',iid)
+                aimg_p = './aki_64/id.png'.replace('id',iid)
+                img = Im.open(aimg_p)
+            except:
+                aimg = '  '
             outmsg = aki_map\
+                .replace('图片',aimg)\
                 .replace('iname(12)///',iname)\
                 .replace('$r',str(irarity) + ' ')\
-                .replace('stime(49)////////////////////////////////////////',str(ialias))
+                .replace('stime(41)////////////////////////////////',str(ialias))
             for i in akm_data:#提取
                 if i['itemId'] == outdata['itemId']:
                     ilist.append(i)
