@@ -32,6 +32,7 @@ import requests
 import os
 from os.path import join, getsize
 import eventlet
+import zipfile
 from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img,infomap,maximgpass
 api = AppPixivAPI()
 loop = asyncio.get_event_loop() 
@@ -83,6 +84,23 @@ try:#配置cfg.json读取与补全
     cfg = json.load(jsonfile)
     jsonfile.close()
     sdir('./r18')
+    if not os.path.exists('./aki_60'):
+        sdir('./aki_60')
+        f = zipfile.ZipFile("./aki_60.zip",'r')
+        for file in f.namelist():
+            f.extract(file,"aki_60/")
+        os.remove("./aki_60.zip")
+    if not os.path.exists('./aki_30'):
+        sdir('./aki_30')
+        flist = os.listdir('./aki_60')
+        for file in flist:
+            path = './aki_60/' + file
+            path2 = './aki_30/' + file
+            img = Im.open(path).convert('RGBA')
+            img = img.resize((30, 30),Im.ANTIALIAS)
+            img.save(path2, 'png')
+
+
     sdir('./setu')
     sdir('./chace')
     sdir('./backups')
@@ -1096,8 +1114,8 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             ialias = await rep(45,str(alias))
             ilist = []
             try:
-                aimg = '\\p./aki_64/id.png\\    '.replace('id',iid)
-                aimg_p = './aki_64/id.png'.replace('id',iid)
+                aimg = '\\p./aki_60/id.png\\    '.replace('id',iid)
+                aimg_p = './aki_60/id.png'.replace('id',iid)
                 img = Im.open(aimg_p)
             except:
                 aimg = '  '
