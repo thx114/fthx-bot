@@ -761,14 +761,14 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
                         if outmsg['extmsg'] != '':
                             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
                     except:pass
-                    return
-                try:
-                    await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
-                except:pass
-                try:
-                    if outmsg['extmsg'] != '':
-                        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
-                except:pass
+                else:
+                    try:
+                        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
+                    except:pass
+                    try:
+                        if outmsg['extmsg'] != '':
+                            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
+                    except:pass
                 await asyncio.sleep(1)
 #R18色图
     elif msg.startswith('不够色') and group.id in cfg['r18_group']:
@@ -1303,9 +1303,9 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
     days = rrule.rrule(freq = rrule.DAILY,dtstart=firstDay,until=endDay)
     if days.count() >= 2:
         await app.sendGroupMessage(group,MessageChain.create([Plain('执行自动重启项目----')]))
-        daki()
-        daks()
-        dakm()
+        await daki()
+        await  daks()
+        await  dakm()
         if not os.path.exists('./backups'):
             os.makedirs('./backups')
         srcfile='./cfg.json'
