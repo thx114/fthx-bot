@@ -41,7 +41,7 @@ app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKe
 try:
     api = AppPixivAPI()
     print('登录Pixiv中..... /如不需要请#此行')
-    api.login(piv_username, piv_password)
+    #api.login(piv_username, piv_password)
 except:print('Pixiv登录失败')
 def sdir(tdir): #新建目录
     if not os.path.exists(tdir):
@@ -94,8 +94,6 @@ try:#配置cfg.json读取与补全
             img = Im.open(path).convert('RGBA')
             img = img.resize((30, 30),Im.ANTIALIAS)
             img.save(path2, 'png')
-
-
     sdir('./setu')
     sdir('./chace')
     sdir('./backups')
@@ -112,7 +110,7 @@ try:#配置cfg.json读取与补全
         except: 
             print('不存在:',i)
             cfg[i] = 0
-except:pass
+except:print('err')
 try:#配置cfg.json数据转换
     hsolvlist_data = {}
     hsolvlist_data = cfg['hsolvlist']
@@ -134,7 +132,7 @@ try:#方舟json读取
     aks_data = json.load(jsonfile)
     jsonfile.close()
 except:print('错误，方舟数据读取失败')
-
+print(cfg['r18_group'])
 class DF(object): #下载
     async def adf(url,pach):#异步下载
         url = url.replace('i.pximg.net','i.pixiv.cat')
@@ -1282,16 +1280,22 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         if group.id in cfg['setu_group']:
             outmsg = '此群已经是色图群'
             if msg.endswith('-'):
-                cfg['setu_group'].remove(group.id);outmsg = '此群不再是色图群'
-        else: cfg['setu_group'].append(group.id) ; outmsg = '已变成色图群'
+                cfg['setu_group'].remove(group.id)
+                outmsg = '此群不再是色图群'
+        else: 
+            cfg['setu_group'].append(group.id)
+            outmsg = '已变成色图群'
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #r18群权限管理
     elif msg.startswith('sg r18') and member.id in admin:
         if group.id in cfg['r18_group'] :
             outmsg = '此群已经是r18群'
             if msg.endswith('-'):
-                cfg['r18_group'].remove(group.id);outmsg = '此群不再是r18群'
-        else: cfg['r18_group'].append(group.id) ; outmsg = '已变成r18群'
+                cfg['r18_group'].remove(group.id)
+                outmsg = '此群不再是r18群'
+        else: 
+            cfg['r18_group'].append(group.id)
+            outmsg = '已变成r18群'
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #后处理项目
     savecfg()
