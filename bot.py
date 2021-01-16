@@ -404,7 +404,6 @@ class Setu:
                     yes , no = await asyncio.wait(tasks)
                     allr = [r.result() for r in yes]
                     loop_ing = False
-                    return
             else:
                 outmsg = await Setu.offline(r18)
                 async with app:r = await app.sendGroupMessage(g,MessageChain.create(outmsg))
