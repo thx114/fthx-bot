@@ -312,7 +312,8 @@ class Setu:
         inputimg = Im.open(path)
         #imgb = inputimg.tobytes()
         #await app.uploadImage(imgb,UploadMethods.Group)
-        async with app:r = await app.sendGroupMessage(xmlimg_group,MessageChain.create([(Image.fromLocalFile(path))]))
+        print(path)
+        async with app:await app.sendGroupMessage(xmlimg_group,MessageChain.create([(Image.fromLocalFile(path))]))
         mmx = inputimg.size[0]
         mmy = inputimg.size[1]
         size = getsize(path)
@@ -348,6 +349,7 @@ class Setu:
         outmsg = [(Image.fromLocalFile(filepach))]
         return outmsg
     async def get(r18,iid,g,s='',num=1): #获取色图
+        if num > 10: return
         #start_time = Time.time()
         """
         \n r18: <int> 1或者0
@@ -380,7 +382,7 @@ class Setu:
             if cfg['setu_l'] == 0:
                 global loop_ing
                 loop_ing = False
-                if num <= len(cfg['setus'][fl]):
+                if num < len(cfg['setus'][fl]):
                     for i in range(num):
                         lsetudata = cfg['setus'][fl]
                         setudata = lsetudata[0]
@@ -398,12 +400,13 @@ class Setu:
                 else:
                     outmsg = [(Plain('色图获取的太多啦，补不上货啦'))]
                     async with app:r = await app.sendGroupMessage(g,MessageChain.create(outmsg))
-                while len(cfg['setus'][fl]) < setus and loop_ing == False:
-                    loop_ing = True
-                    tasks = [loop.create_task(Setu.add(r18=0)) for _ in range(oncesetuadd)]
-                    yes , no = await asyncio.wait(tasks)
-                    allr = [r.result() for r in yes]
-                    loop_ing = False
+                for _ in range(4):
+                    if len(cfg['setus'][fl]) < setus and loop_ing == False:
+                        loop_ing = True
+                        tasks = [loop.create_task(Setu.add(r18=r18)) for _ in range(oncesetuadd)]
+                        yes , no = await asyncio.wait(tasks)
+                        allr = [r.result() for r in yes]
+                        loop_ing = False
             else:
                 outmsg = await Setu.offline(r18)
                 async with app:r = await app.sendGroupMessage(g,MessageChain.create(outmsg))
