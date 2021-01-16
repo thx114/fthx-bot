@@ -8,10 +8,14 @@ piv_password = 'xxxxxxxx' #你的p站密码
 
 lolicon_key = "12345ioawd" #你的lolicon apikey
 saucenao_key = "67890oasof" #你的saucenao apikey
-admin = [20002000]  #主人的qq号 
 
+admin = [20002000]  #主人的qq号 
+xmlimg_group = 200002000 #为了发xml而让机器人上传图片的群(工具群)
 maxx_img = 1080 #下载后的色图最大宽度 0为无限    !!!启用xml色图时此项最好<=1080!!!
 maximgpass = 100 #toimg 文字写入图片系统中:单个文字能跨过(图片中的)图片的最多次数
+
+oncesetuadd = 4 #色图补充器一次性补充的色图数 /超过4不会有效率提升
+setus = 20 #色图缓存库至少存储色图量
 
 fl1 = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf" #你的绘图(默认)中文字体
 fl2 = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf" #你的绘图(默认)英文字体
@@ -31,15 +35,15 @@ aks_map="""
  │ \\#99FFFF\关卡名称\\#FFFFFF\:sname(12)/// \\#99FFFF\理智消耗\\#FFFFFF\:scost(23)//////////////│\\n0\\
  │ \\#99FFFF\最短通关时间\#FFFFFF\:stime(41)////////////////////////////////│\\n0\\
  ├ ───────────────────────────────────────────────────── ┤\\n0\\
- │ \\#FFFFFF\名称    \\#FFFFFF\          \\#FFFFFF\数量\\#FFFFFF\    \\#FFFFFF\掉率     期望理智  期望用时 │\\n0\ """
+ │ \\#FFFFFF\名称    \\#FFFFFF\          \\#FFFFFF\数量\\#FFFFFF\    \\#FFFFFF\掉率     期望理智  期望用时 │\\n0\\"""
 
 aks_map2 = """ │ \\#FFFFFF\\name(24)////////\\#FFFFFF\│ num(6)│ rate(7)│ lz(8)//// time(9)//│\\n0\\"""
 aks_map3 = """ ╰ ───────────────────────────────────────────────────── ╯\\n0\\"""
 aki_map="""
  ╭ ─────────────────── \\b15\ \\b45\ 物品 \\b15\   \\b30\────────────────────── ╮\\n0\\
  │    \\b15\\by F_thx\\b30\                                   \\b15\-数据来自企鹅物流 \\b30\   │\\n0\\
- │ \\#99FFFF\物品名称\\#FFFFFF\:iname(12)/// \\#99FFFF\稀有度\\#FFFFFF\:$r                       │\\n0\\
- │ \\#99FFFF\别名\\#FFFFFF\:stime(49)////////////////////////////////////////│\\n0\\
+ │ 图片\\#99FFFF\物品名称\\#FFFFFF\:iname(12)/// \\#99FFFF\稀有度\\#FFFFFF\:$r                   │\\n0\\
+ │     \\#99FFFF\别名\\#FFFFFF\:stime(41)////////////////////////////////│\\n0\\
  ├ ───────────────────────────────────────────────────── ┤\\n0\\
  │ \\#FFFFFF\关卡名称\\#FFFFFF\          \\#FFFFFF\数量\\#FFFFFF\    \\#FFFFFF\掉率     期望理智  期望用时 │\\n0\\
 """
@@ -63,7 +67,7 @@ helptext = """admin:
   色图来 <数量/搜索内容> :普通色图
   不够色 :r18色图
   info :获取此群最后一个色图的详细信息
-  Experimental_xml_setu on/off :开启/关闭 全局色图xml
+  xml on/off :开启/关闭 全局色图xml
   排行榜 <mode>:获取p站排行榜
     -mode : day week month day_r18 week_r18 week_r18g
   tp <数字1~5> 获取排行榜目标详细信息

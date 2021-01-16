@@ -1,11 +1,8 @@
-from os.path import join
-from pathlib import Path
+from asyncio.tasks import wait
 import random
-import re
 import aiohttp
 import math
 from PIL import ImageFile
-from typing_extensions import runtime
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from random import randint
 import requests
@@ -20,7 +17,6 @@ import asyncio
 import aiohttp
 from graia.application.group import Group, Member
 from graia.application.message.elements.internal import At, Image, Plain, Xml,Json,App
-from graia.application.friend import Friend
 from operator import eq
 from datetime import datetime
 import time as Time
@@ -31,18 +27,14 @@ import sys
 import requests
 import os
 from os.path import join, getsize
-import eventlet
+from threading import Thread
 import zipfile
-from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map,helptext,piv_username,piv_password,maxx_img,infomap,maximgpass
+from asyncio.subprocess import PIPE, STDOUT
+from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map\
+    ,helptext,piv_username,piv_password,maxx_img,infomap,maximgpass,xmlimg_group,oncesetuadd,setus
 api = AppPixivAPI()
 loop = asyncio.get_event_loop() 
-bcc = Broadcast(loop=loop) 
-app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True)) #机器人启动
-try:
-    api = AppPixivAPI()
-    print('登录Pixiv中..... /如不需要请#此行')
-    #api.login(piv_username, piv_password)
-except:print('Pixiv登录失败')
+
 def sdir(tdir): #新建目录
     if not os.path.exists(tdir):
         print('目标不存在,新建目录:',tdir)
@@ -73,12 +65,11 @@ try:#初始化
         print('初始化完成，你需要在群聊内输入akra来获取明日方舟的数据')
 except Exception:print('初始化出现错误')
 try:#配置cfg.json读取与补全
-    cfgdlist = ['hsolvlist','hsolv','qd','qdlist','last_setu','plinfodata']
+    cfgdlist = ['hsolvlist','hsolv','qd','qdlist','last_setu','plinfodata','setus']
     cfgilist = ['setu_l','xml']
     jsonfile = open("cfg.json","r")
     cfg = json.load(jsonfile)
     jsonfile.close()
-    sdir('./r18')
     if not os.path.exists('./aki_60'):
         sdir('./aki_60')
         f = zipfile.ZipFile("./aki_60.zip",'r')
@@ -98,18 +89,19 @@ try:#配置cfg.json读取与补全
     sdir('./chace')
     sdir('./backups')
     sdir('./listpiv')
+    sdir('./r18')
+    sdir('./setu')
     for i in cfgdlist:
-        try: 
-            load = cfg[i]
-        except: 
-            print('不存在:',i)
-            cfg[i] = {}
+        try:load = cfg[i]
+        except:cfg[i] = {}
     for i in cfgilist:
-        try: 
-            load = cfg[i]
-        except: 
-            print('不存在:',i)
-            cfg[i] = 0
+        try: load = cfg[i]
+        except: cfg[i] = 0
+    try:load = cfg['setus']['r18']
+    except:cfg['setus']['r18'] = []
+    try:load = cfg['setus']['setu']
+    except:cfg['setus']['setu'] = []
+
 except:print('err')
 try:#配置cfg.json数据转换
     hsolvlist_data = {}
@@ -132,7 +124,6 @@ try:#方舟json读取
     aks_data = json.load(jsonfile)
     jsonfile.close()
 except:print('错误，方舟数据读取失败')
-print(cfg['r18_group'])
 class DF(object): #下载
     async def adf(url,pach):#异步下载
         url = url.replace('i.pximg.net','i.pixiv.cat')
@@ -158,160 +149,184 @@ class DF(object): #下载
                     mmy = inputimg.size[1]
                     print('新图片大小:',mmx,'|',mmy)
                     inputimg.save(pach, 'png')
+        print('下载完毕')
 class CHS(object): #数据初始化
     def chs(id): 
         datas = [hsolv_data,hsolvlist_data,qd_data,qdlist_data]
         for i in datas :
             if id not in i:
                 i[id] = 0
+code = False
+def PixivLogin():
+    api = AppPixivAPI()
+    print("p站登录中.....")
+    api.login(piv_username, piv_password)
+    code = True
+t = Thread(target=PixivLogin)
+t.setDaemon(True)
+t.start()
+t.join(2)
+if code == False:print("p站登录超时")
+else:print("p站登录成功")
+bcc = Broadcast(loop=loop) 
+app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True))
 async def tlen(text): #文字宽度测量
     lenTxt = len(text) 
     lenTxt_utf8 = len(text.encode('utf-8')) 
     size = int((lenTxt_utf8 - lenTxt)/2 + lenTxt)
     return size
-async def dakm(): #明日方舟m数据获取
-    apiurl = 'https://penguin-stats.io/PenguinStats/api/v2/result/matrix'
-    print('与api沟通中...')
-    async with aiohttp.ClientSession() as session:
-        async with session.get(apiurl) as resp:
-            res_akm_json = await resp.json()
-    ak_m = res_akm_json['matrix']
-    akm = []
-    for i in ak_m:
-        end = False
-        print(i)
-        for item in i:
-            if 'end' in item:
-                print(i['stageId'],i['itemId'],'已录入')
-                end = True
-        if end == False:akm.append(i)
-    print('done')
-    jsonfile=open("akm.json","w")
-    json.dump(akm,jsonfile,indent=4)
-    jsonfile.close()
-    print('json save done')
-async def daki(): #明日方舟i数据获取
-    apiurl = 'https://penguin-stats.io/PenguinStats/api/v2/items'
-    print('与api沟通中...')
-    async with aiohttp.ClientSession() as session:
-        async with session.get(apiurl) as resp:
-            res_aki_json = await resp.json()
-    aki = []
-    for i in res_aki_json:
-        aki_jsoning = {}
-        aki_jsoning['itemId'] = i['itemId']
-        aki_jsoning['alias'] = i['alias']['zh']
-        aki_jsoning['rarity'] = i['rarity']
-        print(aki_jsoning['itemId'],aki_jsoning['alias'][0],'已录入')
-        aki.append(aki_jsoning)
-    print('done')
-    jsonfile=open("aki.json","w")
-    json.dump(aki,jsonfile,indent=4)
-    jsonfile.close()
-    print('json save done')
-async def daks(): #明日方舟s数据获取
-    apiurl = 'https://penguin-stats.io/PenguinStats/api/v2/stages'
-    print('与api沟通中...')
-    async with aiohttp.ClientSession() as session:
-        async with session.get(apiurl) as resp:
-            res_aks_json = await resp.json()
-    aks = []
-    for i in res_aks_json:
-        aks_jsoning = {}
-        aks_jsoning['stageId'] = i['stageId']
-        aks_jsoning['name'] = i['code_i18n']['zh']
-        aks_jsoning['stageType'] = i['stageType']
-        try:
-            aks_jsoning['apCost'] = i['apCost']
-        except:pass
-        try:
-            aks_jsoning['minClearTime'] = i['minClearTime']
-        except:pass
-        try:
-            aks_jsoning['dropInfos'] = i['dropInfos']
-        except:pass
-        print(aks_jsoning['stageId'],aks_jsoning['name'],'已录入')
-        aks.append(aks_jsoning)
-    print('done')
-    jsonfile=open("aks.json","w")
-    json.dump(aks,jsonfile,indent=4)
-    jsonfile.close()
-    print('json save done')
-async def setu(r18,iid,g,s=''): #获取色图
-    outmsg = {}
-    id = str(iid)
-    if id not in hsolvlist_data:
-        print('初始化',id)
-        hsolv_data[id] = 0
-        hsolvlist_data[id] = 0
-        qd_data[id] = 0
-        qdlist_data[id] = 0
-    exmsg = "none"
-    if qd_data[id] == 0:
-        if qdlist_data[id] == 0:
-            stadd = random.randint(10,28)
-            outmsg['extmsg'] = "这是你第一次获取色图,随机获取色图$张".replace('$',str(stadd))
-        else:
-            stadd = random.randint(6,15)
-            outmsg['extmsg'] = "今天第一次获取色图，随机获取色图$张".replace('$',str(stadd))
-        hsolv_data[id] = hsolv_data[id] + stadd
-        qdlist_data[id] = qdlist_data[id] + 1
-        qd_data[id] = 1
-
-    if hsolv_data[id] >= 1 and cfg['setu_l'] == 0:
-        apiurl = 'https://api.lolicon.app/setu/?apikey=$APIKEY&r18=$R18'.replace('$APIKEY',lolicon_key).replace('$R18',str(r18)).replace('$NUM',str(1))
-        if s != '':
-            apiurl = apiurl + '&keyword=' + s
+class Ak:
+    async def m(): #明日方舟m数据获取
+        apiurl = 'https://penguin-stats.io/PenguinStats/api/v2/result/matrix'
         print('与api沟通中...')
-        print(apiurl)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(apiurl) as resp:
+                res_akm_json = await resp.json()
+        ak_m = res_akm_json['matrix']
+        akm = []
+        for i in ak_m:
+            end = False
+            print(i)
+            for item in i:
+                if 'end' in item:
+                    print(i['stageId'],i['itemId'],'已录入')
+                    end = True
+            if end == False:akm.append(i)
+        print('done')
+        jsonfile=open("akm.json","w")
+        json.dump(akm,jsonfile,indent=4)
+        jsonfile.close()
+        print('json save done')
+    async def i(): #明日方舟i数据获取
+        apiurl = 'https://penguin-stats.io/PenguinStats/api/v2/items'
+        print('与api沟通中...')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(apiurl) as resp:
+                res_aki_json = await resp.json()
+        aki = []
+        for i in res_aki_json:
+            aki_jsoning = {}
+            aki_jsoning['itemId'] = i['itemId']
+            aki_jsoning['alias'] = i['alias']['zh']
+            aki_jsoning['rarity'] = i['rarity']
+            print(aki_jsoning['itemId'],aki_jsoning['alias'][0],'已录入')
+            aki.append(aki_jsoning)
+        print('done')
+        jsonfile=open("aki.json","w")
+        json.dump(aki,jsonfile,indent=4)
+        jsonfile.close()
+        print('json save done')
+    async def s(): #明日方舟s数据获取
+        apiurl = 'https://penguin-stats.io/PenguinStats/api/v2/stages'
+        print('与api沟通中...')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(apiurl) as resp:
+                res_aks_json = await resp.json()
+        aks = []
+        for i in res_aks_json:
+            aks_jsoning = {}
+            aks_jsoning['stageId'] = i['stageId']
+            aks_jsoning['name'] = i['code_i18n']['zh']
+            aks_jsoning['stageType'] = i['stageType']
+            try:
+                aks_jsoning['apCost'] = i['apCost']
+            except:pass
+            try:
+                aks_jsoning['minClearTime'] = i['minClearTime']
+            except:pass
+            try:
+                aks_jsoning['dropInfos'] = i['dropInfos']
+            except:pass
+            print(aks_jsoning['stageId'],aks_jsoning['name'],'已录入')
+            aks.append(aks_jsoning)
+        print('done')
+        jsonfile=open("aks.json","w")
+        json.dump(aks,jsonfile,indent=4)
+        jsonfile.close()
+        print('json save done')
+class Setu:
+    async def add(r18=0): #为色图池增加色图
+        ext_ing = ''
+        outmsg = []
+        p_ingdata = {}
+        setudata = {}
+        start_time = Time.time()
+        apiurl = 'https://api.lolicon.app/setu/?apikey=$APIKEY&r18=$R18'.replace('$APIKEY',lolicon_key).replace('$R18',str(r18)).replace('$NUM',str(1))
+        print('与api沟通中...')
         async with aiohttp.ClientSession() as session:
             async with session.get(apiurl) as resp:
                 res_json = await resp.json()
         print('done')
-        code = res_json['code']
-        if code == 429:
+        code = str(res_json['code'])
+        codes = {
+        '-1'	:'-1:api内部错误',
+        '0'	    :'none',
+        '401'	:'401:APIKEY 不存在或被封禁',
+        '403'	:'403:由于不规范的操作而被拒绝调用',
+        '404'	:'404:找不到符合关键字的色图',
+        '429'	:'429:达到色图调用上限，切换至本地色图'}
+        if code != '0':ext_ing = codes['code']
+        if code == '429':
             cfg['setu_l'] = 1
-            outmsg['extmsg'] = "429错误，达到色图调用上限，切换至本地色图"
-            return outmsg
+            return
+        print(ext_ing)
         for i in res_json['data']:
             url_ing = i['url']
             pid_ing = i['pid']
             if r18 == 1:path_ing = './r18/' + str(pid_ing) + '.png'
             else:path_ing = './setu/' + str(pid_ing) + '.png'
-            outmsg['pid'] = pid_ing
-            hsolvlist_data[id] = hsolvlist_data[id] + 1
-            hsolv_data[id] = hsolv_data[id] - 1
+            p_ingdata['pid'] = pid_ing
             print(url_ing,pid_ing,'开始下载')
-            try:
-                await DF.adf(url_ing,path_ing)
-                outmsg['imgpath'] = path_ing
-                code = True
+            try:await DF.adf(url_ing,path_ing)
             except:
                 print('连接错误，正在重试....')
-                try:
-                    await DF.adf(url_ing,path_ing)
-                    outmsg['imgpath'] = path_ing
-                    code = True
+                try:await DF.adf(url_ing,path_ing)
                 except:
-                    hsolv_data[id] = hsolv_data[id] + 1
-                    hsolvlist_data[id] = hsolvlist_data[id] - 1
-                    outmsg['extmsg'] = "连接错误，已退回色图。"
-        gr = str(g)
-        outdata = ""
-        datamsg = res_json['data'][0]
-        for i in datamsg:
-            outdata = outdata + i + str(datamsg[i]) 
-        outdata = outdata.replace('pid','pid:').replace('p0',' p0 - ').replace('uid','uid:').replace('title','\n标题:').replace('author','   作者:').replace('url','\n').replace('r18False','').replace('r18True','').replace('width','\n').replace('height','x').replace('tags','\n标签:')
-        print(datamsg)
-        outmsg['pid'] = datamsg['pid']
-        outmsg['uid'] = datamsg['uid']
-        outmsg['title'] = datamsg['title']
-        outmsg['author'] = datamsg['author']
-        outmsg['url'] = datamsg['url']
-        outmsg['tags'] = datamsg['tags']
-        last_setu[gr] = outdata
-        outmsg['info'] = outdata
-    elif hsolv_data[id] >= 1 and cfg['setu_l'] == 1:
+                    print("连接错误")
+                    return
+            print('intoxml')
+            ext =" $title by $author |pid:$pid uid:$uid "\
+            .replace('$title',i['title'])\
+            .replace('$author',i['author'])\
+            .replace('$pid',str(pid_ing))\
+            .replace('$uid',str(i['uid']))
+            setudata['img'] = path_ing
+            setudata['ext'] = ext
+            outdata = ""
+            for item in i:
+                outdata = outdata + str(item) + str(i[str(item)])
+            outdata = outdata.replace('pid','pid:').replace('p0',' p0 - ').replace('uid','uid:').replace('title','\n标题:').replace('author','   作者:').replace('url','\n').replace('r18False','').replace('r18True','').replace('width','\n').replace('height','x').replace('tags','\n标签:')
+            setudata['info'] = outdata
+            if r18 == 1:fl = 'r18'
+            else:fl = 'setu'
+            cfg['setus'][fl].append(setudata)
+            print('色图库数量+1, 目前色图总量为',len(cfg['setus'][fl]))
+            return pid_ing
+    async def xml(setudata): #使用xml发出色图
+        path = setudata['img']
+        ext = setudata['ext']
+        print('intoxml')
+        with open(path,'rb') as f:
+            img = f.read()
+            pmd5 = hashlib.md5(img).hexdigest()
+        inputimg = Im.open(path)
+        #imgb = inputimg.tobytes()
+        #await app.uploadImage(imgb,UploadMethods.Group)
+        async with app:r = await app.sendGroupMessage(xmlimg_group,MessageChain.create([(Image.fromLocalFile(path))]))
+        mmx = inputimg.size[0]
+        mmy = inputimg.size[1]
+        size = getsize(path)
+        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0" advertiser_id="0" aid="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="" appid="-1" /></msg>'''
+        textxml = textxml.replace('$md5',pmd5)\
+            .replace('$x',str(mmx))\
+            .replace('$y',str(mmy))\
+            .replace('$mx',str(mmx))\
+            .replace('$my',str(mmy))\
+            .replace('$ext',ext)\
+            #.replace('$size',str(size))
+        outxml = [(Xml(textxml))]
+        return outxml
+    async def offline(r18): #发送离线色图
         if r18 == 0: setu_ = './setu'
         else: setu_ = './r18'
         folder = os.listdir(setu_)
@@ -330,10 +345,71 @@ async def setu(r18,iid,g,s=''): #获取色图
         hsolv_data[id] = hsolv_data[id] - 1
         last_setu[str(g)] = filename
         hsolvlist_data[id] = hsolvlist_data[id] + 1
-        outmsg['imgpath'] = filepach
-    else:
-        outmsg['extmsg'] = "你没有剩余色图或其他错误"
-    return outmsg
+        outmsg = [(Image.fromLocalFile(filepach))]
+        return outmsg
+    async def get(r18,iid,g,s='',num=1): #获取色图
+        #start_time = Time.time()
+        """
+        \n r18: <int> 1或者0
+        \n iid: <int> QQ号
+        \n g  : <int> 群号
+        \n
+        \n s  : <str> 关键词 (可选)
+        \n num: <int> 请求色图数量 (可选)
+        \n """
+        id = str(iid)
+        if id not in hsolvlist_data: #初始化
+            print('初始化',id)
+            hsolv_data[id] = 0
+            hsolvlist_data[id] = 0
+            qd_data[id] = 0
+            qdlist_data[id] = 0
+        if qd_data[id] == 0: #签到
+            if qdlist_data[id] == 0:
+                stadd = random.randint(10,28)
+                ext_ing = "这是你第一次获取色图,随机获取色图$张".replace('$',str(stadd))
+            else:
+                stadd = random.randint(6,15)
+                ext_ing = "今天第一次获取色图，随机获取色图$张".replace('$',str(stadd))
+            hsolv_data[id] += stadd
+            qdlist_data[id] += 1
+            qd_data[id] = 1
+        if hsolv_data[id] > 0: 
+            if r18 == 1:fl = 'r18'
+            else:fl = 'setu'
+            if cfg['setu_l'] == 0:
+                global loop_ing
+                loop_ing = False
+                if num <= len(cfg['setus'][fl]):
+                    for i in range(num):
+                        lsetudata = cfg['setus'][fl]
+                        setudata = lsetudata[0]
+                        if cfg['xml'] == 1:
+                            outxml = await Setu.xml(setudata)
+                            print(outxml)
+                            async with app:await app.sendGroupMessage(g,MessageChain.create(outxml))
+                        else:
+                            outmsg = [(Image.fromLocalFile(setudata['img']))]
+                            async with app:await app.sendGroupMessage(g,MessageChain.create(outmsg))
+                        del lsetudata[0]
+                        cfg['setus'][fl] = lsetudata
+                        hsolvlist_data[id] += num
+                        hsolv_data[id] -= num
+                else:
+                    outmsg = [(Plain('色图获取的太多啦，补不上货啦'))]
+                    async with app:r = await app.sendGroupMessage(g,MessageChain.create(outmsg))
+                while len(cfg['setus'][fl]) < setus and loop_ing == False:
+                    loop_ing = True
+                    tasks = [loop.create_task(Setu.add(r18=0)) for _ in range(oncesetuadd)]
+                    yes , no = await asyncio.wait(tasks)
+                    allr = [r.result() for r in yes]
+                    loop_ing = False
+                    return
+            else:
+                outmsg = await Setu.offline(r18)
+                async with app:r = await app.sendGroupMessage(g,MessageChain.create(outmsg))
+        else:
+            async with app:r = await app.sendGroupMessage(g,MessageChain.create([Plain('你没色图啦')]))
 async def rep(l,text): #文字占位处理
     strnone = ' '
     len_ing = await tlen(text)
@@ -649,6 +725,12 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2,pz=False): #文字转图片
     image.save('./chace/1.png')
     print("done")
 
+@bcc.receiver("ApplicationLaunched")
+async def start():
+    print('start')
+    loop_ing = False
+
+
 @bcc.receiver("GroupMessage")
 async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, group: Group, member:Member): #群聊监听
     msg = MessageChain.asDisplay()
@@ -704,135 +786,18 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
 #普通色图
     if msg.startswith('色图来') and group.id in cfg['setu_group']:
         msg = msg.replace('色图来','').replace(' ','')
-        print(msg)
-        sc = ''
-        if msg == '':
-            num = 1
-        else:
-            try:
-                num = int(msg)
-            except:
-                num = 1
-                sc = msg
-        print(num)
-        if num == 0:pass
-        elif num > 10:pass
-        else:
-            for i in range(num):
-                outmsg = await setu(0,member.id,group.id,sc)
-                if cfg['xml'] == 1:
-                    print(outmsg)
-                    chace1 = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
-                    await asyncio.sleep(1)
-                    await app.revokeMessage(chace1)
-                    filepach = outmsg['imgpath']
-                    fd = open(filepach, "rb")
-                    f = fd.read()
-                    pmd5 = hashlib.md5(f).hexdigest()
-                    inputimg = Im.open(filepach)
-                    mmx = inputimg.size[0]
-                    mmy = inputimg.size[1]
-                    tags = ' '.join(outmsg['tags'])
-                    size = getsize(filepach)
-
-                    ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
-                    .replace('$title',outmsg['title'])\
-                    .replace('$author',outmsg['author'])\
-                    .replace('$pid',str(outmsg['pid']))\
-                    .replace('$uid',str(outmsg['uid']))\
-                    .replace('$tags',tags)
-
-                    dxy = str(1000)
-                    print(pmd5)
-                    textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
-                    textxml = textxml.replace('$md5',pmd5)\
-                        .replace('$x',str(mmx))\
-                        .replace('$y',str(mmy))\
-                        .replace('$mx',str(mmx))\
-                        .replace('$my',str(mmy))\
-                        .replace('$ext',ext)\
-                        .replace('$url',outmsg['url'])
-                        #.replace('$size',str(size))
-                    outxml = [Xml(textxml)]
-                    await app.sendGroupMessage(group,MessageChain.create(outxml))
-                    try:
-                        if outmsg['extmsg'] != '':
-                            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
-                    except:pass
-                else:
-                    try:
-                        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
-                    except:pass
-                    try:
-                        if outmsg['extmsg'] != '':
-                            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
-                    except:pass
-                await asyncio.sleep(1)
+        if msg == '':await Setu.get(0,member.id,group.id)
+        elif msg.isdigit:await Setu.get(0,member.id,group.id,num=int(msg))
+        else          :await Setu.get(0,member.id,group.id,s=msg)
 #R18色图
     elif msg.startswith('不够色') and group.id in cfg['r18_group']:
         msg = msg.replace('不够色','').replace(' ','')
-        sc = ''
-        if msg == '':
-            num = 1
-        else:
-            try:
-                num = int(msg)
-            except:
-                num = 1
-                sc = msg
-        if num == 0:pass
-        elif num > 10:pass
-        else:
-            for i in range(num):
-                outmsg = await setu(1,member.id,group.id,sc)
-                if cfg['xml'] == 1:
-                    chace1 = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
-                    await asyncio.sleep(1)
-                    await app.revokeMessage(chace1)
-                    filepach = outmsg['imgpath']
-                    fd = open(filepach, "rb")
-                    f = fd.read()
-                    pmd5 = hashlib.md5(f).hexdigest()
-                    inputimg = Im.open(filepach)
-                    mmx = inputimg.size[0]
-                    mmy = inputimg.size[1]
-                    tags = ' '.join(outmsg['tags'])
-
-                    ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
-                    .replace('$title',outmsg['title'])\
-                    .replace('$author',outmsg['author'])\
-                    .replace('$pid',str(outmsg['pid']))\
-                    .replace('$uid',str(outmsg['uid']))\
-                    .replace('$tags',tags)
-
-                    dxy = str(1000)
-                    print(pmd5)
-                    textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
-                    textxml = textxml.replace('$md5',pmd5)\
-                        .replace('$x',str(mmx))\
-                        .replace('$y',str(mmy))\
-                        .replace('$mx',str(mmx))\
-                        .replace('$my',str(mmy))\
-                        .replace('$ext',ext)\
-                        .replace('$url',outmsg['url'])
-                    outxml = [Xml(textxml)]
-                    await app.sendGroupMessage(group,MessageChain.create(outxml))
-                    try:
-                        if outmsg['extmsg'] != '':
-                            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
-                    except:pass
-                    return
-                try:
-                    await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(outmsg['imgpath'])]))
-                except:pass
-                try:
-                    if outmsg['extmsg'] != '':
-                        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg['extmsg'])]))
-                except:pass
-                await asyncio.sleep(1)
-#Experimental_xml_setu
-    elif msg.startswith('Experimental_xml_setu'):
-        msg = msg.replace('Experimental_xml_setu','').replace(' ','')
+        if msg == '':await Setu.get(1,member.id,group.id)
+        elif msg.isdigit:await Setu.get(1,member.id,group.id,num=int(msg))
+        else          :await Setu.get(1,member.id,group.id,s=msg)
+#xml_setu
+    elif msg.startswith('xml') and hsolvlist_data[str(member.id)] >30:
+        msg = msg.replace('xml','').replace(' ','')
         if msg == 'on':
             cfg['xml'] = 1
             await app.sendGroupMessage(group,MessageChain.create([(Plain('已开启'))]))
@@ -845,34 +810,13 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
         text = helptext
         await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
 #test
-    elif msg.startswith('test'):
-        path = './chace/ak.png'
-        fd = open(path, "rb")
-        f = fd.read()
-        pmd5 = str.upper(hashlib.md5(f).hexdigest())
-        inputimg = Im.open(path)
-        mmx = inputimg.size[0]
-        mmy = inputimg.size[1]
-        size = getsize(path)
-        chace1 = await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile(path)]))
-        print(chace1)
-        url = 'http://gchat.qpic.cn/gchatpic_new/0/0-0-md5/0'.replace('md5',pmd5)
-        await app.revokeMessage(chace1)
-
-        #textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" #multiMsgFlag="0"><item><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="$size" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source #name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
-        #textxml = textxml.replace('$md5',pmd5)\
-        #    .replace('$x',str(mmx))\
-        #    .replace('$y',str(mmy))\
-        #    .replace('$mx',str(mmx))\
-        #    .replace('$my',str(mmy))\
-        #    .replace('$size',str(size))
-        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="23" templateID="1" action="web" brief="51神韵博客" sourceMsgId="0" url="跳转网址" flag="0" adverSign="0" multiMsgFlag="0"><item layout="5"><picture cover="$url" w="0" h="0" /></item><source name="" icon="" action="" appid="-1" /></msg>'''
-        textxml = textxml\
-            .replace('$url',url)
-        print(mmx,mmy,pmd5)
-
- 
-        await app.sendGroupMessage(group,MessageChain.create([(Json(textxml))]))
+    elif msg.startswith('test') and member.id in admin:
+        tasks = [loop.create_task(Setu.add(r18=0)) for _ in range(oncesetuadd)]
+        yes , no = await asyncio.wait(tasks)
+        allr = [r.result() for r in yes]
+        print(allr)
+        #testxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="ae8788712f4384c7f6653ffb397a1ea6.png" md5="ae8788712f4384c7f6653ffb397a1ea6" GroupFiledid="0" filesize="38504" local_path="" minWidth="1080" minHeight="1018" maxWidth="1080" maxHeight="1018" /></item><source name=" 水着フォーミダブル by itaco |pid:78779890 uid:3075769 -跳转" icon="" action="web" url="http://gchat.qpic.cn/gchatpic_new/1764362678/1034944591-3215381436-CEEA3C8CE437FCED8197C7F3A2F23DD0/0" appid="-1" /></msg>"""
+        #await app.sendGroupMessage(group,MessageChain.create([(Xml(testxml))]))
 #排行榜
     elif msg.startswith('排行榜') and group.id in setu_group:
         msg = msg.replace('排行榜','').replace(' ','')
@@ -989,18 +933,18 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
     elif msg.startswith('ak'):
         msg = msg.replace('ak','').replace(' ','').replace('－','-')
         if msg.startswith('rm') and member.id in admin:
-            await dakm()
+            await Ak.m()
             await app.sendGroupMessage(group,MessageChain.create([Plain('企鹅物流 - akm 数据下载完成')]))
         if msg.startswith('ri') and member.id in admin:
-            await daki()
+            await Ak.i()
             await app.sendGroupMessage(group,MessageChain.create([Plain('企鹅物流 - aki 数据下载完成')]))
         if msg.startswith('rs') and member.id in admin:
-            await daks()
+            await Ak.s()
             await app.sendGroupMessage(group,MessageChain.create([Plain('企鹅物流 - aks 数据下载完成')]))
         if msg.startswith('ra') and member.id in admin:
-            await dakm()
-            await daki()
-            await daks()
+            await Ak.m()
+            await Ak.i()
+            await Ak.s()
             restart_program()
         if msg.startswith('s'):
             msg = msg.replace('s','')
@@ -1169,12 +1113,12 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             img = "./chace/ak.png"
             toimg(outmsg,img)
             await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))    
-#色图info
-    elif msg.startswith('info'):
+#info
+    elif msg.startswith('info') and group.id in setu_group:
         outmsg = last_setu[str(group.id)]
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #debug
-    elif msg.startswith('debug'):
+    elif msg.startswith('debug') and group.id in setu_group:
         id = str(member.id)
         info = 'hsolv_data=' +  str(hsolv_data[id]) + '\nhsolvlist_data=' + str(hsolvlist_data[id]) + '\nqd_data=' + str(qd_data[id]) + '\nqdlist_data=' + str(qdlist_data[id])
         await app.sendGroupMessage(group,MessageChain.create([Plain(info)]))
@@ -1200,7 +1144,7 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
             savecfg()
 #-LSP排行榜
-        elif msg.startswith('list'):
+        elif msg.startswith('list') and group.id in setu_group:
             print("list读取")
             groupids = []
             hsolvlist = []
@@ -1260,12 +1204,14 @@ async def group_listener(app: GraiaMiraiApplication, MessageChain:MessageChain, 
             await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
 #-显示hsolv等级
         else:
-            print("printhsolv")
-            id = int(msg.replace("-","").replace(' ',''))
-            mid = 0
-            mid = int(hsolvlist_data[str(id)])
-            outmsg = str(id) + "的hso等级为" + str(mid)
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            try:
+                print("printhsolv")
+                id = int(msg.replace("-","").replace(' ',''))
+                mid = 0
+                mid = int(hsolvlist_data[str(id)])
+                outmsg = str(id) + "的hso等级为" + str(mid)
+                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            except:pass
 #备份
     elif msg.startswith('backup') and member.id in admin:
         savecfg()
