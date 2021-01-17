@@ -37,7 +37,7 @@ def run1():
     global size
     global color
     global pz
-    pz = True
+    pz = False
     lispuimg = []
     xin = -200
     xout = -100
@@ -90,7 +90,7 @@ def run1():
                 elif text.startswith("b"):size = int(text[1:]) #b<int>:文字大小
                 elif text.startswith('#'):color = text ##<16进制颜色>:文字颜色
                 elif text.startswith('y'):y = int(text[1:]) #y<int>:立即切换到y坐标
-                elif text.startswith('x'): 
+                elif text.startswith('x'):#x<x/y>(-)<int> 
                     """
                     xx<int>: x += int
                     xx-<int>: x -= int
@@ -102,29 +102,32 @@ def run1():
                     if text.startswith('x'):
                         text = text[1:]
                         if text.startswith('-'):x -= int(text[1:])
+                        elif text.startswith('>'):x = int(text[1:])
                         else: x += int(text)
                     elif text.startswith('y'):
                         text = text[1:]
                         if text.startswith('-'):y -= int(text[1:])
+                        elif text.startswith('>'):y = int(text[1:])
                         else: x += int(text)
                     if x + size > mx: mx = x + size 
                     if y + size > my: my = y + size
                 elif text.startswith('p'): #p<图片路径>: 添加图片
-                    putpath = text[1:]
-                    print(putpath)
-                    putimg =  Image.open(putpath)
-                    putmx = putimg.size[0]
-                    putmy = putimg.size[1]
-                    xin = x
-                    xout = x + putmx
-                    yin = y
-                    yout = y + putmy
-                    if yout > my: my = yout + size
-                    if xout > mx: mx = xout + size
-                    print(mx,my)
-                    x = x + putmx + 1
-                    putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
-                    lispuimg.append(putdata) #所有图片的文字禁区
+                    if pz == True:
+                        putpath = text[1:]
+                        print(putpath)
+                        putimg =  Image.open(putpath).convert('RGBA')
+                        putmx = putimg.size[0]
+                        putmy = putimg.size[1]
+                        xin = x
+                        xout = x + putmx
+                        yin = y
+                        yout = y + putmy
+                        if yout > my: my = yout + size
+                        if xout > mx: mx = xout + size
+                        print(mx,my)
+                        x = x + putmx + 1
+                        putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
+                        lispuimg.append(putdata) #所有图片的文字禁区
                 elif text.startswith('d'): #p<字典>: 变量修改(可用该功能一次性修改 x y color size 等等)
                     if x + size > mx: mx = x + size
                     if y + size > my: my = y + size
@@ -213,7 +216,7 @@ def run1():
                 elif text.startswith("b"):size = int(text[1:]) #b<int>:文字大小
                 elif text.startswith('#'):color = text ##<16进制颜色>:文字颜色
                 elif text.startswith('y'):y = int(text[1:]) #y<int>:立即切换到y坐标
-                elif text.startswith('x'): 
+                elif text.startswith('x'):#x<x/y>(-)<int> 
                     """
                     xx<int>: x += int
                     xx-<int>: x -= int
@@ -225,28 +228,34 @@ def run1():
                     if text.startswith('x'):
                         text = text[1:]
                         if text.startswith('-'):x -= int(text[1:])
+                        elif text.startswith('>'):x = int(text[1:])
                         else: x += int(text)
                     elif text.startswith('y'):
                         text = text[1:]
                         if text.startswith('-'):y -= int(text[1:])
+                        elif text.startswith('>'):y = int(text[1:])
                         else: x += int(text)
+                    if x + size > mx: mx = x + size 
+                    if y + size > my: my = y + size
                 elif text.startswith('p'): #p<图片路径>: 添加图片
                     print(x,y)
                     putpath = text[1:]
                     putimg =  Image.open(putpath).convert('RGBA')
+                    putimg.mode 
                     putmx = putimg.size[0]
                     putmy = putimg.size[1]
                     layer = Image.new('RGBA', im1.size, (0,0,0,0))
                     layer.paste(putimg,(math.floor(x),math.floor(y)))
                     im1 = Image.composite(layer, im1, layer)
-                    xin = x
-                    xout = x + putmx
-                    yin = y
-                    yout = y + putmy
-                    x = x + putmx + 1
-                    putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
-                    print(putdata,x,y)
-                    lispuimg.append(putdata) #所有图片的文字禁区
+                    if pz == True:
+                        xin = x
+                        xout = x + putmx
+                        yin = y
+                        yout = y + putmy
+                        x = x + putmx + 1
+                        putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
+                        print(putdata,x,y)
+                        lispuimg.append(putdata) #所有图片的文字禁区
                 elif text.startswith('d'): #p<字典>: 变量修改(可用该功能一次性修改 x y color size 等等)
                     testx = 0
                     text = text[1:]

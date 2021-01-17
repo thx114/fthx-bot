@@ -1,8 +1,9 @@
-requests==2.24.0
-aiohttp==3.6.2
+~pencv_python>=4.3.0.38
+beautifulsoup4>=4.9.3
+PixivPy>=3.5.10
+aiohttp>=3.7.3
+requests>=2.24.0
 typing_extensions==3.7.4.2
-Pillow==8.1.0
-python_dateutil==2.8.1
-graia-application-mirai==0.11.0
-graia-broadcast==0.5.3
-pixivpy3==3.5.10
+Pillow>=8.1.0
+python_dateutil>=2.8.1
+graia-application-mirai>=0.15.0
