@@ -108,6 +108,11 @@ try:#配置cfg.json读取与补全
     except:cfg['setus']['r18'] = []
     try:load = cfg['setus']['setu']
     except:cfg['setus']['setu'] = []
+    try:
+        initDate = datetime.strptime(cfg['time'],'%Y-%m-%d %H:%M:%S')
+        cfg['time'] = Time.time()
+        print('done')
+    except:pass
 except:print('err')
 try:#配置cfg.json数据转换
     hsolvlist_data = {}
@@ -393,10 +398,11 @@ class Setu:
             else:
                 stadd = random.randint(6,15)
                 ext_ing = "今天第一次获取色图，随机获取色图$张".replace('$',str(stadd))
-            async with app:r = await app.sendGroupMessage(g,MessageChain.create([At(iid),Plain(ext_ing)]))
+            async with app:await app.sendGroupMessage(g,MessageChain.create([At(iid),Plain(ext_ing)]))
             hsolv_data[id] += stadd
             qdlist_data[id] += 1
             qd_data[id] = 1
+            savecfg()
         if hsolv_data[id] > 0: 
             if r18 == 1:fl = 'r18'
             else:fl = 'setu'
@@ -408,6 +414,7 @@ class Setu:
                         lsetudata = cfg['setus'][fl]
                         setudata = lsetudata[0]
                         if cfg['xml'] == 1:
+                            setudata['ext'] = setudata['ext'] + '色图缓存:' + str(len(cfg['setus'][fl]))
                             outxml = await Setu.xml(setudata)
                             print(outxml)
                             async with app:await app.sendGroupMessage(g,MessageChain.create(outxml))
@@ -770,8 +777,6 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2,pz=False,savepath='./chace/
     image.save(savepath)
     print("done")
 
-
-
 @bcc.receiver("GroupMessage")
 async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group: Group, member:Member): #群聊监听
     msg = message.asDisplay()
@@ -791,7 +796,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         timg = message.get(Image)[0].url
         print(timg)
         if message.has(At):
-            if message.get(At)[0].target == bot_qq:
+            if message.get(At)[0].target == bot_qq and group.id in setu_group:
 #-以图搜图          
                 await app.sendGroupMessage(group, MessageChain.create([At(member.id), Plain("选择搜索源:\n1.saucenao\n2.ascii2d.net")]))
                 @Waiter.create_using_function([GroupMessage])
@@ -995,118 +1000,11 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
 #test
     elif msg.startswith('test') and member.id in admin:
-        print('test')
-        #if msg.startswith('test1'): fromt = 'saucenao'
-        #else:fromt = 'QAQTEST'
-        #soup = BeautifulSoup(open('./test.html',encoding="utf-8"),features='html.parser')#html.parser是解析器，也可是lxml
-        #a = soup.find_all('div',attrs={"class": "row item-box"},limit=10)
-        #ilist = []
-        #maps = ''
-        #imgpath = './sh.png'
-        #await DF.adf(timg,imgpath)
-        #image = Im.open(imgpath)
-        #mmx = image.size[0]
-        #mmy = image.size[1]
-        #await DF.resize(imgpath,360,180)
-        #for i in a:
-        #    idata = {}
-        #    outlinks = []
-        #    try:outi = i.find_all('img',attrs={"loading": "eager"})[0]['src']
-        #    except:outi = i.find_all('img',attrs={"loading": "lazy"})[0]['src']
-        #    try:outlink = i.find_all('a',attrs={'target':"_blank"})
-        #    except:outlink = 'none'
-        #    try:small = i.find_all('small')[-1].string
-        #    except:small = '无'
-        #    small = small.replace('\n','').replace('\r','').replace(' ','')
-        #    for _ in outlink:
-        #        linkdata = {}
-        #        linkdata['str'] = _.string
-        #        linkdata['url'] = _['href']
-        #        if linkdata == {} : linkdata['str'] = '详情不存在'
-        #        outlinks.append(linkdata)
-        #    idata['img'] = outi
-        #    idata['links'] = outlinks
-        #    idata['from'] = small
-        #    ilist.append(idata)
-        #startmap = Search_map\
-        #        .replace('$from(17)////////',await rep(17,fromt))\
-        #        .replace('$s180x360', imgpath)
-        #n = 0
-        #outmsg = startmap
-        #for i in ilist:
-        #    n += 1
-        #    url = i['img']
-        #    if url.startswith('/thumbnail/'):url = 'https://ascii2d.net' + url
-        #    img_ing = './chace/' + str(n) + '.png\\'
-        #    await DF.adf(url,img_ing)
-        #    try:ptitle = i['links'][0]['str']
-        #    except:ptitle ='None'
-        #    try:puser = i['links'][1]['str']
-        #    except:puser ='None'
-        #    try:pfromi = i['from']
-        #    except:pfromi ='None'
-        #    try:title = await rep(13,i['links'][0]['str'])
-        #    except:title =await rep(13,'None')
-        #    try:user = await rep(13,i['links'][1]['str'])
-        #    except:user =await rep(13,'None')
-        #    try:fromi = await rep(9,i['from'])
-        #    except:fromi =await rep(9,'None')
-        #    map_ing = Search_map2\
-        #        .replace('$i120x240',img_ing + str(n) + '.')\
-        #        .replace('$title(13)///','\\xx>300\\'+ title)\
-        #        .replace('$user(13)///','\\xx>510\\'+ user)\
-        #        .replace('$from(9)/','\\xx>720\\'+fromi)
-        #    outmsg = outmsg + map_ing
-        #    print(ptitle,puser,pfromi)
-        #    print(title,user,fromi)
-        #outmsg = outmsg + aks_map3
-        #print(outmsg)
-        #path = './chace/bg_l.png'
-        #path2 ='./chace/bg_d.png'
-        #img = cv2.imread(path, -1) 
-        #fx = fy = 1
-        #img = cv2.resize(img, (0, 0), fx=fx, fy=fy, interpolation=cv2.INTER_CUBIC)  
-        #img = cv2.GaussianBlur(img,(13,13),0)
-        #cv2.imwrite(path2, img)
-        #cv2.waitKey(0)  
-        #toimg(outmsg,path2)
-        #await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
-        #    
-        #waiterout = ''
-        #await app.sendGroupMessage(group,MessageChain.create([(Plain('接收内容'))]))
-        #tic = Time.time()
-        #@Waiter.create_using_function([GroupMessage])
-        #def waiter(event: GroupMessage, waiter_group: Group,waiter_member: Member, waiter_message: MessageChain):
-        #    toc = Time.time()
-        #    print('触发')
-        #    if toc - tic > 10:
-        #        print('return!!!!!!!!!!!!!!!!!!!')
-        #        return event
-        #    if all([
-        #        waiter_group.id == group.id,
-        #        waiter_member.id == member.id,
-        #        waiter_message.asDisplay().startswith("22")
-        #    ]):
-        #        #waiterout = waiter_message.asDisplay()
-        #        print('qaq')
-        #        return event
-        #await inc.wait(waiter)
-        #await app.sendGroupMessage(group,MessageChain.create([Plain('Done')]))
-        #print('done')
-        #await inc.wait(waiter)
-        ##print(waiterout)
-        ##if waiterout.startswith('1'): txt = '1'
-        ##if waiterout.startswith('2'): txt = '2'
-        ##else:txt = 'else'
-        #        
-        #await app.sendGroupMessage(group, MessageChain.create([Plain("执行完毕.")]))
-        #tasks = [loop.create_task(Setu.add(r18=0)) for _ in range(oncesetuadd)]
-        #yes , no = await asyncio.wait(tasks)
-        #allr = [r.result() for r in yes]
-        #print(allr)
-        #testxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="ae8788712f4384c7f6653ffb397a1ea6.png" md5="ae8788712f4384c7f6653ffb397a1ea6" GroupFiledid="0" filesize="38504" local_path="" minWidth="1080" minHeight="1018" maxWidth="1080" maxHeight="1018" /></item><source name=" 水着フォーミダブル by itaco |pid:78779890 uid:3075769 -跳转" icon="" action="web" url="http://gchat.qpic.cn/gchatpic_new/1764362678/1034944591-3215381436-CEEA3C8CE437FCED8197C7F3A2F23DD0/0" appid="-1" /></msg>"""
-        #await app.sendGroupMessage(group,MessageChain.create([(Xml(testxml))]))
-        #https：//ascii2d.net/search/url/图像编码 URL
+        try:
+            initDate = datetime.strptime(cfg['time'],'%Y-%m-%d %H:%M:%S')
+            cfg['time'] = Time.time()
+            print('更新done')
+        except:print('无需更新')
 #排行榜
     elif msg.startswith('排行榜') and group.id in setu_group:
         msg = msg.replace('排行榜','').replace(' ','')
@@ -1535,16 +1433,11 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #后处理项目
     savecfg()
-    initDate = datetime.strptime(cfg['time'],'%Y-%m-%d %H:%M:%S')
-    timedata = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    timedata2 = datetime.strptime(timedata,'%Y-%m-%d %H:%M:%S')
-    firstDay = datetime(initDate.year,initDate.month,initDate.day)
-    endDay = datetime(timedata2.year,timedata2.month,timedata2.day)
-    days = rrule.rrule(freq = rrule.DAILY,dtstart=firstDay,until=endDay)
-    if days.count() >= 2:
-        timenow = datetime.now().strftime('%Y-%m-%d 10:10:10')
+    timenow = Time.time()
+    ltime = cfg['time']
+    if timenow - ltime > 86400:
         cfg['time'] = timenow
-        await app.sendGroupMessage(group,MessageChain.create([Plain('执行自动重启项目----')]))
+        await app.sendGroupMessage(xmlimg_group,MessageChain.create([Plain('执行自动重启项目----')]))
         srcfile='./cfg.json'
         name = Time.strftime('%Y-%m-%d-%H',Time.localtime(Time.time()))
         dstfile='./backups/'+ name + '.json'
@@ -1552,9 +1445,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         print(timenow)
         for i in qd_data:
             qd_data[i] = 0
-
         savecfg()
-
         await Ak.i()
         await Ak.s()
         await Ak.m()
