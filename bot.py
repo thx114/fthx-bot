@@ -15,11 +15,13 @@ from PIL import ImageFont,ImageDraw
 from graia.broadcast import Broadcast
 from graia.application import GraiaMiraiApplication, Session, message
 from graia.application.event.messages import GroupMessage
+from graia.application.event.mirai import MemberJoinEvent, NewFriendRequestEvent
 from graia.application.message.chain import MessageChain
+
 import asyncio
 import aiohttp
 from graia.application.group import Group, Member
-from graia.application.message.elements.internal import At, Image, Plain, Xml,Json,App
+from graia.application.message.elements.internal import At, Image, Plain, Xml,Json,App,Source
 from graia.broadcast.interrupt import InterruptControl
 from graia.broadcast.interrupt.waiter import Waiter
 from operator import eq
@@ -46,96 +48,84 @@ def sdir(tdir): #新建目录
     if not os.path.exists(tdir):
         print('目标不存在,新建目录:',tdir)
         os.makedirs(tdir)
-try:#初始化
-    if not os.path.exists('cfg.json'):
-        if not os.path.exists('./chace/mainbg.png'):
-            print('错误:没有找到主界面背景')
-        cfg = {}
-        cfg['hsolvlist'] = {}
-        cfg['hsolv'] = {}
-        cfg['qd'] = {}
-        cfg['qdlist'] = {}
-        cfg['last_setu'] = {}
-        cfg['hsolvlist']['0'] = 0
-        cfg['hsolv']['0'] = 0
-        cfg['qd']['0'] = 0
-        cfg['qdlist']['0'] = 0
-        cfg['setu_group'] = [0]
-        cfg['r18_group'] = [0]
-        cfg['last_setu']['0'] = 0
-        cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
-        cfg['setu_l'] = 0
-        cfg['xml'] = 0
-        jsonfile=open("cfg.json","w")
-        json.dump(cfg,jsonfile,indent=4)
-        jsonfile.close()
-        print('初始化完成，你需要在群聊内输入akra来获取明日方舟的数据')
-except Exception:print('初始化出现错误')
-try:#配置cfg.json读取与补全
-    cfgdlist = ['hsolvlist','hsolv','qd','qdlist','last_setu','plinfodata','setus','last_s']
-    cfgilist = ['setu_l','xml']
+
+try: #start
+    try:#初始化
+        if not os.path.exists('cfg.json'):
+            if not os.path.exists('./chace/mainbg.png'):
+                print('错误:没有找到主界面背景')
+            cfg = {}
+            cfg['hsolvlist'] = {}
+            cfg['hsolv'] = {}
+            cfg['qd'] = {}
+            cfg['qdlist'] = {}
+            cfg['last_setu'] = {}
+            cfg['hsolvlist']['0'] = 0
+            cfg['hsolv']['0'] = 0
+            cfg['qd']['0'] = 0
+            cfg['qdlist']['0'] = 0
+            cfg['setu_group'] = [0]
+            cfg['r18_group'] = [0]
+            cfg['last_setu']['0'] = 0
+            cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
+            cfg['setu_l'] = 0
+            cfg['xml'] = 0
+            jsonfile=open("cfg.json","w")
+            json.dump(cfg,jsonfile,indent=4)
+            jsonfile.close()
+            print('初始化完成，你需要在群聊内输入akra来获取明日方舟的数据')
+    except Exception:print('初始化出现错误')
     jsonfile = open("cfg.json","r")
     cfg = json.load(jsonfile)
     jsonfile.close()
-    if not os.path.exists('./aki_60'):
-        sdir('./aki_60')
-        f = zipfile.ZipFile("./aki_60.zip",'r')
-        for file in f.namelist():
-            f.extract(file,"aki_60/")
-        os.remove("./aki_60.zip")
-    if not os.path.exists('./aki_30'):
-        sdir('./aki_30')
-        flist = os.listdir('./aki_60')
-        for file in flist:
-            path = './aki_60/' + file
-            path2 = './aki_30/' + file
-            img = Im.open(path).convert('RGBA')
-            img = img.resize((30, 30),Im.ANTIALIAS)
-            img.save(path2, 'png')
-    sdir('./setu')
-    sdir('./chace')
-    sdir('./backups')
-    sdir('./listpiv')
-    sdir('./r18')
-    sdir('./setu')
-    for i in cfgdlist:
-        try:load = cfg[i]
-        except:cfg[i] = {}
-    for i in cfgilist:
-        try: load = cfg[i]
-        except: cfg[i] = 0
-    try:load = cfg['setus']['r18']
-    except:cfg['setus']['r18'] = []
-    try:load = cfg['setus']['setu']
-    except:cfg['setus']['setu'] = []
-    try:
+    try:#配置补全
+        sdir('./setu')
+        sdir('./chace')
+        sdir('./backups')
+        sdir('./listpiv')
+        sdir('./r18')
+        sdir('./setu')
+        for i in ['hsolvlist','hsolv','qd','qdlist','last_setu','plinfodata','setus','last_s']:
+            try:load = cfg[i]
+            except:cfg[i] = {}
+        for i in ['setu_l','xml']:
+            try: load = cfg[i]
+            except: cfg[i] = 0
+        try:load = cfg['setus']['r18']
+        except:cfg['setus']['r18'] = []
+        try:load = cfg['setus']['setu']
+        except:cfg['setus']['setu'] = []
+    except:print('配置补全错误')
+    try:#时间转换
         initDate = datetime.strptime(cfg['time'],'%Y-%m-%d %H:%M:%S')
-        cfg['time'] = Time.time()
-        print('done')
+        cfg['time'] = math.floor( Time.time() / 60 / 60 / 24 )
+        print('更新时间配置')
     except:pass
+    if type(cfg['time']) == float:
+        cfg['time'] = math.floor( Time.time() / 60 / 60 / 24 )
+        print('更新时间配置')
+    try:
+        hsolvlist_data = cfg['hsolvlist']
+        hsolv_data = cfg['hsolv']
+        qd_data = cfg['qd']
+        qdlist_data = cfg['qdlist']
+        setu_group = cfg['setu_group']
+        r18_group = cfg['r18_group']
+        last_setu = cfg['last_setu']
+        last_s = cfg['last_s']
+    except:print('严重错误，配置读取失败')
+    try:#方舟json读取
+        jsonfile = open("akm.json","r")
+        akm_data = json.load(jsonfile)
+        jsonfile.close()
+        jsonfile = open("aki.json","r")
+        aki_data = json.load(jsonfile)
+        jsonfile.close()
+        jsonfile = open("aks.json","r")
+        aks_data = json.load(jsonfile)
+        jsonfile.close()
+    except:print('错误，方舟数据读取失败')
 except:print('err')
-try:#配置cfg.json数据转换
-    hsolvlist_data = {}
-    hsolvlist_data = cfg['hsolvlist']
-    hsolv_data = cfg['hsolv']
-    qd_data = cfg['qd']
-    qdlist_data = cfg['qdlist']
-    setu_group = cfg['setu_group']
-    r18_group = cfg['r18_group']
-    last_setu = cfg['last_setu']
-    last_s = cfg['last_s']
-except:print('严重错误，配置读取失败')
-try:#方舟json读取
-    jsonfile = open("akm.json","r")
-    akm_data = json.load(jsonfile)
-    jsonfile.close()
-    jsonfile = open("aki.json","r")
-    aki_data = json.load(jsonfile)
-    jsonfile.close()
-    jsonfile = open("aks.json","r")
-    aks_data = json.load(jsonfile)
-    jsonfile.close()
-except:print('错误，方舟数据读取失败')
 class DF(object): #下载
     async def resize(path,mx=0,my=0):
         onlyy = onlyx =False
@@ -369,7 +359,6 @@ class Setu:
         filename = filepach.replace(setu_ + '/','')
         print("选中色图" + filepach)
         hsolv_data[id] = hsolv_data[id] - 1
-        last_setu[str(g)] = filename
         hsolvlist_data[id] = hsolvlist_data[id] + 1
         outmsg = [(Image.fromLocalFile(filepach))]
         return outmsg
@@ -483,57 +472,30 @@ def savecfg(): #保存cfg.json
         jsonfile.close()
     except Exception:
         print('save cfg 出现错误')
-def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2,pz=False,savepath='./chace/out.png'): #文字转图片
+def toimg(msg,imgpath='./chace/mainbg.png',f1=fl1,f2=fl2,PZ=False,savepath='./chace/out.png',SIZE=30,COLOR = "#ffffff"): #文字转图片
     '''
     input:
       msg:str 输入文字
-      img:str 图片路径
+      imgpath:str 图片路径
       f1:str 字体1路径
       f2:str 字体2路径
     '''
     msg = msg.replace('\n','').replace('\r','')
-    image = Im.open(img).convert('RGBA')
-#rs
-    global x
-    global y
-    global mx
-    global my
-    global mmx
-    global mmy
-    global size
-    global color
-    lispuimg = []
-    xin = -200
-    xout = -100
-    yin = -200
-    yout = -100
-    mmx = 2048
-    mmy = 1278
-    size = 30
-    y = 0 
-    x = 0
-    my = 10
-    mx = 10
-    color = "#ffffff"
+    img = Im.open(imgpath).convert('RGBA')
+    global x,y,mx,my,mmx,mmy,size,color,pz,function_time,for_time,text_time,text_list,function_list,for_list,lispuimg,functionlist
+    for i in ['text_list' , 'function_list' , 'for_list' , 'lispuimg' , 'functionlist']:exec(i+'=[]',globals())
+    for i in ['y' , 'x' , 'my' , 'mx','function_time','for_time','text_time']:exec(i+'=0',globals())
+    pz = PZ
+    size = SIZE
+    color = COLOR
+    mmx = img.size[0]
+    mmy = img.size[1]
     efunction = False
-    functionlist = []
     f = ''
-    if img != './chace/mainbg.png' : 
-        mmx = image.size[0]
-        mmy = image.size[1]
-    '''变量:
-    x : 坐标x
-    y : 坐标y
-    mx :裁剪后图片宽度 (如果要设定必须在末尾)
-    my :裁剪后图片长度 (如果要设定必须在末尾)
-    mmx :原图大小(如果要设定必须在开头)
-    mmy :原图大小(如果要设定必须在开头)
-    # "y": y + size 是可行的
-    size:目前文字大小
-    color:颜色
-    '''
-#def1
+    img = Im.open(imgpath)
+    textimg = Im.new('RGBA', img.size, (0,0,0,0))
     for i in msg: # 遍历所有文字,探测\指令,输出所有文字占图片最大宽 高
+        function_s = Time.time()
         if efunction == False and eq(i,"\\"): #探测到 \ 则进入功能模式
             efunction=True
             functionlist=[] 
@@ -554,143 +516,7 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2,pz=False,savepath='./chace/
                     if y + size > my: my = y + size
                 elif text.startswith("b"):size = int(text[1:]) #b<int>:文字大小
                 elif text.startswith('#'):color = text ##<16进制颜色>:文字颜色
-                elif text.startswith('x'):#x<x/y>(-)<int> 
-                    """
-                    xx<int>: x += int
-                    xx-<int>: x -= int
-
-                    xy<int>: y += int
-                    xy-<int>: y -= int
-                    """
-                    text = text[1:]
-                    if text.startswith('x'):
-                        text = text[1:]
-                        if text.startswith('-'):x -= int(text[1:])
-                        elif text.startswith('>'):x = int(text[1:])
-                        else: x += int(text)
-                    elif text.startswith('y'):
-                        text = text[1:]
-                        if text.startswith('-'):y -= int(text[1:])
-                        elif text.startswith('>'):y = int(text[1:])
-                        else: x += int(text)
-                    if x + size > mx: mx = x + size 
-                    if y + size > my: my = y + size
-                elif text.startswith('p'): #p<图片路径>: 添加图片
-                    if pz == True:
-                        putpath = text[1:]
-                        print(putpath)
-                        putimg =  Im.open(putpath).convert('RGBA')
-                        putmx = putimg.size[0]
-                        putmy = putimg.size[1]
-                        xin = x
-                        xout = x + putmx
-                        yin = y
-                        yout = y + putmy
-                        if yout > my: my = yout + size
-                        if xout > mx: mx = xout + size
-                        print(mx,my)
-                        x = x + putmx + 1
-                        putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
-                        lispuimg.append(putdata) #所有图片的文字禁区
-                elif text.startswith('d'): #p<字典>: 变量修改(可用该功能一次性修改 x y color size 等等)
-                    if x + size > mx: mx = x + size
-                    if y + size > my: my = y + size
-                    testx = 0
-                    text = text[1:]
-                    print(text)
-                    dict_ing = json.loads(text)
-                    print('修改:',dict_ing)
-                    globals().update(dict_ing)
-                    print(testx)
-                functionlist=[] 
-                continue
-            functionlist.append(i) #退出后保存功能模式下所探测的文字到 functionlist
-            continue
-        if i >= u'\u4e00' and i <= u'\u9fa5' or i >= u'\u3040' and i <= u'\u31FF':#中文
-            fx = size
-            f = f1
-        else:   #如果是英文，使用英文字体，并每次x跃进时只会跃进半个文字大小
-            fx = size / 2 
-            f = f2
-        x += fx
-        for r in range(maximgpass): #在 单个文字能跨过(图片中的)图片的最多次数 内循环
-            code = False
-            if pz == True:
-                for i in lispuimg: #文字撞到(图片中的)图片则跃进图片宽度
-                    if i['xin'] <= x < i['xout'] and i['yin'] <= y < i['yout']:
-                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                        x = i['xout'] + size
-                        code = True
-                        break
-                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y < i['yout']:
-                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                        x = i['xout'] + size
-                        code = True
-                        break
-                    if i['xin'] <= x < i['xout'] and i['yin'] <= y + size < i['yout']:
-                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                        x = i['xout'] + size
-                        code = True
-                        break
-                    if i['xin'] <= x + size < i['xout'] and i['yin'] <= y + size < i['yout']:
-                        print('撞到图片啦:',x,y,i['xin'],i['xout'])
-                        x = i['xout'] + size
-                        code = True
-                        break
-            if x + size / 2 > mmx : #文字撞到边缘则换行
-                print(x,y,mmx,mmy)
-                if x + size > mx: mx = x + size
-                if y + size > my: my = y + size
-                x = 0
-                y += size
-                code = True
-            if code == False : break #跳出循环
-#rs2
-    if x > mx: mx = x + size
-    if y > my: my = y + size
-    if my == 0:mx = x + size
-    if my == 0:my += size 
-    print('mx:' + str(mx) + "|my:" + str(my))
-    ly =  (mmy - my) / 2
-    image.save(savepath)
-    image = image.crop((0,ly,mx,ly+my))
-    mmx = mx
-    mmy = my
-    size = 30
-    y = 0
-    x = 0
-    color = "#ffffff"
-    efunction = False
-    functionlist = []
-    lispuimg = []
-    f = ''
-#def2
-    for i in msg: # 遍历文字,探测\指令, 在图片内写入 文字/图片
-        if efunction == False and eq(i,"\\"): #探测到 \ 则进入功能模式
-            efunction=True
-            functionlist=[] 
-            continue
-        elif efunction == True: #功能模式
-            if eq(i,"\\"): #在功能模式下再次探测到 \ 则退出功能模式
-                efunction = False
-                text = ''.join(functionlist)
-                if text.startswith("n"): #n:换行
-                    text = text[1:]
-                    if text.isdigit():x = int(text) #n<int> 换行并使x = int
-                    if text.startswith('s'):x = x  #ns 换行并保持x
-                    else: x = 0
-                    y += size
-                elif text.startswith("b"):size = int(text[1:]) #b<int>:文字大小
-                elif text.startswith('#'):color = text ##<16进制颜色>:文字颜色
-                elif text.startswith('y'):y = int(text[1:]) #y<int>:立即切换到y坐标
-                elif text.startswith('x'):#x<x/y>(-)<int> 
-                    """
-                    xx<int>: x += int
-                    xx-<int>: x -= int
-
-                    xy<int>: y += int
-                    xy-<int>: y -= int
-                    """
+                elif text.startswith('x'):#x<x/y>(-/>)<int> : xy 绝对/相对值修改
                     text = text[1:]
                     if text.startswith('x'):
                         text = text[1:]
@@ -708,22 +534,26 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2,pz=False,savepath='./chace/
                     print(x,y)
                     putpath = text[1:]
                     putimg =  Im.open(putpath).convert('RGBA')
-                    putimg.mode 
                     putmx = putimg.size[0]
                     putmy = putimg.size[1]
-                    layer = Im.new('RGBA', image.size, (0,0,0,0))
-                    layer.paste(putimg,(math.floor(x),math.floor(y)))
-                    image = Im.composite(layer, image, layer)
+                    layer = Im.new('RGBA', textimg.size, (0,0,0,0)) #空图层 原图大小
+                    layer.paste(putimg,(math.floor(x),math.floor(y))) #空图层插入putimg
+                    textimg = Im.composite(layer, textimg, layer) #图层与原图合并
                     if pz == True:
+                        putpath = text[1:]
                         xin = x
                         xout = x + putmx
                         yin = y
                         yout = y + putmy
+                        if yout > my: my = yout + size
+                        if xout > mx: mx = xout + size
                         x = x + putmx + 1
                         putdata = {"xin":xin,"xout":xout,"yin":yin,"yout":yout} #因为该图片而产生的文字禁区:(xin,yin),(xout,yout)
                         print(putdata,x,y)
                         lispuimg.append(putdata) #所有图片的文字禁区
                 elif text.startswith('d'): #p<字典>: 变量修改(可用该功能一次性修改 x y color size 等等)
+                    if x + size > mx: mx = x + size
+                    if y + size > my: my = y + size
                     testx = 0
                     text = text[1:]
                     print(text)
@@ -735,15 +565,21 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2,pz=False,savepath='./chace/
                 continue
             functionlist.append(i) #退出后保存功能模式下所探测的文字到 functionlist
             continue
-        if i >= u'\u4e00' and i <= u'\u9fa5' or i >= u'\u3040' and i <= u'\u31FF': #中文
+        function_e = Time.time()
+        function_list.append(function_e - function_s)
+        text_s = Time.time()
+        if i >= u'\u4e00' and i <= u'\u9fa5' or i >= u'\u3040' and i <= u'\u31FF':#中文
             fx = size
             f = f1
-        else:  #如果是英文，使用英文字体，并每次x跃进时只会跃进半个文字大小
+        else:   #如果是英文，使用英文字体，并每次x跃进时只会跃进半个文字大小
             fx = size / 2 
             f = f2
-        ImageDraw.Draw(image).text((x+2, y-6),i,font=ImageFont.truetype(f,size),fill='#000000',direction=None) #文字阴影
-        ImageDraw.Draw(image).text((x, y-8),i,font=ImageFont.truetype(f,size),fill=color,direction=None) #文字
+        ImageDraw.Draw(textimg).text((x+2, y-6),i,font=ImageFont.truetype(f,size),fill='#000000',direction=None) #文字阴影
+        ImageDraw.Draw(textimg).text((x, y-8),i,font=ImageFont.truetype(f,size),fill=color,direction=None) #文字
         x += fx
+        text_e = Time.time()
+        text_list.append(text_e - text_s)
+        for_s = Time.time()
         for r in range(maximgpass): #在 单个文字能跨过(图片中的)图片的最多次数 内循环
             code = False
             if pz == True:
@@ -769,13 +605,32 @@ def toimg(msg,img='./chace/mainbg.png',f1=fl1,f2=fl2,pz=False,savepath='./chace/
                         code = True
                         break
             if x + size / 2 > mmx : #文字撞到边缘则换行
-                print('撞到墙啦:',x,y)
+                if x + size > mx: mx = x + size
+                if y + size > my: my = y + size
                 x = 0
                 y += size
                 code = True
             if code == False : break #跳出循环
-    image.save(savepath)
-    print("done")
+        for_e = Time.time()
+        for_list.append(for_e - for_s)
+    if x > mx: mx = x + size
+    if y > my: my = y + size
+    if my == 0:mx = x + size
+    if my == 0:my += size 
+    print('mx:' + str(mx) + "|my:" + str(my))
+    ly =  (mmy - my) / 2
+    img = img.crop((0,ly,mx,ly+my))
+    layer = Im.new('RGBA', img.size, (0,0,0,0)) #空图层 原图大小
+    layer.paste(textimg,(0,0)) #空图层插入putimg
+    img = Im.composite(layer, img, layer) #图层与原图合并
+    img.save(savepath)
+    for i in for_list:for_time += i
+    for i in function_list:function_time += i
+    for i in text_list:text_time += i
+    print('function用时:',function_time)
+    print('写入文字用时:',text_time)
+    print('碰撞箱用时:',for_time)
+
 
 @bcc.receiver("GroupMessage")
 async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group: Group, member:Member): #群聊监听
@@ -941,7 +796,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 @Waiter.create_using_function([GroupMessage])
                 async def waiter(event: GroupMessage, waiter_group: Group,waiter_member: Member, waiter_message: MessageChain):
                     toc = Time.time()
-                    if toc - tic > 600:
+                    if toc - tic > 60:
                         return event
                     if all([waiter_message.has(Image),waiter_message.has(At)]):
                         if message.get(At)[0].target == bot_qq:
@@ -1000,11 +855,17 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
 #test
     elif msg.startswith('test') and member.id in admin:
-        try:
-            initDate = datetime.strptime(cfg['time'],'%Y-%m-%d %H:%M:%S')
-            cfg['time'] = Time.time()
-            print('更新done')
-        except:print('无需更新')
+        print(1)
+#toimg
+    elif msg.startswith('toimg') and member.id in admin:
+        msg = msg.replace('toimg ','').replace('toimg','')
+        input = msg.split(',')
+        t_s = Time.time()
+        if len(input) > 1:toimg(input[0],input[1])
+        else:toimg(input[0])
+        await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
+        t_e = Time.time()
+        print(t_e-t_s)
 #排行榜
     elif msg.startswith('排行榜') and group.id in setu_group:
         msg = msg.replace('排行榜','').replace(' ','')
@@ -1219,7 +1080,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 outmsg = outmsg + aks_map3
                 print(outmsg)
                 toimg(outmsg,img = "./chace/ak.png" )
-                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
         if msg.startswith('i'):
             cost = 1
             stime0 = 1
@@ -1300,7 +1161,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
 
             img = "./chace/ak.png"
             toimg(outmsg,img)
-            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))    
+            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))    
 #info
     elif msg.startswith('info') and group.id in setu_group:
         outmsg = last_setu[str(group.id)]
@@ -1379,17 +1240,17 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 elif n == 21:
                     res[n] = res[n] + '\\#FFFFFF\\'
 
-                res[n] = res[n] + ' \\n0\\ '
+                res[n] = res[n] + ' \\n\\ '
                 n = n + 1
             a = ''.join(res)
-            msg = "-lsp排行榜:\\#FF0000\\ \\n0\\" + a + "\\n0\\    \\n0\\\y0\\\\b20\\\\#FFFFFF\\ "
+            msg = "-lsp排行榜:\\#FF0000\\ \\n\\" + a + "\\n\\    \\xx>0\\ \\xy>0\\\\b20\\\\#FFFFFF\\ "
             for i in res:
-                msg = msg + '\\n0\\|'
+                msg = msg + '\\n\\|'
             for i in range(3):
-                msg = msg + '\\n0\\|'
+                msg = msg + '\\n\\|'
             print(msg)
             toimg(msg)
-            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/1.png")]))
+            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
 #-显示hsolv等级
         else:
             try:
@@ -1433,10 +1294,10 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #后处理项目
     savecfg()
-    timenow = Time.time()
+    timenow = math.floor( Time.time() / 60 / 60 / 24 )
     ltime = cfg['time']
-    if timenow - ltime > 86400:
-        cfg['time'] = timenow
+    if timenow - ltime > 1:
+        cfg['time'] = math.floor( Time.time() / 60 / 60 / 24 )
         await app.sendGroupMessage(xmlimg_group,MessageChain.create([Plain('执行自动重启项目----')]))
         srcfile='./cfg.json'
         name = Time.strftime('%Y-%m-%d-%H',Time.localtime(Time.time()))
@@ -1450,5 +1311,16 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         await Ak.s()
         await Ak.m()
         restart_program()
+
+@bcc.receiver("MemberJoinEvent")
+async def member_join(app: GraiaMiraiApplication,event: MemberJoinEvent):
+    await app.sendGroupMessage(event.member.group.id, MessageChain.create([At(target=event.member.id),Plain("加入了本群")]))
+
+@bcc.receiver("NewFriendRequestEvent")
+async def friend_request(app: GraiaMiraiApplication,event: NewFriendRequestEvent):
+    mid = event.supplicant
+    if hsolvlist_data[str(mid)] > 30 : await event.accept('喵~')
+    else : await event.reject('哼~不给加好友')
+
 
 app.launch_blocking()
