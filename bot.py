@@ -170,10 +170,19 @@ class CHS(object): #数据初始化
         for i in datas :
             if id not in i:
                 i[id] = 0
+code = False
+def PixivLogin():
+    api = AppPixivAPI()
+    print("p站登录中.....")
+    api.auth(refresh_token=refresh_token)
+    code = True
+t = Thread(target=PixivLogin)
+t.setDaemon(True)
+t.start()
+t.join(2)
+if code == False:print("p站登录超时")
+else:print("p站登录成功")
 
-api = AppPixivAPI()
-print("p站登录中.....")
-api.auth(refresh_token=refresh_token)
 
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True,use_dispatcher_statistics = True,use_reference_optimization = True))
