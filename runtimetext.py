@@ -3,8 +3,8 @@ bot_qq = 1000100010 #在此填入bot_qq号
 authKey = "qaq1234" #在此填入http api 中的 authKey
 host_ = "http://127.0.0.1:8080" #在此填入http api 中的 host
 
-piv_username = 'xxxxxxxx' #你的p站账号
-piv_password = 'xxxxxxxx' #你的p站密码
+refresh_token = "TNBdsx5vr_aHKp22BNsSqG4uKJFKYyVqIVRSSofdgf4" #你的p站refresh_token (获取方法https://gist.github.com/ZipFile/c9ebedb224406f4f11845ab700124362)
+
 
 lolicon_key = "12345ioawd" #你的lolicon apikey
 saucenao_key = "67890oasof" #你的saucenao apikey

@@ -38,7 +38,7 @@ from threading import Thread
 import zipfile
 from asyncio.subprocess import PIPE, STDOUT
 from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map\
-    ,helptext,piv_username,piv_password,maxx_img,infomap,maximgpass,xmlimg_group,oncesetuadd,setus,Search_map,Search_map2
+    ,helptext,refresh_token,maxx_img,infomap,maximgpass,xmlimg_group,oncesetuadd,setus,Search_map,Search_map2
 
 
 api = AppPixivAPI()
@@ -170,18 +170,11 @@ class CHS(object): #数据初始化
         for i in datas :
             if id not in i:
                 i[id] = 0
-code = False
-def PixivLogin():
-    api = AppPixivAPI()
-    print("p站登录中.....")
-    api.login(piv_username, piv_password)
-    code = True
-t = Thread(target=PixivLogin)
-t.setDaemon(True)
-t.start()
-t.join(2)
-if code == False:print("p站登录超时")
-else:print("p站登录成功")
+
+api = AppPixivAPI()
+print("p站登录中.....")
+api.auth(refresh_token=refresh_token)
+
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True,use_dispatcher_statistics = True,use_reference_optimization = True))
 inc = InterruptControl(bcc)
@@ -363,6 +356,8 @@ class Setu:
         outmsg = [(Image.fromLocalFile(filepach))]
         return outmsg
     async def get(r18,iid,g,s='',num=1): #获取色图
+        debug1 = ''
+        debug2 = ''
         if num > 10: return
         #start_time = Time.time()
         """
@@ -381,6 +376,7 @@ class Setu:
             qd_data[id] = 0
             qdlist_data[id] = 0
         if qd_data[id] == 0: #签到
+            debug1 = hsolv_data[id]
             if qdlist_data[id] == 0:
                 stadd = random.randint(10,28)
                 ext_ing = "这是你第一次获取色图,随机获取色图$张".replace('$',str(stadd))
@@ -389,10 +385,10 @@ class Setu:
                 ext_ing = "今天第一次获取色图，随机获取色图$张".replace('$',str(stadd))
             async with app:await app.sendGroupMessage(g,MessageChain.create([At(iid),Plain(ext_ing)]))
             hsolv_data[id] += stadd
+            debug2 = hsolv_data[id]
             qdlist_data[id] += 1
             qd_data[id] = 1
-            savecfg()
-        if hsolv_data[id] > 0: 
+        if hsolv_data[id] > 0 + num: 
             if r18 == 1:fl = 'r18'
             else:fl = 'setu'
             if cfg['setu_l'] == 0:
@@ -412,8 +408,10 @@ class Setu:
                             async with app:await app.sendGroupMessage(g,MessageChain.create(outmsg))
                         del lsetudata[0]
                         cfg['setus'][fl] = lsetudata
-                        hsolvlist_data[id] += num
-                        hsolv_data[id] -= num
+                        print(' /',hsolv_data[id])
+                        hsolvlist_data[id] += 1
+                        hsolv_data[id] -= 1
+                        print(' \\',hsolv_data[id])
                 else:
                     outmsg = [(Plain(At(iid),'色图获取的太多啦，补不上货啦'))]
                     async with app:r = await app.sendGroupMessage(g,MessageChain.create(outmsg))
@@ -428,7 +426,10 @@ class Setu:
                 outmsg = await Setu.offline(r18)
                 async with app:r = await app.sendGroupMessage(g,MessageChain.create(outmsg))
         else:
-            async with app:r = await app.sendGroupMessage(g,MessageChain.create([At(iid),Plain('你没色图啦')]))
+            debug3 = hsolv_data[id]
+            debug = str(debug1) + ',' + str(debug2) + ',' +str(debug3)
+            
+            async with app:r = await app.sendGroupMessage(g,MessageChain.create([At(iid),Plain(debug + '你没色图啦')]))
 async def rep(l,text): #文字占位处理
     strnone = ' '
     text=text.replace('　',' ')
@@ -574,7 +575,6 @@ def toimg(msg,imgpath='./chace/mainbg.png',f1=fl1,f2=fl2,PZ=False,savepath='./ch
         else:   #如果是英文，使用英文字体，并每次x跃进时只会跃进半个文字大小
             fx = size / 2 
             f = f2
-        ImageDraw.Draw(textimg).text((x+2, y-6),i,font=ImageFont.truetype(f,size),fill='#000000',direction=None) #文字阴影
         ImageDraw.Draw(textimg).text((x, y-8),i,font=ImageFont.truetype(f,size),fill=color,direction=None) #文字
         x += fx
         text_e = Time.time()
@@ -855,7 +855,16 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
 #test
     elif msg.startswith('test') and member.id in admin:
-        print(1)
+        id = str(member.id)
+        print(hsolv_data[id])
+        hsolv_data[id] += 5
+        print(hsolv_data[id])
+        id = str(member.id)
+        info = 'hsolv_data=' +  str(hsolv_data[id]) + '\nhsolvlist_data=' + str(hsolvlist_data[id]) + '\nqd_data=' + str(qd_data[id]) + '\nqdlist_data=' + str(qdlist_data[id])
+        hsolv_data[id] -= 5
+        print(hsolv_data[id])
+        await app.sendGroupMessage(group,MessageChain.create([Plain(info)]))
+
 #toimg
     elif msg.startswith('toimg') and member.id in admin:
         msg = msg.replace('toimg ','').replace('toimg','')
@@ -1079,7 +1088,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                     outmsg = outmsg + i
                 outmsg = outmsg + aks_map3
                 print(outmsg)
-                toimg(outmsg,img = "./chace/ak.png" )
+                toimg(outmsg,imgpath = "./chace/ak.png" )
                 await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
         if msg.startswith('i'):
             cost = 1
