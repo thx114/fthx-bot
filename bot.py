@@ -170,19 +170,18 @@ class CHS(object): #数据初始化
         for i in datas :
             if id not in i:
                 i[id] = 0
-code = False
 def PixivLogin():
     api = AppPixivAPI()
     print("p站登录中.....")
     api.auth(refresh_token=refresh_token)
-    code = True
 t = Thread(target=PixivLogin)
 t.setDaemon(True)
 t.start()
 t.join(2)
-if code == False:print("p站登录超时")
-else:print("p站登录成功")
 
+api = AppPixivAPI()
+print("p站登录中.....")
+api.auth(refresh_token=refresh_token)
 
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True,use_dispatcher_statistics = True,use_reference_optimization = True))
@@ -400,7 +399,69 @@ class Setu:
         if hsolv_data[id] > 0 + num: 
             if r18 == 1:fl = 'r18'
             else:fl = 'setu'
-            if cfg['setu_l'] == 0:
+            if s != "":
+                ext_ing = ''
+                outmsg = []
+                p_ingdata = {}
+                setudata = {}
+                start_time = Time.time()
+                apiurl = 'https://api.lolicon.app/setu/?apikey=$APIKEY&r18=$R18&keyword=$S'.replace('$APIKEY',lolicon_key).replace('$R18',str(r18)).replace('$NUM',str(1)).replace('$S',s)
+                print('与api沟通中...')
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(apiurl) as resp:
+                        res_json = await resp.json()
+                print('|>done')
+                code = str(res_json['code'])
+                if code != '0':
+                    errmsg = str(res_json['msg'])
+                    outmsg = [(Plain(errmsg))]
+                    async with app:await app.sendGroupMessage(g,MessageChain.create(outmsg))
+                    return
+                if code == '429':
+                    cfg['setu_l'] = 1
+                    return
+                print(ext_ing)
+                for i in res_json['data']:
+                    url_ing = i['url']
+                    pid_ing = i['pid']
+                    if r18 == 1:path_ing = './r18/' + str(pid_ing) + '.png'
+                    else:path_ing = './setu/' + str(pid_ing) + '.png'
+                    p_ingdata['pid'] = pid_ing
+                    print(url_ing,pid_ing,'开始下载')
+                    try:await DF.adf(url_ing,path_ing)
+                    except:
+                        print('连接错误，正在重试....')
+                        try:await DF.adf(url_ing,path_ing)
+                        except:
+                            print("连接错误")
+                            return
+                    print('intoxml')
+                    ext =" $title by $author |pid:$pid uid:$uid "\
+                    .replace('$title',i['title'])\
+                    .replace('$author',i['author'])\
+                    .replace('$pid',str(pid_ing))\
+                    .replace('$uid',str(i['uid']))
+                    setudata['img'] = path_ing
+                    setudata['ext'] = ext
+                    outdata = ""
+                    for item in i:
+                        outdata = outdata + str(item) + str(i[str(item)])
+                    outdata = outdata.replace('pid','pid:').replace('p0',' p0 - ').replace('uid','uid:').replace('title','\n标题:').replace('author','   作者:').replace('url','\n').replace('r18False','').replace('r18True','').replace('width','\n').replace('height','x').replace('tags','\n标签:')
+                    setudata['info'] = outdata
+
+                    if cfg['xml'] == 1:
+                        setudata['ext'] = setudata['ext'] + '色图缓存:' + str(len(cfg['setus'][fl]))
+                        outxml = await Setu.xml(setudata)
+                        print(outxml)
+                        async with app:await app.sendGroupMessage(g,MessageChain.create(outxml))
+                    else:
+                        outmsg = [(Image.fromLocalFile(setudata['img']))]
+                        async with app:await app.sendGroupMessage(g,MessageChain.create(outmsg))
+                    hsolvlist_data[id] += 1
+                    hsolv_data[id] -= 1
+
+
+            elif cfg['setu_l'] == 0:
                 global loop_ing
                 loop_ing = False
                 if num < len(cfg['setus'][fl]):
@@ -840,7 +901,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
     if msg.startswith('色图来') and group.id in cfg['setu_group']:
         msg = msg.replace('色图来','').replace(' ','')
         if msg == '':await Setu.get(0,member.id,group.id)
-        elif msg.isdigit:await Setu.get(0,member.id,group.id,num=int(msg))
+        elif msg.isdigit() == True:await Setu.get(0,member.id,group.id,num=int(msg))
         else          :await Setu.get(0,member.id,group.id,s=msg)
 #R18色图
     elif msg.startswith('不够色') and group.id in cfg['r18_group']:
