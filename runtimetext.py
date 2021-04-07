@@ -3,7 +3,7 @@ bot_qq = 1000100010 #在此填入bot_qq号
 authKey = "qaq1234" #在此填入http api 中的 authKey
 host_ = "http://127.0.0.1:8080" #在此填入http api 中的 host
 
-refresh_token = "TNBdsx5vr_aHKp22BNsSqG4uKJFKYyVqIVRSSofdgf4" #你的p站refresh_token (获取方法https://gist.github.com/ZipFile/c9ebedb224406f4f11845ab700124362)
+refresh_token = "######################" #你的p站refresh_token (获取方法https://gist.github.com/ZipFile/c9ebedb224406f4f11845ab700124362)
 
 
 lolicon_key = "12345ioawd" #你的lolicon apikey
@@ -67,31 +67,28 @@ Search_map2 = '''
  │                                                       \\xx>855\\│\\n\\
 '''
 
-helptext = """admin:
-  test :test
-  restart :重启机器人
-  akra :更新全部明日方舟数据并重启机器人
-  akri :更新 明日方舟 物品 数据
-  akrs :更新 明日方舟 关卡 数据
-  akrm :更新 明日方舟 掉落 数据
-  hsolvr :重置色图签到
-  hsolv+ <qqid> :为<qqid>增加10色图
-  backup :备份cfg.json
-  sg setu +/- :开启/关闭 此群色图权限
-  sg r18 +/- :开启/关闭 此群r18权限
-
+helptext = """
+admin:
+  ├toimg <Str> |文字写入图片
+  ├撤回时间 <Int> |设置色图撤回时间
+  ├test |test
+  ├restart |重启机器人
+  ├hsolvr |重置色图
+  ├hsolv+ <Int/None>|增加色图
+  ├sg setu <+/-> |色图群权限管理
+  ├sg r18 <+/-> |r18群权限管理
+  ├ak <rm/ri/rs/ra> |明日方舟企鹅物流手动数据更新
+  ├详情 <+/-> |开关色图详情
+  └清除色图缓存 |清除色图缓存
 普通:
-  /帮助 :帮助
-  <@机器人> <图片> :以图搜图
-  <图片:色图来> :普通色图
-  色图来 <数量/搜索内容> :普通色图
-  不够色 :r18色图
-  info :获取此群最后一个色图的详细信息
-  xml on/off :开启/关闭 全局色图xml
-  排行榜 <mode>:获取p站排行榜
-    -mode : day week month day_r18 week_r18 week_r18g
-  tp <数字1~5> 获取排行榜目标详细信息
-  hsolvlist :LSP排行榜
-  aks <关卡名字> :查询此关卡
-  aki <物品名字> :查询此物品
+  ├色图来 <Str/Int/None> | 关键词获取色图 / 获取多个色图 / 随机色图
+  ├不够色 <Str/Int/None> | 同上，但是r18
+  ├xml <on/off> |开关色图xml模式
+  ├/help |获取帮助
+  ├排行榜 <day_r18/week_r18/week_r18g/week/month/None>|p站排行榜
+  ├ak <s/i> <Str> |明日方舟企鹅物流物品查询
+  ├info |获取上一个色图详情
+  ├debug |获取个人debug信息
+  ├hsolv <Int/list>| hsolv等级获取(qq) / lsp排行榜
+  └backup |备份
 """

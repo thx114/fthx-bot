@@ -17,6 +17,8 @@ from graia.application import GraiaMiraiApplication, Session, message
 from graia.application.event.messages import GroupMessage
 from graia.application.event.mirai import MemberJoinEvent, NewFriendRequestEvent
 from graia.application.message.chain import MessageChain
+from graia.saya import Saya
+from graia.saya.builtins.broadcast import BroadcastBehaviour
 
 import asyncio
 import aiohttp
@@ -182,6 +184,23 @@ pt.join(2)
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True,use_dispatcher_statistics = True,use_reference_optimization = True))
 inc = InterruptControl(bcc)
+###################################
+#如果你想使用saya模块就去除下面的“#” 
+###################################
+#saya = Saya(bcc)
+#saya.install_behaviours(BroadcastBehaviour(bcc))
+#
+#with saya.module_context():
+#    for module in os.listdir("modules"):
+#        try:
+#            if os.path.isdir(module):
+#                saya.require(f"modules.{module}")
+#            else:
+#                saya.require(f"modules.{module.split('.')[0]}")
+#        except ModuleNotFoundError:
+#            pass
+
+
 async def tlen(text): #文字宽度测量
     lenTxt = len(text) 
     lenTxt_utf8 = len(text.encode('utf-8')) 
@@ -383,10 +402,10 @@ class Setu:
         if qd_data[id] == 0: #签到
             debug1 = hsolv_data[id]
             if qdlist_data[id] == 0:
-                stadd = random.randint(10,28)
+                stadd = random.randint(20,56)
                 ext_ing = "这是你第一次获取色图,随机获取色图$张".replace('$',str(stadd))
             else:
-                stadd = random.randint(6,15)
+                stadd = random.randint(15,30)
                 ext_ing = "今天第一次获取色图，随机获取色图$张".replace('$',str(stadd))
             outmsg.append(Plain(ext_ing))
             hsolv_data[id] += stadd
@@ -644,6 +663,7 @@ def toimg(msg,imgpath='./chace/mainbg.png',f1=fl1,f2=fl2,PZ=False,savepath='./ch
         else:   #如果是英文，使用英文字体，并每次x跃进时只会跃进半个文字大小
             fx = size / 2 
             f = f2
+        ImageDraw.Draw(textimg).text((x+2, y-6),i,font=ImageFont.truetype(f,size),fill="#000000",direction=None)
         ImageDraw.Draw(textimg).text((x, y-8),i,font=ImageFont.truetype(f,size),fill=color,direction=None) #文字
         x += fx
         text_e = Time.time()
@@ -720,8 +740,9 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         timg = message.get(Image)[0].url
         print(timg)
         if message.has(At):
+# at机器人功能
             if message.get(At)[0].target == bot_qq and group.id in setu_group:
-#-以图搜图          
+    #├<@机器人> <Img> |以图搜图          
                 await app.sendGroupMessage(group, MessageChain.create([At(member.id), Plain("选择搜索源:\n1.saucenao\n2.ascii2d.net")]))
                 @Waiter.create_using_function([GroupMessage])
                 def waiter(
@@ -892,7 +913,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                             await app.sendGroupMessage(group, MessageChain.create(outmsg))
                 outmsg = await inc.wait(waiter)
                 print('nooo')
-#-表情色图来
+    #└<Img> |表情色图来
         if message.get(Image)[0].imageId == '{B407F708-A2C6-A506-3420-98DF7CAC4A57}.mirai' and group.id in cfg['setu_group']:
             outmsg = await Setu.get(0,qid=member.id)
             rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
@@ -900,7 +921,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 await asyncio.sleep(cfg['revoke'])
                 await app.revokeMessage(rmsg)
             await Setu.reget(0)
-#管理员功能
+#管理员指令
     if member.id in admin:
     #├toimg <Str> |文字写入图片
         if msg.startswith('toimg'):
@@ -933,28 +954,26 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         elif msg.startswith('restart') :
             await app.sendGroupMessage(group,MessageChain.create([Plain('执行重启项目----')]))
             restart_program()
-    #├hsolv <r/+> |hsolv相关
-        elif msg.startswith("hsolv") :
-            msg = msg.replace("hsolv",'')
-        # ├ r |重置色图
-            if msg.startswith('r') and member.id in admin:
-                outmsg = "所有当天获取色图次数被重置"
-                for i in qd_data:
-                    qd_data[i] = 0
-                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-                savecfg()
-                srcfile='./cfg.json'
-                name = Time.strftime('%Y-%m-%d-%H',Time.localtime(Time.time()))
-                dstfile='./backups/'+ name + '.json'
-                shutil.move(srcfile,dstfile)
-        # ├ + |增加色图
-            elif msg.startswith('+') and member.id in admin:
-                id = msg.replace("+","").replace(' ','')
-                if id == '': id = str(member.id)
-                hsolv_data[id] = hsolv_data[id] + 10
-                outmsg = str(id) + "的色图增加了10"
-                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-                savecfg()
+    #├hsolvr |重置色图
+        elif msg.startswith("hsolvr"):
+            outmsg = "所有当天获取色图次数被重置"
+            for i in qd_data:
+                qd_data[i] = 0
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            savecfg()
+            srcfile='./cfg.json'
+            name = Time.strftime('%Y-%m-%d-%H',Time.localtime(Time.time()))
+            dstfile='./backups/'+ name + '.json'
+            shutil.move(srcfile,dstfile)
+    #├hsolv+ <Int/None>|增加色图
+        elif msg.startswith('hsolv+'):
+            
+            id = msg.replace("hsolv+","").replace(' ','')
+            if id == '': id = str(member.id)
+            hsolv_data[id] = hsolv_data[id] + 10
+            outmsg = str(id) + "的色图增加了10"
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            savecfg()
     #├sg setu <+/-> |色图群权限管理
         elif msg.startswith('sg setu'):
             if group.id in cfg['setu_group']:
@@ -1017,417 +1036,421 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                     cfg["info"] = 1
                     outmsg = '已开启详情 详情可能在缓存色图用完之后才会生效'
             await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-    #├详情 <+/-> |清除色图缓存
+    #└清除色图缓存 |清除色图缓存
         elif msg.startswith('清除色图缓存'):
             cfg["setus"]['r18'] = []
             cfg["setus"]['setu'] = []
-#色图来 <Str/Int/None> |获取色图
-    if msg.startswith('色图来') and group.id in cfg['setu_group']:
-        msg = msg.replace('色图来','').replace(' ','')
-        if msg == '':outmsg =await Setu.get(0,qid=member.id)
-        elif msg.isdigit() == True:outmsg =await Setu.get(0,num=int(msg),qid=member.id)
-        else :outmsg = await Setu.get(0,s=msg,qid=member.id)
-        rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
-        if cfg['revoke'] > 0 :
-            await asyncio.sleep(cfg['revoke'])
-            await app.revokeMessage(rmsg)
-        await Setu.reget(0)  
-#不够色 <Str/Int/None> |获取r18色图
-    elif msg.startswith('不够色') and group.id in cfg['r18_group']:
-        msg = msg.replace('不够色','').replace(' ','')
-        if msg == '':outmsg = await Setu.get(1,member.id,group.id)
-        elif msg.isdigit:outmsg = await Setu.get(1,member.id,group.id,num=int(msg))
-        else          :outmsg = await Setu.get(1,member.id,group.id,s=msg)
-        await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
-        await Setu.reget(0)
-#xml <on/off> |开关色图xml模式
-    elif msg.startswith('xml') and hsolvlist_data[str(member.id)] >30:
-        msg = msg.replace('xml','').replace(' ','')
-        if msg == 'on':
-            cfg['xml'] = 1
-            await app.sendGroupMessage(group,MessageChain.create([(Plain('已开启'))]))
-        elif msg == 'off':
-            cfg['xml'] = 0
-            await app.sendGroupMessage(group,MessageChain.create([(Plain('已关闭'))]))
-        else :pass
-#/help |获取帮助
-    elif msg.startswith('/help'):
-        text = helptext
-        await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
-#排行榜 <day_r18/week_r18/week_r18g/week/month/None>|p站排行榜
-    elif msg.startswith('排行榜') and group.id in setu_group:
-        msg = msg.replace('排行榜','').replace(' ','')
-        mo = 'day'
-        if group.id in r18_group:
-            if msg.startswith('day_r18'):mo = 'day_r18'
-            if msg.startswith('week_r18'):mo = 'week_r18'
-            if msg.startswith('week_r18g'):mo = 'week_r18g'
-        else:
-            if msg.startswith('week'):mo = 'week'
-            if msg.startswith('month'):mo = 'month'
-        rank_list = api.illust_ranking(mode=mo)
-        rank_list = rank_list['illusts']
-        n = 0
-        msglist = [[(Plain('pixiv排行榜:'))]]
-        cfg['plinfodata'][str(group.id)] = []
-        for i in rank_list :
-            p_ing = {}
-            p_ing['url'] = []
-            print(i)
-            if n == 5 : break
-            n = n + 1
-            p_ing['pid'] = i['id']
-            p_ing['uid'] = i['user']['id']
-            p_ing['title'] = i['title']
-            p_ing['user'] = i['user']['name']
-            p_ing['tags'] = []
-            for tag in i['tags']:
-                p_ing['tags'].append(tag['name'])
-            try:
-                p_ing['url'].append(i['meta_single_page']["original_image_url"])
-            except :
-                for u in i['meta_pages']:
-                    p_ing['url'].append( u["image_urls"]['original'])
-            savepath = './listpiv/'+ str(group.id) + '/' + str(n) + '.png'
-            savefl = './listpiv/'+ str(group.id) 
-            sdir(savefl)
-            p_ing['path'] = savepath
-            print(p_ing['url'])
-
-            await DF.adf(p_ing['url'][0],savepath)
-            fd = open(savepath, "rb")
-            f = fd.read()
-            pmd5 = hashlib.md5(f).hexdigest()
-            p_ing['md5'] = pmd5 
-            cfg['plinfodata'][str(group.id)].append(p_ing)
-            print(str(p_ing))
-            ioutmsg = (Plain('\n' + str(n) + '.' + p_ing['title']))
-            iimg = (Image.fromLocalFile(savepath))
-            msglist.append([ioutmsg,iimg])
-            p_ing = {}
-        msglist.append([(Plain('使用tp 1~5来查看色图详情'))])
-        for i in msglist:
-            await app.sendGroupMessage(group,MessageChain.create(i))
-            await asyncio.sleep(3)
-    elif msg.startswith('tp'):
-        msg = msg.replace(' ','').replace('tp','')
-        try:
-            mint = int(msg) - 1
-        except:return
-        p_ing = cfg['plinfodata'][str(group.id)][mint]
-        tags = ' '.join(p_ing['tags'])
-        inputimg = Im.open(p_ing['path'])
-        mmx = inputimg.size[0]
-        mmy = inputimg.size[1]
-        if cfg['xml'] == 1:
-            textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
-            ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
-                    .replace('$title',p_ing['title'])\
-                    .replace('$author',p_ing['user'])\
-                    .replace('$pid',str(p_ing['pid']))\
-                    .replace('$uid',str(p_ing['user']))\
-                    .replace('$tags',tags)
-            textxml = textxml.replace('$md5',p_ing['md5'])\
-                .replace('$x',str(mmx))\
-                .replace('$y',str(mmy))\
-                .replace('$mx',str(mmx))\
-                .replace('$my',str(mmy))\
-                .replace('$ext',ext)\
-                .replace('$url',p_ing['url'])
-            outmsg = [Xml(textxml)]
-        else:
-            print(len(p_ing['url']))
-            outmsg = []
-            if len(p_ing['url']) > 1:
-                n = 0
-                for i in p_ing['url']:
-                    n += 1
-                    savepath = p_ing['path'].replace('.png','_' + str(n) + '.png')
-                    print(savepath)
-                    await DF.adf(i,savepath)
-                    outmsg.append((Image.fromLocalFile(savepath)))
-            else:outmsg = [].append((Image.fromLocalFile(p_ing['path'])))
-            urlstr = p_ing['url'][0]
-            urlstr = urlstr[:-3]
-            outmsg.append((Plain(infomap\
-                .replace('title',p_ing['title'])\
-                .replace('author',p_ing['user'])\
-                .replace('$uid',str(p_ing['uid']))\
-                .replace('$pid',str(p_ing['pid']))\
-                .replace('tags',tags)\
-                .replace('mx',str(mmx))\
-                .replace('my',str(mmy))\
-                .replace('url',urlstr))))
-        print(outmsg)
-        for i in outmsg:
-            await app.sendGroupMessage(group,MessageChain.create([i]))
-            await asyncio.sleep(2)
-#ak <s/i> <Str> |明日方舟企鹅物流物品查询
-    elif msg.startswith('ak'):
-        msg = msg.replace('ak','').replace(' ','').replace('－','-')
-        if msg.startswith('s'):
-            msg = msg.replace('s','')
-            outdata = {}
-            i = {}
-            for i in aks_data:
-                if msg == i['name']:outdata = i
-            if outdata == {} : outmsg = '无结果'
+#普通指令
+    else:
+    #├色图来 <Str/Int/None> | 关键词获取色图 / 获取多个色图 / 随机色图
+        if msg.startswith('色图来') and group.id in cfg['setu_group']:
+            msg = msg.replace('色图来','').replace(' ','')
+            if msg == '':outmsg =await Setu.get(0,qid=member.id)
+            elif msg.isdigit() == True:outmsg =await Setu.get(0,num=int(msg),qid=member.id)
+            else :outmsg = await Setu.get(0,s=msg,qid=member.id)
+            rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
+            if cfg['revoke'] > 0 :
+                await asyncio.sleep(cfg['revoke'])
+                await app.revokeMessage(rmsg)
+            await Setu.reget(0)  
+    #├不够色 <Str/Int/None> | 同上，但是r18
+        elif msg.startswith('不够色') and group.id in cfg['r18_group']:
+            msg = msg.replace('不够色','').replace(' ','')
+            if msg == '':outmsg = await Setu.get(1,member.id,group.id)
+            elif msg.isdigit:outmsg = await Setu.get(1,member.id,group.id,num=int(msg))
+            else          :outmsg = await Setu.get(1,member.id,group.id,s=msg)
+            await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
+            await Setu.reget(0)
+    #├xml <on/off> |开关色图xml模式
+        elif msg.startswith('xml') and hsolvlist_data[str(member.id)] >30:
+            msg = msg.replace('xml','').replace(' ','')
+            if msg == 'on':
+                cfg['xml'] = 1
+                await app.sendGroupMessage(group,MessageChain.create([(Plain('已开启'))]))
+            elif msg == 'off':
+                cfg['xml'] = 0
+                await app.sendGroupMessage(group,MessageChain.create([(Plain('已关闭'))]))
+            else :pass
+    #├/help |获取帮助
+        elif msg.startswith('/help'):
+            text = helptext
+            await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
+    #├排行榜 <day_r18/week_r18/week_r18g/week/month/None>|p站排行榜
+        elif msg.startswith('排行榜') and group.id in setu_group:
+            msg = msg.replace('排行榜','').replace(' ','')
+            mo = 'day'
+            if group.id in r18_group:
+                if msg.startswith('day_r18'):mo = 'day_r18'
+                if msg.startswith('week_r18'):mo = 'week_r18'
+                if msg.startswith('week_r18g'):mo = 'week_r18g'
             else:
-                sname = await rep(12,outdata['name'])
-                scost = await rep(23,str(outdata['apCost']))
-                stime0 = await settime(outdata['minClearTime'])
-                stime = await rep(41,str(stime0))
-                outmsg = aks_map\
-                    .replace('sname(12)///',sname)\
-                    .replace('scost(23)//////////////',str(scost))\
-                    .replace('stime(41)////////////////////////////////',str(stime))
-                msglist = []
-                for i in outdata['dropInfos']:
-                    rarity = 1
-                    name = ''
-                    outdata2 = {}
-                    for o in aki_data:
-                        try:
-                            if o['itemId'] == i['itemId']:
-                                name = o['alias'][0]
-                                rarity = o['rarity']
-                                break
-                        except:pass
-                    if name =='':pass
-                    else:
-                        if rarity == 0: cl = '#FFFFFF\\'
-                        elif rarity == 1: cl = '#DFE961\\'
-                        elif rarity == 2: cl = '#1AA5E1\\'
-                        elif rarity == 3: cl = '#D282DA\\'
-                        elif rarity == 4: cl = '#EDCB26\\'
-                        else: cl = '#FFFFFF\\'
-                        try:
-                            aimg = '\\p./aki_30/id.png\\  '.replace('id',i['itemId'])
-                            aimg_p = './aki_30/id.png'.replace('id',i['itemId'])
-                            img = Im.open(aimg_p)
-                        except:
-                            aimg = '  '
-                        dname = cl + aimg + await rep(14,name)
-                        num = str(i['bounds']['lower']) + '~' + str(i['bounds']['upper'])
-                        if i['dropType'] == "EXTRA_DROP":num = num + 'ex'
-                        dnum = await rep(6,num)
-                        plist = []
-                        for p in akm_data:
-                            if p['stageId'] == outdata['stageId']:
-                                plist.append(p)
-                        for a in plist:
+                if msg.startswith('week'):mo = 'week'
+                if msg.startswith('month'):mo = 'month'
+            rank_list = api.illust_ranking(mode=mo)
+            rank_list = rank_list['illusts']
+            n = 0
+            msglist = [[(Plain('pixiv排行榜:'))]]
+            cfg['plinfodata'][str(group.id)] = []
+            for i in rank_list :
+                p_ing = {}
+                p_ing['url'] = []
+                print(i)
+                if n == 5 : break
+                n = n + 1
+                p_ing['pid'] = i['id']
+                p_ing['uid'] = i['user']['id']
+                p_ing['title'] = i['title']
+                p_ing['user'] = i['user']['name']
+                p_ing['tags'] = []
+                for tag in i['tags']:
+                    p_ing['tags'].append(tag['name'])
+                try:
+                    p_ing['url'].append(i['meta_single_page']["original_image_url"])
+                except :
+                    for u in i['meta_pages']:
+                        p_ing['url'].append( u["image_urls"]['original'])
+                savepath = './listpiv/'+ str(group.id) + '/' + str(n) + '.png'
+                savefl = './listpiv/'+ str(group.id) 
+                sdir(savefl)
+                p_ing['path'] = savepath
+                print(p_ing['url'])
+    
+                await DF.adf(p_ing['url'][0],savepath)
+                fd = open(savepath, "rb")
+                f = fd.read()
+                pmd5 = hashlib.md5(f).hexdigest()
+                p_ing['md5'] = pmd5 
+                cfg['plinfodata'][str(group.id)].append(p_ing)
+                print(str(p_ing))
+                ioutmsg = (Plain('\n' + str(n) + '.' + p_ing['title']))
+                iimg = (Image.fromLocalFile(savepath))
+                msglist.append([ioutmsg,iimg])
+                p_ing = {}
+            msglist.append([(Plain('使用tp 1~5来查看色图详情'))])
+            for i in msglist:
+                await app.sendGroupMessage(group,MessageChain.create(i))
+                await asyncio.sleep(3)
+        elif msg.startswith('tp'):
+            msg = msg.replace(' ','').replace('tp','')
+            try:
+                mint = int(msg) - 1
+            except:return
+            p_ing = cfg['plinfodata'][str(group.id)][mint]
+            tags = ' '.join(p_ing['tags'])
+            inputimg = Im.open(p_ing['path'])
+            mmx = inputimg.size[0]
+            mmy = inputimg.size[1]
+            if cfg['xml'] == 1:
+                textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="web" url="$url" appid="-1" /></msg>'''
+                ext =" $title by $author |pid:$pid uid:$uid |tags:$tags"\
+                        .replace('$title',p_ing['title'])\
+                        .replace('$author',p_ing['user'])\
+                        .replace('$pid',str(p_ing['pid']))\
+                        .replace('$uid',str(p_ing['user']))\
+                        .replace('$tags',tags)
+                textxml = textxml.replace('$md5',p_ing['md5'])\
+                    .replace('$x',str(mmx))\
+                    .replace('$y',str(mmy))\
+                    .replace('$mx',str(mmx))\
+                    .replace('$my',str(mmy))\
+                    .replace('$ext',ext)\
+                    .replace('$url',p_ing['url'])
+                outmsg = [Xml(textxml)]
+            else:
+                print(len(p_ing['url']))
+                outmsg = []
+                if len(p_ing['url']) > 1:
+                    n = 0
+                    for i in p_ing['url']:
+                        n += 1
+                        savepath = p_ing['path'].replace('.png','_' + str(n) + '.png')
+                        print(savepath)
+                        await DF.adf(i,savepath)
+                        outmsg.append((Image.fromLocalFile(savepath)))
+                else:outmsg = [].append((Image.fromLocalFile(p_ing['path'])))
+                urlstr = p_ing['url'][0]
+                urlstr = urlstr[:-3]
+                outmsg.append((Plain(infomap\
+                    .replace('title',p_ing['title'])\
+                    .replace('author',p_ing['user'])\
+                    .replace('$uid',str(p_ing['uid']))\
+                    .replace('$pid',str(p_ing['pid']))\
+                    .replace('tags',tags)\
+                    .replace('mx',str(mmx))\
+                    .replace('my',str(mmy))\
+                    .replace('url',urlstr))))
+            print(outmsg)
+            for i in outmsg:
+                await app.sendGroupMessage(group,MessageChain.create([i]))
+                await asyncio.sleep(2)
+    #├ak <s/i> <Str> |明日方舟企鹅物流物品查询
+        elif msg.startswith('ak'):
+            msg = msg.replace('ak','').replace(' ','').replace('－','-')
+            if msg.startswith('s'):
+                msg = msg.replace('s','')
+                outdata = {}
+                i = {}
+                for i in aks_data:
+                    if msg == i['name']:outdata = i
+                if outdata == {} : outmsg = '无结果'
+                else:
+                    sname = await rep(12,outdata['name'])
+                    scost = await rep(23,str(outdata['apCost']))
+                    stime0 = await settime(outdata['minClearTime'])
+                    stime = await rep(41,str(stime0))
+                    outmsg = aks_map\
+                        .replace('sname(12)///',sname)\
+                        .replace('scost(23)//////////////',str(scost))\
+                        .replace('stime(41)////////////////////////////////',str(stime))
+                    msglist = []
+                    for i in outdata['dropInfos']:
+                        rarity = 1
+                        name = ''
+                        outdata2 = {}
+                        for o in aki_data:
                             try:
-                                if a['itemId'] == i['itemId']:
-                                    outdata2 = a
+                                if o['itemId'] == i['itemId']:
+                                    name = o['alias'][0]
+                                    rarity = o['rarity']
                                     break
                             except:pass
-                        if outdata2 == {}:continue
+                        if name =='':pass
                         else:
-                            quantity = outdata2['quantity']
-                            times = outdata2['times']
-                            if quantity == 0 or times == 0:
-                                continue
-                            rate = quantity / times
-                            prate = rate * 100
-                            drate = await rep(7,str(round(prate,2)))
-                            lz = round( outdata['apCost'] / rate ,2)
-                            dlz = await rep(8,str(lz))
-                            time = outdata['minClearTime'] / rate
-                            atime = await settime(time)
-                            dtime = await rep(9,str(atime))
-                        listp = str(math.floor(round(prate,0))).rjust(3,'0')
-                        imsg = listp + aks_map2.replace('#FFFFFF\\name(24)////////',dname)
-                        imsg = imsg.replace('num(6)',dnum)
-                        imsg = imsg.replace('rate(7)',str(drate + '%'))
-                        imsg = imsg.replace('lz(8)////',str(dlz))
-                        imsg = imsg.replace('time(9)//',str(dtime))
-                        print(name,dnum,drate,dlz,dtime)
-                        msglist.append(imsg)
-                        msglist.sort(reverse=True)
+                            if rarity == 0: cl = '#FFFFFF\\'
+                            elif rarity == 1: cl = '#DFE961\\'
+                            elif rarity == 2: cl = '#1AA5E1\\'
+                            elif rarity == 3: cl = '#D282DA\\'
+                            elif rarity == 4: cl = '#EDCB26\\'
+                            else: cl = '#FFFFFF\\'
+                            try:
+                                aimg = '\\p./aki_30/id.png\\  '.replace('id',i['itemId'])
+                                aimg_p = './aki_30/id.png'.replace('id',i['itemId'])
+                                img = Im.open(aimg_p)
+                            except:
+                                aimg = '  '
+                            dname = cl + aimg + await rep(14,name)
+                            num = str(i['bounds']['lower']) + '~' + str(i['bounds']['upper'])
+                            if i['dropType'] == "EXTRA_DROP":num = num + 'ex'
+                            dnum = await rep(6,num)
+                            plist = []
+                            for p in akm_data:
+                                if p['stageId'] == outdata['stageId']:
+                                    plist.append(p)
+                            for a in plist:
+                                try:
+                                    if a['itemId'] == i['itemId']:
+                                        outdata2 = a
+                                        break
+                                except:pass
+                            if outdata2 == {}:continue
+                            else:
+                                quantity = outdata2['quantity']
+                                times = outdata2['times']
+                                if quantity == 0 or times == 0:
+                                    continue
+                                rate = quantity / times
+                                prate = rate * 100
+                                drate = await rep(7,str(round(prate,2)))
+                                lz = round( outdata['apCost'] / rate ,2)
+                                dlz = await rep(8,str(lz))
+                                time = outdata['minClearTime'] / rate
+                                atime = await settime(time)
+                                dtime = await rep(9,str(atime))
+                            listp = str(math.floor(round(prate,0))).rjust(3,'0')
+                            imsg = listp + aks_map2.replace('#FFFFFF\\name(24)////////',dname)
+                            imsg = imsg.replace('num(6)',dnum)
+                            imsg = imsg.replace('rate(7)',str(drate + '%'))
+                            imsg = imsg.replace('lz(8)////',str(dlz))
+                            imsg = imsg.replace('time(9)//',str(dtime))
+                            print(name,dnum,drate,dlz,dtime)
+                            msglist.append(imsg)
+                            msglist.sort(reverse=True)
+                    for i in msglist:
+                        i = i[3:]
+                        outmsg = outmsg + i
+                    outmsg = outmsg + aks_map3
+                    print(outmsg)
+                    toimg(outmsg,imgpath = "./chace/ak.png" )
+                    await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
+            if msg.startswith('i'):
+                cost = 1
+                stime0 = 1
+                sname = ''
+                dnum = 0
+                iid = ''
+                msg = msg.replace('i','')
+                outdata = {}
+                for i in aki_data:
+                    for o in i['alias']:
+                        if o == msg:
+                            outdata = i
+                            iid = i['itemId']
+                            break
+                iname = await rep(12,outdata['alias'][0])
+                irarity = outdata['rarity']
+                alias = outdata['alias']
+                del alias[0]
+                ialias = await rep(45,str(alias))
+                ilist = []
+                try:
+                    aimg = '\\p./aki_60/id.png\\    '.replace('id',iid)
+                    aimg_p = './aki_60/id.png'.replace('id',iid)
+                    img = Im.open(aimg_p)
+                except:
+                    aimg = '  '
+                outmsg = aki_map\
+                    .replace('图片',aimg)\
+                    .replace('iname(12)///',iname)\
+                    .replace('$r',str(irarity) + ' ')\
+                    .replace('stime(41)////////////////////////////////',str(ialias))
+                for i in akm_data:#提取
+                    if i['itemId'] == outdata['itemId']:
+                        ilist.append(i)
+                msglist =[]
+                for o in ilist:#要处理的akm数据 o
+                    for p in aks_data:#读取物品此时的aks数据 p
+                        if o['stageId'] == p['stageId']:
+                            sname = '#FFFFFF\\' + await rep(16,p['name'])
+                            try:
+                                cost = p['apCost']
+                                stime0 = p['minClearTime']
+                            except:continue
+                            for a in p['dropInfos']:#读取p此时的dropInfos a
+                                try:
+                                    if a['itemId'] == iid:
+                                        num = str(a['bounds']['lower']) + '~' + str(a['bounds']['upper'])
+                                        dnum = await rep(6,num)
+                                except:pass
+    
+                    quantity = o['quantity']
+                    times = o['times']
+                    if quantity == 0 or times == 0:
+                        continue
+                    rate = quantity / times
+                    prate = rate * 100
+                    drate = await rep(7,str(round(prate,2)))
+                    lz = round( cost / rate ,2)
+                    dlz = await rep(8,str(lz))
+                    time = stime0 / rate
+                    atime = await settime(time)
+                    dtime = await rep(9,str(atime))
+                    listp = str(math.floor(round(prate,0))).rjust(3,'0')
+                    imsg = ''
+                    imsg = listp + aks_map2.replace('#FFFFFF\\name(24)////////',sname)
+                    imsg = imsg.replace('num(6)',dnum)
+                    imsg = imsg.replace('rate(7)',str(drate + '%'))
+                    imsg = imsg.replace('lz(8)////',str(dlz))
+                    imsg = imsg.replace('time(9)//',str(dtime))
+                    print('获取完毕:',sname,dnum,drate,dlz,dtime)
+                    msglist.append(imsg)
+                    msglist.sort(reverse=True)
                 for i in msglist:
                     i = i[3:]
-                    outmsg = outmsg + i
-                outmsg = outmsg + aks_map3
+                    outmsg = outmsg  + i + '\n'
+                outmsg = outmsg + '\n' + aks_map3
                 print(outmsg)
-                toimg(outmsg,imgpath = "./chace/ak.png" )
+    
+                img = "./chace/ak.png"
+                toimg(outmsg,img)
+                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))    
+    #├info |获取上一个色图详情
+        elif msg.startswith('info') and group.id in setu_group:
+            outmsg = last_setu[str(member.id)]
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+    #├debug |获取个人debug信息
+        elif msg.startswith('debug') and group.id in setu_group:
+            id = str(member.id)
+            info = 'hsolv_data=' +  str(hsolv_data[id]) + '\nhsolvlist_data=' + str(hsolvlist_data[id]) + '\nqd_data=' + str(qd_data[id]) + '\nqdlist_data=' + str(qdlist_data[id])
+            await app.sendGroupMessage(group,MessageChain.create([Plain(info)]))
+    #├hsolv <Int/list>| hsolv等级获取(qq) / lsp排行榜
+        elif msg.startswith("hsolv"):
+            print('hsolv')
+            msg = msg.replace("hsolv",'')
+            if msg.startswith('list') and group.id in setu_group:
+                print('list')
+                print("list读取")
+                groupids = []
+                hsolvlist = []
+                n = 0
+                mlist = await app.memberList(group)
+                for i in mlist:
+                    groupids.append(i.id)
+                for item in hsolvlist_data:
+                    try:
+                        if int(item) in groupids != 0:
+                            for i in mlist:
+                                if i.id == int(item) != 0:
+                                    itemid = await app.getMember(group,int(item))
+                                    inmsg = '$item:$int'.replace('$item',itemid.name).replace('$int',str(hsolvlist_data[item]))
+                                    hsolvlist.append(str(inmsg))
+                    except:
+                        print('err')
+                        await app.sendGroupMessage(group,MessageChain.create([Plain('执行此命令时发生了错误')]))
+    
+                res = sorted(hsolvlist, key=lambda x: (lambda y: (int(y[1]), y[0]))(x.split(':')))
+                res.reverse()
+                out = ''
+                for i in res:
+                    if n == 0:
+                        for i in res[n]:
+                            r = random.randint(0,18)
+                            out = out + '\\' + hsomap[r] + '\\' + ''.join(i)
+                        
+                        res[n] = '\\b20\\ \\b30\\' + out + '\\b25\\\\#FF0000\\'
+                    elif n == 1:
+                        res[n] = res[n] + '\\b20\\\\#FF3300\\'
+                    elif n == 3:
+                        res[n] =  res[n] + '\\#FF6600\\'
+                    elif n == 6:
+                        res[n] = res[n] + '\\#FF9900\\'
+                    elif n == 9:
+                        res[n] = res[n] + '\\#FFCC00\\'
+                    elif n == 12:
+                        res[n] = res[n] + '\\#FFFF00\\'
+                    elif n == 15:
+                        res[n] = res[n] + '\\#FFFF66\\'
+                    elif n == 18:
+                        res[n] = res[n] + '\\#FFFFCC\\'
+                    elif n == 21:
+                        res[n] = res[n] + '\\#FFFFFF\\'
+    
+                    res[n] = res[n] + ' \\n\\ '
+                    n = n + 1
+                a = ''.join(res)
+                msg = "-lsp排行榜:\\#FF0000\\ \\n\\" + a + "\\n\\    \\xx>0\\ \\xy>0\\\\b20\\\\#FFFFFF\\ "
+                for i in res:
+                    msg = msg + '\\n\\|'
+                for i in range(3):
+                    msg = msg + '\\n\\|'
+                print(msg)
+                toimg(msg)
                 await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
-        if msg.startswith('i'):
-            cost = 1
-            stime0 = 1
-            sname = ''
-            dnum = 0
-            iid = ''
-            msg = msg.replace('i','')
-            outdata = {}
-            for i in aki_data:
-                for o in i['alias']:
-                    if o == msg:
-                        outdata = i
-                        iid = i['itemId']
-                        break
-            iname = await rep(12,outdata['alias'][0])
-            irarity = outdata['rarity']
-            alias = outdata['alias']
-            del alias[0]
-            ialias = await rep(45,str(alias))
-            ilist = []
-            try:
-                aimg = '\\p./aki_60/id.png\\    '.replace('id',iid)
-                aimg_p = './aki_60/id.png'.replace('id',iid)
-                img = Im.open(aimg_p)
-            except:
-                aimg = '  '
-            outmsg = aki_map\
-                .replace('图片',aimg)\
-                .replace('iname(12)///',iname)\
-                .replace('$r',str(irarity) + ' ')\
-                .replace('stime(41)////////////////////////////////',str(ialias))
-            for i in akm_data:#提取
-                if i['itemId'] == outdata['itemId']:
-                    ilist.append(i)
-            msglist =[]
-            for o in ilist:#要处理的akm数据 o
-                for p in aks_data:#读取物品此时的aks数据 p
-                    if o['stageId'] == p['stageId']:
-                        sname = '#FFFFFF\\' + await rep(16,p['name'])
-                        try:
-                            cost = p['apCost']
-                            stime0 = p['minClearTime']
-                        except:continue
-                        for a in p['dropInfos']:#读取p此时的dropInfos a
-                            try:
-                                if a['itemId'] == iid:
-                                    num = str(a['bounds']['lower']) + '~' + str(a['bounds']['upper'])
-                                    dnum = await rep(6,num)
-                            except:pass
-
-                quantity = o['quantity']
-                times = o['times']
-                if quantity == 0 or times == 0:
-                    continue
-                rate = quantity / times
-                prate = rate * 100
-                drate = await rep(7,str(round(prate,2)))
-                lz = round( cost / rate ,2)
-                dlz = await rep(8,str(lz))
-                time = stime0 / rate
-                atime = await settime(time)
-                dtime = await rep(9,str(atime))
-                listp = str(math.floor(round(prate,0))).rjust(3,'0')
-                imsg = ''
-                imsg = listp + aks_map2.replace('#FFFFFF\\name(24)////////',sname)
-                imsg = imsg.replace('num(6)',dnum)
-                imsg = imsg.replace('rate(7)',str(drate + '%'))
-                imsg = imsg.replace('lz(8)////',str(dlz))
-                imsg = imsg.replace('time(9)//',str(dtime))
-                print('获取完毕:',sname,dnum,drate,dlz,dtime)
-                msglist.append(imsg)
-                msglist.sort(reverse=True)
-            for i in msglist:
-                i = i[3:]
-                outmsg = outmsg  + i + '\n'
-            outmsg = outmsg + '\n' + aks_map3
-            print(outmsg)
-
-            img = "./chace/ak.png"
-            toimg(outmsg,img)
-            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))    
-#info |获取上一个色图详情
-    elif msg.startswith('info') and group.id in setu_group:
-        outmsg = last_setu[str(member.id)]
-        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-#debug |获取个人debug信息
-    elif msg.startswith('debug') and group.id in setu_group:
-        id = str(member.id)
-        info = 'hsolv_data=' +  str(hsolv_data[id]) + '\nhsolvlist_data=' + str(hsolvlist_data[id]) + '\nqd_data=' + str(qd_data[id]) + '\nqdlist_data=' + str(qdlist_data[id])
-        await app.sendGroupMessage(group,MessageChain.create([Plain(info)]))
-#hsolv <Int/list>| hsolv等级获取(qq) / lsp排行榜
-    elif msg.startswith("hsolv"):
-        msg = msg.replace("hsolv",'')
-        if msg.startswith('list') and group.id in setu_group:
-            print("list读取")
-            groupids = []
-            hsolvlist = []
-            n = 0
-            mlist = await app.memberList(group)
-            for i in mlist:
-                groupids.append(i.id)
-            for item in hsolvlist_data:
+        #-显示hsolv等级
+            else:
                 try:
-                    if int(item) in groupids != 0:
-                        for i in mlist:
-                            if i.id == int(item) != 0:
-                                itemid = await app.getMember(group,int(item))
-                                inmsg = '$item:$int'.replace('$item',itemid.name).replace('$int',str(hsolvlist_data[item]))
-                                hsolvlist.append(str(inmsg))
-                except:
-                    print('err')
-                    await app.sendGroupMessage(group,MessageChain.create([Plain('执行此命令时发生了错误')]))
-
-            res = sorted(hsolvlist, key=lambda x: (lambda y: (int(y[1]), y[0]))(x.split(':')))
-            res.reverse()
-            out = ''
-            for i in res:
-                if n == 0:
-                    for i in res[n]:
-                        r = random.randint(0,18)
-                        out = out + '\\' + hsomap[r] + '\\' + ''.join(i)
-                    
-                    res[n] = '\\b20\\ \\b30\\' + out + '\\b25\\\\#FF0000\\'
-                elif n == 1:
-                    res[n] = res[n] + '\\b20\\\\#FF3300\\'
-                elif n == 3:
-                    res[n] =  res[n] + '\\#FF6600\\'
-                elif n == 6:
-                    res[n] = res[n] + '\\#FF9900\\'
-                elif n == 9:
-                    res[n] = res[n] + '\\#FFCC00\\'
-                elif n == 12:
-                    res[n] = res[n] + '\\#FFFF00\\'
-                elif n == 15:
-                    res[n] = res[n] + '\\#FFFF66\\'
-                elif n == 18:
-                    res[n] = res[n] + '\\#FFFFCC\\'
-                elif n == 21:
-                    res[n] = res[n] + '\\#FFFFFF\\'
-
-                res[n] = res[n] + ' \\n\\ '
-                n = n + 1
-            a = ''.join(res)
-            msg = "-lsp排行榜:\\#FF0000\\ \\n\\" + a + "\\n\\    \\xx>0\\ \\xy>0\\\\b20\\\\#FFFFFF\\ "
-            for i in res:
-                msg = msg + '\\n\\|'
-            for i in range(3):
-                msg = msg + '\\n\\|'
-            print(msg)
-            toimg(msg)
-            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
-    #-显示hsolv等级
-        else:
-            try:
-                print("printhsolv")
-                id = int(msg.replace("-","").replace(' ',''))
-                mid = 0
-                mid = int(hsolvlist_data[str(id)])
-                outmsg = str(id) + "的hso等级为" + str(mid)
-                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
-            except:pass
-#backup |备份
-    elif msg.startswith('backup') and member.id in admin:
-        savecfg()
-        srcfile='./cfg.json'
-        name = Time.strftime('%Y-%m-%d-%H',Time.localtime(Time.time()))
-        dstfile='./backups/'+ name + '.json'
-        shutil.move(srcfile,dstfile)
-        outmsg = name + '已备份'
-        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+                    print("printhsolv")
+                    id = int(msg.replace("-","").replace(' ',''))
+                    mid = 0
+                    mid = int(hsolvlist_data[str(id)])
+                    outmsg = str(id) + "的hso等级为" + str(mid)
+                    await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+                except:pass
+    #└backup |备份
+        elif msg.startswith('backup') and member.id in admin:
+            savecfg()
+            srcfile='./cfg.json'
+            name = Time.strftime('%Y-%m-%d-%H',Time.localtime(Time.time()))
+            dstfile='./backups/'+ name + '.json'
+            shutil.move(srcfile,dstfile)
+            outmsg = name + '已备份'
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 
 
 #后处理项目
     savecfg()
     timenow = math.floor( Time.time() / 60 / 60 / 24 )
     ltime = cfg['time']
-    if timenow - ltime > 1:
+    if timenow - ltime >= 1:
         cfg['time'] = math.floor( Time.time() / 60 / 60 / 24 )
         await app.sendGroupMessage(xmlimg_group,MessageChain.create([Plain('执行自动重启项目----')]))
         srcfile='./cfg.json'
@@ -1455,3 +1478,8 @@ async def friend_request(app: GraiaMiraiApplication,event: NewFriendRequestEvent
 
 
 app.launch_blocking()
+
+try:
+    loop.run_forever()
+except KeyboardInterrupt:
+    exit()
