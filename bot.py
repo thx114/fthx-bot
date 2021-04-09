@@ -3,6 +3,7 @@ import random
 import aiohttp
 import math
 from PIL import ImageFile
+from aiohttp.client import ClientSession
 from bs4 import BeautifulSoup
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from random import randint
@@ -11,6 +12,7 @@ import hashlib
 import json
 import shutil
 import cv2
+import _thread
 from PIL import ImageFont,ImageDraw
 from graia.broadcast import Broadcast
 from graia.application import GraiaMiraiApplication, Session, message
@@ -45,7 +47,7 @@ from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bo
 
 api = AppPixivAPI()
 loop = asyncio.get_event_loop() 
-
+is_run = False
 def sdir(tdir): #新建目录
     if not os.path.exists(tdir):
         print('目标不存在,新建目录:',tdir)
@@ -152,7 +154,7 @@ class DF(object): #下载
         inputimg = inputimg.resize((new_x, new_y),Im.ANTIALIAS)
         print('新图片大小:',new_x,'|',new_y)
         inputimg.save(path)
-    async def adf(url,path):#异步下载
+    async def adf(url,path,resize=[],resize_r=False):#异步下载
         url = url.replace('i.pximg.net','i.pixiv.cat')
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'}
         async with aiohttp.ClientSession() as session:
@@ -163,24 +165,35 @@ class DF(object): #下载
             with open(path, 'wb') as f:
                 f.write(content_img)
             await session.close()
-            if path.endswith('png'):
+            if path.endswith('png') and resize == []:
                 await DF.resize(path,maxx_img)
-        print('下载完毕')
+        print(path + '下载完毕')
+
+        if resize_r == True:shutil.copyfile(path,path.replace('.png','_r.png'))
+        if resize != []:await DF.resize(path,resize[0],resize[1])
+        return path
+
+
 class CHS(object): #数据初始化
     def chs(id): 
         datas = [hsolv_data,hsolvlist_data,qd_data,qdlist_data]
         for i in datas :
             if id not in i:
                 i[id] = 0
+api = AppPixivAPI()
 def PixivLogin():
-    api = AppPixivAPI()
     print("p站登录中.....")
-    api.auth(refresh_token=refresh_token)
-    print('--------登录成功')
+    requests.session().keep_alive = False
+    try:api.auth(refresh_token=refresh_token)
+    except:
+        try:api.auth(refresh_token=refresh_token)
+        except Exception as e:print('Pixiv登录错误: -\n└' + str(e))
+    return api
 pt = Thread(target=PixivLogin)
 pt.setDaemon(True)
 pt.start()
-pt.join(2)
+pt.join(timeout=2)
+
 
 bcc = Broadcast(loop=loop) 
 app = GraiaMiraiApplication(broadcast=bcc,connect_info=Session(host=host_,authKey=authKey,account=bot_qq,websocket=True,use_dispatcher_statistics = True,use_reference_optimization = True))
@@ -511,13 +524,24 @@ class Setu:
             print(outmsg)
             return outmsg
     async def reget(r18 ):
+        global is_run
+        if is_run == True: return
+        is_run = True
         if r18 == 1:fl = 'r18'
         else:fl = 'setu'
-        for _ in range(4):
-            if len(cfg['setus'][fl]) < setus:
-                tasks = [loop.create_task(Setu.add(r18=r18)) for _ in range(oncesetuadd)]
-                yes , no = await asyncio.wait(tasks)
-                allr = [r.result() for r in yes]
+        tasks = []
+        setu_ix = len(cfg['setus'][fl])
+        for _ in range(10):
+            if setu_ix < setus:
+                task = asyncio.ensure_future(Setu.add(r18=r18))
+                tasks.append(task)
+                setu_ix = setu_ix + 1
+        await asyncio.gather(*tasks)
+        is_run = False
+    async def tdf(url,path):
+        await DF.adf(url,path)
+        shutil.copyfile(path,path.replace('.png','_r.png'))
+        await DF.resize(path,240,120)
 async def rep(l,text): #文字占位处理
     strnone = ' '
     text=text.replace('　',' ')
@@ -776,7 +800,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 if mode == 1:
                     fromt = 'saucenao'
                     print('以图搜图sau')
-                    url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=10&url=$url".replace('$url',timg).replace('$key',saucenao_key)
+                    url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=8&url=$url".replace('$url',timg).replace('$key',saucenao_key)
                     async with aiohttp.ClientSession() as session:
                         async with session.get(url) as resp:
                             data = await resp.json()
@@ -843,14 +867,17 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 n = 0
                 outmsg = startmap
                 n = 0
+                tasks = []
+    
                 for i in ilist:
                     n += 1
                     url = i['img']
                     if url.startswith('/thumbnail/'):url = 'https://ascii2d.net' + url
                     img_ing = './chace/' + str(n) + '.png'
-                    await DF.adf(url,img_ing)
-                    shutil.copyfile(img_ing,img_ing.replace('.png','_r.png'))
-                    await DF.resize(img_ing,240,120)
+
+                    task = asyncio.ensure_future(DF.adf(url,img_ing,resize=[240,120],resize_r=True))
+                    tasks.append(task)
+        
                     try:title = await rep(13,i['links'][0]['str'])
                     except:title =await rep(13,'None')
                     try:user = await rep(13,i['links'][1]['str'])
@@ -866,6 +893,8 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 outmsg = outmsg + aks_map3
                 path = './chace/bg_l.png'
                 path2 ='./chace/bg_d.png'
+                await asyncio.gather(*tasks)
+                await DF.resize(path,915,1560)
                 img = cv2.imread(path, -1) 
                 fx = fy = 1
                 img = cv2.resize(img, (0, 0), fx=fx, fy=fy, interpolation=cv2.INTER_CUBIC)  
