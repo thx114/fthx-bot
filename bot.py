@@ -44,7 +44,8 @@ from asyncio.subprocess import PIPE, STDOUT
 from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map\
     ,helptext,refresh_token,maxx_img,infomap,maximgpass,xmlimg_group,oncesetuadd,setus,Search_map,Search_map2
 
-
+global is_run
+global execout
 api = AppPixivAPI()
 loop = asyncio.get_event_loop() 
 is_run = False
@@ -53,6 +54,7 @@ def sdir(tdir): #新建目录
         print('目标不存在,新建目录:',tdir)
         os.makedirs(tdir)
 
+ 
 try: #start
     try:#初始化
         if not os.path.exists('cfg.json'):
@@ -201,20 +203,21 @@ inc = InterruptControl(bcc)
 ###################################
 #如果你想使用saya模块就去除下面的“#” 
 ###################################
-saya = Saya(bcc)
-saya.install_behaviours(BroadcastBehaviour(bcc))
-
-with saya.module_context():
-    for module in os.listdir("modules"):
-        try:
-            if os.path.isdir(module):
-                saya.require(f"modules.{module}")
-            else:
-                saya.require(f"modules.{module.split('.')[0]}")
-        except ModuleNotFoundError:
-            pass
-
-
+try:
+    saya = Saya(bcc)
+    saya.install_behaviours(BroadcastBehaviour(bcc))
+    
+    with saya.module_context():
+        for module in os.listdir("modules"):
+            try:
+                if os.path.isdir(module):
+                    saya.require(f"modules.{module}")
+                else:
+                    saya.require(f"modules.{module.split('.')[0]}")
+            except ModuleNotFoundError:
+                pass
+except Exception as e:
+    print('saya加载错误 不使用saya插件可无视:',e)
 async def tlen(text): #文字宽度测量
     lenTxt = len(text) 
     lenTxt_utf8 = len(text.encode('utf-8')) 
@@ -509,6 +512,7 @@ class Setu:
                         print(' \\',hsolv_data[id])
                         cfg['last_setu'][id] = setudata
                 else:
+                    if is_run == True: outmsg.append(Plain('下载可能卡住了|'))
                     outmsg.append(Plain('色图获取的太多啦，补不上货啦'))
                     print(outmsg)
                 return outmsg
@@ -523,7 +527,7 @@ class Setu:
             outmsg.append(Plain(debug + '你没色图啦'))
             print(outmsg)
             return outmsg
-    async def reget(r18 ):
+    async def reget(r18 ): #重新补充色图
         global is_run
         if is_run == True: return
         is_run = True
@@ -536,12 +540,16 @@ class Setu:
                 task = asyncio.ensure_future(Setu.add(r18=r18))
                 tasks.append(task)
                 setu_ix = setu_ix + 1
-        await asyncio.gather(*tasks)
+        try:await asyncio.gather(*tasks)
+        except:is_run = False
         is_run = False
-    async def tdf(url,path):
+    async def tdf(url,path): #
         await DF.adf(url,path)
         shutil.copyfile(path,path.replace('.png','_r.png'))
         await DF.resize(path,240,120)
+    async def rm(rmsg): #撤回色图
+        await asyncio.sleep(cfg['revoke'])
+        await app.revokeMessage(rmsg)
 async def rep(l,text): #文字占位处理
     strnone = ' '
     text=text.replace('　',' ')
@@ -788,6 +796,8 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                         elif msg.startswith('asc'): mode = 2
                         if mode != 0:
                             return mode
+                global stime 
+                stime = Time.timenow
                 mode = await inc.wait(waiter)
                 imgpath = './sh.png'
                 await DF.adf(timg,imgpath)
@@ -970,16 +980,19 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 [(Plain('撤回时间已改为'+str(cfg['revoke'])))]),quote=message[Source][0].id)
     #├test |test
         elif msg.startswith('test'):
-            #id = str(member.id)
-            #print(hsolv_data[id])
-            #hsolv_data[id] += 5
-            #print(hsolv_data[id])
-            #id = str(member.id)
-            #info = 'hsolv_data=' +  str(hsolv_data[id]) + '\nhsolvlist_data=' + str(hsolvlist_data[id]) + '\nqd_data=' + str(qd_data[id]) + '\nqdlist_data=' + str(qdlist_data[id])
-            #hsolv_data[id] -= 5
-            #print(hsolv_data[id])
-            #await app.sendGroupMessage(group,MessageChain.create([Plain(info)]))
-            print("testdone")
+            print('test')
+    #├exec <Str> |运行函数
+        elif msg.startswith('exec') and member.id in admin:
+            mlist = await app.memberList(group)
+            global execout
+            execout = 'None'
+            msg = 'global execout\n' + msg.replace('exec\n','')
+            print(msg)
+            exec(msg)
+            if execout != "None":
+                if isinstance(execout,list):await app.sendGroupMessage(group,MessageChain.create(execout))
+                if isinstance(execout,str):await app.sendGroupMessage(group,MessageChain.create([(Plain(execout))]),quote=message[Source][0].id)
+                print(execout)
     #├restart |重启机器人
         elif msg.startswith('restart') :
             await app.sendGroupMessage(group,MessageChain.create([Plain('执行重启项目----')]))
@@ -1078,11 +1091,10 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         elif msg.isdigit() == True:outmsg =await Setu.get(0,num=int(msg),qid=member.id)
         else :outmsg = await Setu.get(0,s=msg,qid=member.id)
         rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
-        if cfg['revoke'] > 0 :
-            print('r' , cfg['revoke'])
-            await asyncio.sleep(cfg['revoke'])
-            await app.revokeMessage(rmsg)
-        await Setu.reget(0)  
+        tasks = []
+        tasks.append(asyncio.ensure_future(Setu.rm(rmsg)))
+        tasks.append(asyncio.ensure_future(Setu.reget(0)))
+        await asyncio.gather(*tasks)
 #├不够色 <Str/Int/None> | 同上，但是r18
     elif msg.startswith('不够色') and group.id in cfg['r18_group']:
         msg = msg.replace('不够色','').replace(' ','')
@@ -1090,7 +1102,8 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         elif msg.isdigit:outmsg = await Setu.get(1,member.id,group.id,num=int(msg))
         else          :outmsg = await Setu.get(1,member.id,group.id,s=msg)
         await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
-        await Setu.reget(0)
+        try: await asyncio.wait_for(Setu.reget(1), 20)
+        except: is_run = False
 #├xml <on/off> |开关色图xml模式
     elif msg.startswith('xml') and hsolvlist_data[str(member.id)] >30:
         msg = msg.replace('xml','').replace(' ','')
@@ -1503,8 +1516,10 @@ async def member_join(app: GraiaMiraiApplication,event: MemberJoinEvent):
 @bcc.receiver("NewFriendRequestEvent")
 async def friend_request(app: GraiaMiraiApplication,event: NewFriendRequestEvent):
     mid = event.supplicant
-    if hsolvlist_data[str(mid)] > 30 : await event.accept('喵~')
-    else : await event.reject('哼~不给加好友')
+    try:
+        if hsolvlist_data[str(mid)] > 30 : await event.accept('喵~')
+        else : await event.reject('哼~不给加好友')
+    except:await event.reject('哼~不给加好友')
 
 
 app.launch_blocking()
