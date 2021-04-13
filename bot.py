@@ -21,7 +21,6 @@ from graia.application.event.mirai import MemberJoinEvent, NewFriendRequestEvent
 from graia.application.message.chain import MessageChain
 from graia.saya import Saya
 from graia.saya.builtins.broadcast import BroadcastBehaviour
-
 import asyncio
 import aiohttp
 from graia.application.group import Group, Member
@@ -35,6 +34,7 @@ from dateutil import rrule
 from PIL import Image as Im
 from pixivpy3 import *
 import sys
+import greenlet
 import requests
 import os
 from os.path import join, getsize
@@ -223,6 +223,17 @@ async def tlen(text): #文字宽度测量
     lenTxt_utf8 = len(text.encode('utf-8')) 
     size = int((lenTxt_utf8 - lenTxt)/2 + lenTxt)
     return size
+
+async def aexec(code):
+    # Make an async function with the code and `exec` it
+    exec(
+        f'async def __ex(): ' +
+        ''.join(f'\n {l}' for l in code.split('\n'))
+    )
+
+    # Get `__ex` from local variables, call it and return the result
+    return await locals()['__ex']()
+
 class Ak:
     async def m(): #明日方舟m数据获取
         apiurl = 'https://penguin-stats.io/PenguinStats/api/v2/result/matrix'
@@ -752,7 +763,7 @@ def toimg(msg,imgpath='./chace/mainbg.png',f1=fl1,f2=fl2,PZ=False,savepath='./ch
     print('function用时:',function_time)
     print('写入文字用时:',text_time)
     print('碰撞箱用时:',for_time)
-
+loop.create_future()
 
 @bcc.receiver("GroupMessage")
 async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group: Group, member:Member ): #群聊监听
@@ -985,14 +996,17 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         elif msg.startswith('exec') and member.id in admin:
             mlist = await app.memberList(group)
             global execout
+            global test_
+            async def test_():
+                print("qaq")
             execout = 'None'
             msg = 'global execout\n' + msg.replace('exec\n','')
             print(msg)
-            exec(msg)
+            await aexec(msg)
             if execout != "None":
                 if isinstance(execout,list):await app.sendGroupMessage(group,MessageChain.create(execout))
                 if isinstance(execout,str):await app.sendGroupMessage(group,MessageChain.create([(Plain(execout))]),quote=message[Source][0].id)
-                print(execout)
+                if isinstance(execout,float):pass
     #├restart |重启机器人
         elif msg.startswith('restart') :
             await app.sendGroupMessage(group,MessageChain.create([Plain('执行重启项目----')]))
