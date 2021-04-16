@@ -1,5 +1,6 @@
 from asyncio.tasks import wait
 import random
+import threading
 import aiohttp
 import math
 from PIL import ImageFile
@@ -54,12 +55,10 @@ def sdir(tdir): #新建目录
         print('目标不存在,新建目录:',tdir)
         os.makedirs(tdir)
 
- 
 try: #start
     try:#初始化
         if not os.path.exists('cfg.json'):
-            if not os.path.exists('./chace/mainbg.png'):
-                print('错误:没有找到主界面背景')
+            if not os.path.exists('./chace/mainbg.png'):print('错误:没有找到主界面背景')
             cfg = {}
             cfg['hsolvlist'] = {}
             cfg['hsolv'] = {}
@@ -76,6 +75,9 @@ try: #start
             cfg['time'] = datetime.now().strftime('%Y-%m-%d 10:10:10')
             cfg['setu_l'] = 0
             cfg['xml'] = 0
+            cfg['info'] = 0
+            cfg['revoke'] = 0
+            cfg['debug'] = 0
             jsonfile=open("cfg.json","w")
             json.dump(cfg,jsonfile,indent=4)
             jsonfile.close()
@@ -94,7 +96,7 @@ try: #start
         for i in ['hsolvlist','hsolv','qd','qdlist','last_setu','plinfodata','setus','last_s']:
             try:load = cfg[i]
             except:cfg[i] = {}
-        for i in ['setu_l','xml','revoke',"info"]:
+        for i in ['setu_l','xml','revoke','info','debug']:
             try: load = cfg[i]
             except: cfg[i] = 0
         try:load = cfg['setus']['r18']
@@ -154,7 +156,7 @@ class DF(object): #下载
         new_x = math.floor(new_x)
         new_y = math.floor(new_y)
         inputimg = inputimg.resize((new_x, new_y),Im.ANTIALIAS)
-        print('新图片大小:',new_x,'|',new_y)
+        print('├新图片大小:',new_x,'|',new_y)
         inputimg.save(path)
     async def adf(url,path,resize=[],resize_r=False):#异步下载
         url = url.replace('i.pximg.net','i.pixiv.cat')
@@ -169,13 +171,11 @@ class DF(object): #下载
             await session.close()
             if path.endswith('png') and resize == []:
                 await DF.resize(path,maxx_img)
-        print(path + '下载完毕')
+        print('└下载完毕' + path)
 
         if resize_r == True:shutil.copyfile(path,path.replace('.png','_r.png'))
         if resize != []:await DF.resize(path,resize[0],resize[1])
         return path
-
-
 class CHS(object): #数据初始化
     def chs(id): 
         datas = [hsolv_data,hsolvlist_data,qd_data,qdlist_data]
@@ -223,6 +223,10 @@ async def tlen(text): #文字宽度测量
     lenTxt_utf8 = len(text.encode('utf-8')) 
     size = int((lenTxt_utf8 - lenTxt)/2 + lenTxt)
     return size
+def debug(*nums):
+    if cfg['debug'] == 1:
+        print(*nums)
+    else: pass
 
 async def aexec(code):
     # Make an async function with the code and `exec` it
@@ -233,7 +237,6 @@ async def aexec(code):
 
     # Get `__ex` from local variables, call it and return the result
     return await locals()['__ex']()
-
 class Ak:
     async def m(): #明日方舟m数据获取
         apiurl = 'https://penguin-stats.io/PenguinStats/api/v2/result/matrix'
@@ -304,18 +307,19 @@ class Ak:
         jsonfile.close()
         print('json save done')
 class Setu:
-    async def add(r18=0): #为色图池增加色图
+    async def add(r18=0,just_get=True,s='-'): #为色图池增加色图
         ext_ing = ''
         outmsg = []
         p_ingdata = {}
         setudata = {}
         start_time = Time.time()
         apiurl = 'https://api.lolicon.app/setu/?apikey=$APIKEY&r18=$R18'.replace('$APIKEY',lolicon_key).replace('$R18',str(r18)).replace('$NUM',str(1))
-        print('与api沟通中...')
+        if s != '-':apiurl = apiurl + '&keyword=' + s
+        print('与api沟通中...','>',apiurl)
         async with aiohttp.ClientSession() as session:
             async with session.get(apiurl) as resp:
                 res_json = await resp.json()
-        print('done')
+        print('└done')
         code = str(res_json['code'])
         codes = {
         '-1'	:'-1:api内部错误',
@@ -328,39 +332,39 @@ class Setu:
         if code == '429':
             cfg['setu_l'] = 1
             return
-        print(ext_ing)
-        for i in res_json['data']:
-            url_ing = i['url']
-            pid_ing = i['pid']
-            if r18 == 1:path_ing = './r18/' + str(pid_ing) + '.png'
-            else:path_ing = './setu/' + str(pid_ing) + '.png'
-            p_ingdata['pid'] = pid_ing
-            print(url_ing,pid_ing,'开始下载')
+        i = res_json['data'][0]
+        url_ing = i['url']
+        pid_ing = i['pid']
+        if r18 == 1:path_ing = './r18/' + str(pid_ing) + '.png'
+        else:path_ing = './setu/' + str(pid_ing) + '.png'
+        p_ingdata['pid'] = pid_ing
+        print('开始下载:',url_ing,pid_ing,)
+        try:await DF.adf(url_ing,path_ing)
+        except:
+            print('└连接错误，正在重试....')
             try:await DF.adf(url_ing,path_ing)
             except:
-                print('连接错误，正在重试....')
-                try:await DF.adf(url_ing,path_ing)
-                except:
-                    print("连接错误")
-                    return
-            print('intoxml')
-            ext =" $title by $author |pid:$pid uid:$uid "\
-            .replace('$title',i['title'])\
-            .replace('$author',i['author'])\
-            .replace('$pid',str(pid_ing))\
-            .replace('$uid',str(i['uid']))
-            setudata['img'] = path_ing
-            setudata['ext'] = ext
-            outdata = ""
-            for item in i:
-                outdata = outdata + str(item) + str(i[str(item)])
-            outdata = outdata.replace('pid','pid:').replace('p0uid',' p0 - uid').replace('uid','uid:').replace('title','\n标题:').replace('author','   作者:').replace('url','\n').replace('r18False','').replace('r18True','').replace('width','\n').replace('height','x').replace('tags','\n标签:')
-            setudata['info'] = outdata
+                print(" └连接错误")
+                return
+        ext =" $title by $author |pid:$pid uid:$uid "\
+        .replace('$title',i['title'])\
+        .replace('$author',i['author'])\
+        .replace('$pid',str(pid_ing))\
+        .replace('$uid',str(i['uid']))
+        setudata['img'] = path_ing
+        setudata['ext'] = ext
+        outdata = ""
+        for item in i:
+            outdata = outdata + str(item) + str(i[str(item)])
+        outdata = outdata.replace('pid','pid:').replace('p0uid',' p0 - uid').replace('uid','uid:').replace('title','\n标题:').replace('author','   作者:').replace('url','\n').replace('r18False','').replace('r18True','').replace('width','\n').replace('height','x').replace('tags','\n标签:')
+        setudata['info'] = outdata
+        if just_get == True:
             if r18 == 1:fl = 'r18'
             else:fl = 'setu'
             cfg['setus'][fl].append(setudata)
-            print('色图库数量+1, 目前色图总量为',len(cfg['setus'][fl]))
-            return pid_ing
+            print(' └色图数量+1, 目前色图总量为',len(cfg['setus'][fl]))
+        else:
+            return setudata
     async def xml(setudata): #使用xml发出色图
         path = setudata['img']
         ext = setudata['ext']
@@ -406,21 +410,15 @@ class Setu:
         hsolvlist_data[id] = hsolvlist_data[id] + 1
         outmsg = [(Image.fromLocalFile(filepach))]
         return outmsg
-    async def get(r18,s='-',num=1,qid=110): #获取色图
+    async def get(r18,qid=110,msg='',xml=cfg['xml']): #获取色图
         id = str(qid)
         outmsg = []
-        debug1 = ''
-        debug2 = ''
-        if num > 10: return
-        #start_time = Time.time()
-        """
-        \n r18: <int> 1或者0
-        \n iid: <int> QQ号
-        \n g  : <int> 群号
-        \n
-        \n s  : <str> 关键词 (可选)
-        \n num: <int> 请求色图数量 (可选)
-        \n """
+        if r18 == 1:fl = 'r18'
+        else:fl = 'setu'
+        if msg.isdigit() == True:
+            num = int(msg)
+            if not 0 > num > 10:return
+        else:num = 1
         if id not in hsolvlist_data: #初始化
             print('初始化',id)
             hsolv_data[id] = 0
@@ -440,103 +438,54 @@ class Setu:
             debug2 = hsolv_data[id]
             qdlist_data[id] += 1
             qd_data[id] = 1
-        if hsolv_data[id] > 0 + num: 
-            if r18 == 1:fl = 'r18'
-            else:fl = 'setu'
-            if s != "-":
-                print(2)
-                ext_ing = ''
-                outmsg = []
-                p_ingdata = {}
-                setudata = {}
-                apiurl = 'https://api.lolicon.app/setu/?apikey=$APIKEY&r18=$R18&keyword=$S'.replace('$APIKEY',lolicon_key).replace('$R18',str(r18)).replace('$NUM',str(1)).replace('$S',s)
-                print('与api沟通中...')
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(apiurl) as resp:
-                        res_json = await resp.json()
-                print('|>done')
-                code = str(res_json['code'])
-                if code == '429':
-                    cfg['setu_l'] = 1
-                if code != '0':
-                    errmsg = str(res_json['msg'])
-                    outmsg = [(Plain(errmsg))]
-                    return outmsg
-                print(ext_ing)
-                for i in res_json['data']:
-                    url_ing = i['url']
-                    pid_ing = i['pid']
-                    if r18 == 1:path_ing = './r18/' + str(pid_ing) + '.png'
-                    else:path_ing = './setu/' + str(pid_ing) + '.png'
-                    p_ingdata['pid'] = pid_ing
-                    print(url_ing,pid_ing,'开始下载')
-                    try:await DF.adf(url_ing,path_ing)
-                    except:
-                        print('连接错误，正在重试....')
-                        try:await DF.adf(url_ing,path_ing)
-                        except:
-                            print("连接错误")
-                            outmsg = (Plain('连接错误'))
-                            return outmsg
-                    print('intoxml')
-                    ext =" $title by $author |pid:$pid uid:$uid "\
-                    .replace('$title',i['title'])\
-                    .replace('$author',i['author'])\
-                    .replace('$pid',str(pid_ing))\
-                    .replace('$uid',str(i['uid']))
-                    setudata['img'] = path_ing
-                    setudata['ext'] = ext
-                    outdata = ""
-                    for item in i:
-                        outdata = outdata + str(item) + str(i[str(item)])
-                    outdata = outdata.replace('pid','pid:').replace('p0uid','p0 - uid').replace('uid','uid:').replace('title','\n标题:').replace('author','   作者:').replace('url','\n').replace('r18False','').replace('r18True','').replace('width','\n').replace('height','x').replace('tags','\n标签:')
-                    setudata['info'] = outdata
-                    if cfg['xml'] == 1:
-                        setudata['ext'] = setudata['ext'] + '色图缓存:' + str(len(cfg['setus'][fl]))
-                        outxml = await Setu.xml(setudata)
-                        outmsg.append(outxml)
-                    else:
-                        outmsg.append(Image.fromLocalFile(setudata['img']))
-                    if cfg["info"] == 1:outmsg.append(Plain(setudata['info']))
+        if hsolv_data[id] > num: #有剩余色图并获取色图
+            if cfg['setu_l'] == 1: #离线色图
+                for i in range(num):
+                    offline = await Setu.offline(r18)
+                    outmsg.append(offline)
                     hsolvlist_data[id] += 1
                     hsolv_data[id] -= 1
-                    return outmsg
-            elif cfg['setu_l'] == 0:
+                return outmsg
+            if msg.isdigit() == True or msg == '': #普通和数量色图
                 global loop_ing
                 loop_ing = False
                 if num < len(cfg['setus'][fl]):
                     for i in range(num):
-                        print(4)
                         lsetudata = cfg['setus'][fl]
                         setudata = lsetudata[0]
-                        if cfg['xml'] == 1:
+                        if xml == 1:
                             setudata['ext'] = setudata['ext'] + '色图缓存:' + str(len(cfg['setus'][fl]))
                             outxml = await Setu.xml(setudata)
-                            outmsg.append(outxml)
+                            outmsg = outxml
                         else:
                             outmsg.append(Image.fromLocalFile(setudata['img']))
                         del lsetudata[0]
+                        print('┌色图库 -1')
                         cfg['setus'][fl] = lsetudata
                         if cfg["info"] == 1:outmsg.append(Plain(setudata['info']))
                         hsolvlist_data[id] += 1
                         hsolv_data[id] -= 1
-                        print(' \\',hsolv_data[id])
+                        print('└色图人剩余色图',hsolv_data[id])
                         cfg['last_setu'][id] = setudata
                 else:
                     if is_run == True: outmsg.append(Plain('下载可能卡住了|'))
                     outmsg.append(Plain('色图获取的太多啦，补不上货啦'))
-                    print(outmsg)
                 return outmsg
-            else:
-                offline = await Setu.offline(r18)
-                outmsg.append(offline)
-                print(outmsg)
+            else : #搜索色图
+                setudata = await Setu.add(r18,False,s=msg)
+                if xml == 1:
+                    setudata['ext'] = setudata['ext'] + '色图缓存:' + str(len(cfg['setus'][fl]))
+                    outxml = await Setu.xml(setudata)
+                    outmsg = outxml
+                else:
+                    outmsg.append(Image.fromLocalFile(setudata['img']))
+                if cfg["info"] == 1:outmsg.append(Plain(setudata['info']))
+                hsolvlist_data[id] += 1
+                hsolv_data[id] -= 1
                 return outmsg
         else:
-            debug3 = hsolv_data[id]
-            debug = str(debug1) + ',' + str(debug2) + ',' +str(debug3)
-            outmsg.append(Plain(debug + '你没色图啦'))
-            print(outmsg)
+            outmsg.append(Plain('你没色图啦'))
+            debug(cfg['hsolv'][id],'>',hsolv_data[id],'| id:',id)
             return outmsg
     async def reget(r18 ): #重新补充色图
         global is_run
@@ -1006,7 +955,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             if execout != "None":
                 if isinstance(execout,list):await app.sendGroupMessage(group,MessageChain.create(execout))
                 if isinstance(execout,str):await app.sendGroupMessage(group,MessageChain.create([(Plain(execout))]),quote=message[Source][0].id)
-                if isinstance(execout,float):pass
+                else:await app.sendGroupMessage(group,MessageChain.create([(Plain(str(execout)))]),quote=message[Source][0].id)
     #├restart |重启机器人
         elif msg.startswith('restart') :
             await app.sendGroupMessage(group,MessageChain.create([Plain('执行重启项目----')]))
@@ -1098,26 +1047,20 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             cfg["setus"]['r18'] = []
             cfg["setus"]['setu'] = []
 #普通指令
-#├色图来 <Str/Int/None> | 关键词获取色图 / 获取多个色图 / 随机色图
-    if msg.startswith('色图来') and group.id in cfg['setu_group']:
-        msg = msg.replace('色图来','').replace(' ','')
-        if msg == '':outmsg =await Setu.get(0,qid=member.id)
-        elif msg.isdigit() == True:outmsg =await Setu.get(0,num=int(msg),qid=member.id)
-        else :outmsg = await Setu.get(0,s=msg,qid=member.id)
-        rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
-        tasks = []
-        tasks.append(asyncio.ensure_future(Setu.rm(rmsg)))
-        tasks.append(asyncio.ensure_future(Setu.reget(0)))
+#├<色图来/不够色> <Int/Str/None> |色图功能
+    if msg.startswith('不够色') == 1 or msg.startswith('色图来') == 1:
+        if msg.startswith('色图来') == 1 and group.id in setu_group: is_r18 = 0
+        elif msg.startswith('不够色') == 1 and group.id in r18_group: is_r18 = 1
+        else: return
+        msg = msg.replace('不够色','').replace('色图来','').replace(' ','')
+        debug('r18:',is_r18,'xml:',cfg['xml'])
+        ##xml特殊设置：
+        if is_r18 == 0:outmsg = await Setu.get(is_r18,msg=msg,qid=member.id)
+        if is_r18 == 1:outmsg = await Setu.get(is_r18,msg=msg,xml = 1,qid=member.id)
+        if MessageChain.create(outmsg).has(Xml):rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg))
+        else:rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
+        tasks = [(asyncio.ensure_future(Setu.rm(rmsg))),(asyncio.ensure_future(Setu.reget(is_r18)))]
         await asyncio.gather(*tasks)
-#├不够色 <Str/Int/None> | 同上，但是r18
-    elif msg.startswith('不够色') and group.id in cfg['r18_group']:
-        msg = msg.replace('不够色','').replace(' ','')
-        if msg == '':outmsg = await Setu.get(1,member.id,group.id)
-        elif msg.isdigit:outmsg = await Setu.get(1,member.id,group.id,num=int(msg))
-        else          :outmsg = await Setu.get(1,member.id,group.id,s=msg)
-        await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
-        try: await asyncio.wait_for(Setu.reget(1), 20)
-        except: is_run = False
 #├xml <on/off> |开关色图xml模式
     elif msg.startswith('xml') and hsolvlist_data[str(member.id)] >30:
         msg = msg.replace('xml','').replace(' ','')
