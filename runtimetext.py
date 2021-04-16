@@ -19,6 +19,10 @@ setus = 20 #色图缓存库至少存储色图量
 
 fl1 = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf" #你的绘图(默认)中文字体
 fl2 = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf" #你的绘图(默认)英文字体
+
+stag = ['10000users入り','5000users入り','1000users入り','500users入り','100users入り','']
+stag2 = ['进行[10000收藏]搜索....','进行[5000收藏]搜索....','进行[1000收藏]搜索....','进行[500收藏]搜索....','进行[100收藏]搜索....','进行[无收藏]搜索....']
+
 #######此文件更新后通常下方内容也会更新
 
 thetypes = [1,2,3,4,5,6,7,8]
