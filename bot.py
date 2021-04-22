@@ -301,7 +301,8 @@ class Ak:
         print('json save done')
 class Setu:
     async def add(r18=0,just_get=True,s='-'): #为色图池增加色图
-        if r18 == 2:
+        if r18 >= 2:
+            print('nom')
             setudata = await pixiv.sh(s,20,r18=r18)
             return setudata
         ext_ing = ''
@@ -416,14 +417,17 @@ class Setu:
         outmsg = [(Image.fromLocalFile(filepach))]
         return outmsg
     async def get(r18,qid=110,msg='',xml=cfg['xml']): #获取色图
+        isdigit = False
         id = str(qid)
         outmsg = []
         if r18 == 1:fl = 'r18'
         else:fl = 'setu'
         if msg.isdigit() == True:
             num = int(msg)
-            outmsg = Plain('色图数量不对劲!')
-            if not 0 > num > 10:return outmsg
+            if 0 < num < 10:isdigit =True
+            else:
+                outmsg = [(Plain('色图数量不对劲!'))]
+                return outmsg
         else:num = 1
         if id not in hsolvlist_data: #初始化
             print('初始化',id)
@@ -452,11 +456,11 @@ class Setu:
                     hsolvlist_data[id] += 1
                     hsolv_data[id] -= 1
                 return outmsg
-            if msg.isdigit() == True or msg == '': #普通和数量色图
+            if isdigit == True or msg == '': #普通和数量色图
                 global loop_ing
                 loop_ing = False
                 if num < len(cfg['setus'][fl]):
-                    for i in range(num):
+                    for _ in range(num):
                         lsetudata = cfg['setus'][fl]
                         setudata = lsetudata[0]
                         if xml == 1:
@@ -479,12 +483,13 @@ class Setu:
                 return outmsg
             else : #搜索色图
                 setudata = await Setu.add(r18,False,s=msg)
+                print('joinsetudata')
                 if xml == 1:
                     setudata['ext'] = setudata['ext'] + '色图缓存:' + str(len(cfg['setus'][fl]))
                     outxml = await Setu.xml(setudata)
                     outmsg = outxml
                 else:
-                    if r18 == 2:
+                    if r18 >= 2:
                         for _ in setudata['img']:
                             outmsg.append(Image.fromLocalFile(_))
                     else:outmsg.append(Image.fromLocalFile(setudata['img'][0]))
@@ -542,23 +547,26 @@ class pixiv:
             setudata['info'] = 'pixiv冷却中'
             return setudata
         cfg['cooling'] = math.floor(Time.time())
-        debug('开始搜图')
+        debug('开始搜图：',msg)
         shlist = []
         for i in stag:
             if len(shlist) > num:break
             word = msg + ' ' + i
             raw = api.search_illust(search_target='partial_match_for_tags',word=word)
-            for _ in raw['illusts']:
-                print(len(shlist),'/',num,'|',_['tags'][0]['name'])
-                if len(shlist) > num:break
-                if _['tags'][0]['name'] == 'R-18' and r18 > 0 :shlist.append(_)
-                if _['tags'][0]['name'] != 'R-18' and r18 == 0 :shlist.append(_)
-                if _['tags'][0]['name'] != 'R-18' and r18 == 2 :shlist.append(_)
+            try:
+                for _ in raw['illusts']:
+                    print(len(shlist),'/',num,'|',_['tags'][0]['name'])
+                    if len(shlist) > num:break
+                    if _['tags'][0]['name'] == 'R-18' and r18 == 2 :shlist.append(_)
+                    if _['tags'][0]['name'] != 'R-18' and r18 >= 2 :shlist.append(_)
+            except:
+                print('error:',raw)
             if len(shlist) > num:break
             await asyncio.sleep(3)
             cfg['cooling'] = math.floor(Time.time())
         debug('搜图完成，处理数据中')
         set = random.randint(0,num-1)
+        debug('r:',set)
         data = shlist[set]
         raw_tags = data['tags']
         tags = []
@@ -1031,7 +1039,6 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
     #├test |test
         elif msg.startswith('test'):
             print(1)
-
     #├exec <Str> |运行函数
         elif msg.startswith('exec') and member.id in admin:
             mlist = await app.memberList(group)
@@ -1117,6 +1124,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 await Ak.i()
                 await Ak.s()
                 restart_program()
+            else:msg = 'ak' + msg
     #├详情 <+/-> |开关色图详情
         elif msg.startswith('详情') :
             msg = msg.replace('详情','').replace(' ','')
@@ -1137,6 +1145,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         elif msg.startswith('清除色图缓存'):
             cfg["setus"]['r18'] = []
             cfg["setus"]['setu'] = []
+    if msg != "":print(msg)
 #普通指令
 #├<色图来/不够色> <Int/Str/None> |色图功能
     if msg.startswith('不够色') == 1 or msg.startswith('色图来') == 1:
@@ -1148,30 +1157,20 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         ##xml特殊设置：
         if is_r18 == 0:outmsg = await Setu.get(is_r18,msg=msg,qid=member.id)
         if is_r18 == 1:outmsg = await Setu.get(is_r18,msg=msg,xml = 1,qid=member.id)
+        print(outmsg)
         if MessageChain.create(outmsg).has(Xml):rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg))
         else:rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
         tasks = [(asyncio.ensure_future(Setu.rm(rmsg))),(asyncio.ensure_future(Setu.reget(is_r18)))]
         await asyncio.gather(*tasks)
     elif msg.startswith('来点') and msg.endswith('色图'):
-        msg = msg.replace('来点','').replace('色图','')
-        if group.id in setu_group : r18 = 0
+        msg = msg.replace('来点','').replace('色图','').replace(' ','')
+        if group.id in setu_group : r18 = 3
         if group.id in r18_group : r18 = 2
-        if msg == '':
-            debug('r18:',r18,'xml:',cfg['xml'])
-            ##xml特殊设置：
-            if r18 == 0:outmsg = await Setu.get(0,msg=msg,qid=member.id)
-            if r18 == 2:outmsg = await Setu.get(1,msg=msg,xml = 1,qid=member.id)
-            if MessageChain.create(outmsg).has(Xml):rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg))
-            else:rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
-            tasks = [(asyncio.ensure_future(Setu.rm(rmsg))),(asyncio.ensure_future(Setu.reget(is_r18)))]
-            await asyncio.gather(*tasks)
+        if len(msg) == 0:
             return
         outmsg = await Setu.get(r18,qid=member.id,msg=msg,xml=0)
         rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
         await Setu.rm(rmsg)
-
-
-
 #├xml <on/off> |开关色图xml模式
     elif msg.startswith('xml') and hsolvlist_data[str(member.id)] >30:
         msg = msg.replace('xml','').replace(' ','')
@@ -1296,6 +1295,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             await asyncio.sleep(2)
 #├ak <s/i> <Str> |明日方舟企鹅物流物品查询
     elif msg.startswith('ak'):
+        print('ak')
         msg = msg.replace('ak','').replace(' ','').replace('－','-')
         if msg.startswith('s'):
             msg = msg.replace('s','')
@@ -1384,6 +1384,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 toimg(outmsg,imgpath = "./chace/ak.png" )
                 await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
         if msg.startswith('i'):
+            print('aki')
             cost = 1
             stime0 = 1
             sname = ''
