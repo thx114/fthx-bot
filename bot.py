@@ -463,6 +463,7 @@ class Setu:
                     for _ in range(num):
                         lsetudata = cfg['setus'][fl]
                         setudata = lsetudata[0]
+                        print(xml)
                         if xml == 1:
                             setudata['ext'] = setudata['ext'] + '色图缓存:' + str(len(cfg['setus'][fl]))
                             outxml = await Setu.xml(setudata)
@@ -522,8 +523,10 @@ class Setu:
         shutil.copyfile(path,path.replace('.png','_r.png'))
         await DF.resize(path,240,120)
     async def rm(rmsg): #撤回色图
-        await asyncio.sleep(cfg['revoke'])
-        await app.revokeMessage(rmsg)
+        if cfg['revoke'] > 0:
+            await asyncio.sleep(cfg['revoke'])
+            await app.revokeMessage(rmsg)
+        else:return
     async def setudata(pid,uid,pname,uname,w,h,tags):
         pid = str(pid)
         uid = str(uid)
@@ -1125,22 +1128,6 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 await Ak.s()
                 restart_program()
             else:msg = 'ak' + msg
-    #├详情 <+/-> |开关色图详情
-        elif msg.startswith('详情') :
-            msg = msg.replace('详情','').replace(' ','')
-            if cfg["info"] == 1 :
-                if msg.endswith('-'):
-                    cfg['info'] = 0
-                    outmsg = '详情已关闭'
-                else:
-                    outmsg = '详情本来就开着'
-            else: 
-                if msg.endswith('-'):
-                    outmsg = '详情本来就关着'
-                else:
-                    cfg["info"] = 1
-                    outmsg = '已开启详情 详情可能在缓存色图用完之后才会生效'
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
     #└清除色图缓存 |清除色图缓存
         elif msg.startswith('清除色图缓存'):
             cfg["setus"]['r18'] = []
@@ -1171,6 +1158,22 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         outmsg = await Setu.get(r18,qid=member.id,msg=msg,xml=0)
         rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
         await Setu.rm(rmsg)
+    #├详情 <+/-> |开关色图详情
+    elif msg.startswith('详情') :
+            msg = msg.replace('详情','').replace(' ','')
+            if cfg["info"] == 1 :
+                if msg.endswith('-'):
+                    cfg['info'] = 0
+                    outmsg = '详情已关闭'
+                else:
+                    outmsg = '详情本来就开着'
+            else: 
+                if msg.endswith('-'):
+                    outmsg = '详情本来就关着'
+                else:
+                    cfg["info"] = 1
+                    outmsg = '已开启详情 详情可能在缓存色图用完之后才会生效'
+            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #├xml <on/off> |开关色图xml模式
     elif msg.startswith('xml') and hsolvlist_data[str(member.id)] >30:
         msg = msg.replace('xml','').replace(' ','')
