@@ -16,6 +16,7 @@ maximgpass = 100 #toimg 文字写入图片系统中:单个文字能跨过(图片
 
 oncesetuadd = 4 #色图补充器一次性补充的色图数 /超过4不会有效率提升
 setus = 20 #色图缓存库至少存储色图量
+xmloffline = False #启用xml模式下是否仍然下载色图(xml发送不需要下载色图)
 
 fl1 = "C:/WINDOWS/Fonts/ResourceHanRoundedCN-Heavy.ttf" #你的绘图(默认)中文字体
 fl2 = "C:/WINDOWS/Fonts/GenShinGothic-Monospace-Heavy.ttf" #你的绘图(默认)英文字体

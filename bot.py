@@ -47,7 +47,7 @@ from threading import Thread
 import zipfile
 from asyncio.subprocess import PIPE, STDOUT
 from runtimetext import lolicon_key,saucenao_key,admin,hsomap,fl1,fl2,authKey,bot_qq,host_,aks_map,aks_map2,aks_map3,aki_map\
-    ,helptext,refresh_token,maxx_img,infomap,maximgpass,xmlimg_group,oncesetuadd,setus,Search_map,Search_map2,stag,stag2
+    ,helptext,refresh_token,maxx_img,infomap,maximgpass,xmlimg_group,oncesetuadd,setus,Search_map,Search_map2,stag,stag2,xmloffline
 
 global is_run
 global execout
@@ -348,14 +348,15 @@ class Setu:
         if r18 == 1:path_ing = './r18/' + str(pid_ing) + '.png'
         else:path_ing = './setu/' + str(pid_ing) + '.png'
         p_ingdata['pid'] = pid_ing
-        print('开始下载:',url_ing,pid_ing,)
-        try:await DF.adf(url_ing,path_ing)
-        except:
-            print('└连接错误，正在重试....')
+        if cfg['xml'] == 0 or xmloffline == True:
+            print('开始下载:',url_ing,pid_ing,)
             try:await DF.adf(url_ing,path_ing)
             except:
-                print(" └连接错误")
-                return
+                print('└连接错误，正在重试....')
+                try:await DF.adf(url_ing,path_ing)
+                except:
+                    print(" └连接错误")
+                    return
         ext =" $title by $author |pid:$pid uid:$uid "\
         .replace('$title',i['title'])\
         .replace('$author',i['author'])\
