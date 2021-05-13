@@ -6,6 +6,10 @@ import math
 from PIL import ImageFile
 from aiohttp.client import ClientSession
 from bs4 import BeautifulSoup
+from graia.application import group
+from graia.application.entities import UploadMethods
+import imageio
+from moviepy.video.VideoClip import ImageClip
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from random import randint
 import requests
@@ -25,7 +29,7 @@ from graia.saya.builtins.broadcast import BroadcastBehaviour
 import asyncio
 import aiohttp
 from graia.application.group import Group, Member
-from graia.application.message.elements.internal import At, Image, Plain, Quote, Xml,Json,App,Source
+from graia.application.message.elements.internal import At, Image, Plain, Poke, Quote, Xml,Json,App,Source
 from graia.broadcast.interrupt import InterruptControl
 from graia.broadcast.interrupt.waiter import Waiter
 from operator import eq
@@ -158,6 +162,7 @@ class DF(object): #下载
         print('├新图片大小:',new_x,'|',new_y)
         inputimg.save(path)
     async def adf(url,path,resize=[],resize_r=False):#异步下载
+        debug(url ,">开始下载")
         url = url.replace('i.pximg.net','i.pixiv.cat')
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'}
         async with aiohttp.ClientSession() as session:
@@ -171,7 +176,6 @@ class DF(object): #下载
             if path.endswith('png') and resize == []:
                 await DF.resize(path,maxx_img)
         print('└下载完毕' + path)
-
         if resize_r == True:shutil.copyfile(path,path.replace('.png','_r.png'))
         if resize != []:await DF.resize(path,resize[0],resize[1])
         return path
@@ -181,14 +185,14 @@ class CHS(object): #数据初始化
         for i in datas :
             if id not in i:
                 i[id] = 0
-api = AppPixivAPI()
-api = ByPassSniApi()  # Same as AppPixivAPI, but bypass the GFW
-api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-api.set_accept_language('en-us')
-try:api.auth(refresh_token=refresh_token)
-except:
-    try:api.auth(refresh_token=refresh_token)
-    except Exception as e:print('Pixiv登录错误: -\n└' + str(e))
+#api = AppPixivAPI()
+#api = ByPassSniApi()  # Same as AppPixivAPI, but bypass the GFW
+#api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+#api.set_accept_language('en-us')
+#try:api.auth(refresh_token=refresh_token)
+#except:
+#    try:api.auth(refresh_token=refresh_token)
+#    except Exception as e:print('Pixiv登录错误: -\n└' + str(e))
 
 
 bcc = Broadcast(loop=loop) 
@@ -332,7 +336,6 @@ class Setu:
                 if s != '-':
                     setudata = await pixiv.sh(s,20,r18=r18)
             return setudata
-            
         if code == '429':
             cfg['setu_l'] = 1
             setudata['img'] = ['.\chace\error.png']
@@ -340,6 +343,7 @@ class Setu:
             return setudata
         i = res_json['data'][0]
         url_ing = i['url']
+        setudata['url'] = url_ing
         pid_ing = i['pid']
         if r18 == 1:path_ing = './r18/' + str(pid_ing) + '.png'
         else:path_ing = './setu/' + str(pid_ing) + '.png'
@@ -359,6 +363,10 @@ class Setu:
         .replace('$uid',str(i['uid']))
         setudata['img'] = [path_ing]
         setudata['ext'] = ext
+        tags = ''
+        for _ in i['tags']:
+            tags = tags +","+ _
+        setudata['raw'] = [i['title'],i['author'],str(pid_ing),str(i['uid']),tags]
         outdata = ""
         for item in i:
             outdata = outdata + str(item) + str(i[str(item)])
@@ -379,21 +387,22 @@ class Setu:
             img = f.read()
             pmd5 = hashlib.md5(img).hexdigest()
         inputimg = Im.open(path)
-        #imgb = inputimg.tobytes()
-        #await app.uploadImage(imgb,UploadMethods.Group)
-        print(path)
-        async with app:await app.sendGroupMessage(xmlimg_group,MessageChain.create([(Image.fromLocalFile(path))]))
         mmx = inputimg.size[0]
         mmy = inputimg.size[1]
-        size = getsize(path)
-        textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0" advertiser_id="0" aid="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="" action="" appid="-1" /></msg>'''
+        #textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0" advertiser_id="0" aid="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="http://p.qpic.cn/qqshare/0" url="http://gchat.qpic.cn/gchatpic_new/0/0-0-$md5?term=2" action="web" appid="-1" /></msg>'''
+        textxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="[有色图!!]" sourceMsgId="0" url="$url" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3">$title</title><picture cover="$url" w="0" h="0" /><summary size="25" color="#EE9A00" style="1">$user</summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">$TEXT</summary><hr hidden="false" style="0" /></item><source name="$lost" icon="" action="-1" appid="0" /></msg>"""
         textxml = textxml.replace('$md5',pmd5)\
             .replace('$x',str(mmx))\
             .replace('$y',str(mmy))\
             .replace('$mx',str(mmx))\
             .replace('$my',str(mmy))\
             .replace('$ext',ext)\
-            #.replace('$size',str(size))
+            .replace('$title',setudata['raw'][0])\
+            .replace('$TEXT','tags:' + setudata['raw'][4])\
+            .replace('$user','by ' + setudata['raw'][2])\
+            .replace('$lost','pid:' + setudata['raw'][1] +' | uid:' + setudata['raw'][3])
+        if type(setudata['url']) is list: textxml = textxml.replace('$url',str(setudata['url'][0]))
+        elif type(setudata['url']) is str: textxml = textxml.replace('$url',str(setudata['url']))
         outxml = [(Xml(textxml))]
         return outxml
     async def offline(r18): #发送离线色图
@@ -522,11 +531,22 @@ class Setu:
         await DF.adf(url,path)
         shutil.copyfile(path,path.replace('.png','_r.png'))
         await DF.resize(path,240,120)
-    async def rm(rmsg): #撤回色图
-        if cfg['revoke'] > 0:
-            await asyncio.sleep(cfg['revoke'])
+    async def rm(rmsg,c=False,set=0): #撤回色图
+        if cfg['xml'] == 1:return
+        if c == False :rtime = cfg['revoke']
+        if c == True: rtime = set
+        if rtime > 0:
+            await asyncio.sleep(rtime)
             await app.revokeMessage(rmsg)
         else:return
+    async def gif(path):
+        frames = []
+        image_list = ["chace/none.png",path]
+        for image_name in image_list:
+            frames.append(imageio.imread(image_name))
+        imageio.mimsave(path.replace('.png','.gif').replace('.jpg','.gif'), frames, 'GIF', duration=200)
+        path = path.replace('.png','.gif').replace('.jpg','.gif')
+        return path
     async def setudata(pid,uid,pname,uname,w,h,tags):
         pid = str(pid)
         uid = str(uid)
@@ -858,9 +878,10 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                         if mode != 0:
                             return mode
                 global stime 
-                stime = Time.timenow
+                stime = Time.time()
                 mode = await inc.wait(waiter)
                 imgpath = './sh.png'
+                debug('WITE:',timg)
                 await DF.adf(timg,imgpath)
                 image = Im.open(imgpath)
                 mmx = image.size[0]
@@ -871,7 +892,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 if mode == 1:
                     fromt = 'saucenao'
                     print('以图搜图sau')
-                    url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=8&url=$url".replace('$url',timg).replace('$key',saucenao_key)
+                    url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=5&url=$url".replace('$url',timg).replace('$key',saucenao_key)
                     async with aiohttp.ClientSession() as session:
                         async with session.get(url) as resp:
                             data = await resp.json()
@@ -1041,7 +1062,10 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 [(Plain('撤回时间已改为'+str(cfg['revoke'])))]),quote=message[Source][0].id)
     #├test |test
         elif msg.startswith('test'):
-            print(1)
+            testxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="test" sourceMsgId="0" url="https://i.pixiv.cat/img-original/img/2021/04/06/04/20/34/88967403_p0.jpg" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3"> test</title><picture cover="https://i.pixiv.cat/img-original/img/2021/04/06/04/20/34/88967403_p0.jpg" w="0" h="0" /><summary size="25" color="#EE9A00" style="1"></summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">第一行 第二行 第三行 第四行 第五行</summary><hr hidden="false" style="0" /></item><source name="擎天机器人" icon="http://t.cn/RVIeaZK" action="-1" appid="0" /></msg>"""
+            outxml = [(Xml(testxml))]
+            print(testxml)
+            await app.sendGroupMessage(group,MessageChain.create(outxml))
     #├exec <Str> |运行函数
         elif msg.startswith('exec') and member.id in admin:
             mlist = await app.memberList(group)
@@ -1130,10 +1154,14 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             else:msg = 'ak' + msg
     #└清除色图缓存 |清除色图缓存
         elif msg.startswith('清除色图缓存'):
-            cfg["setus"]['r18'] = []
-            cfg["setus"]['setu'] = []
+            if not msg.replace('清除色图缓存','').startswith('setu'):
+               cfg["setus"]['r18'] = []
+               print('rip r18')
+            if not msg.replace('清除色图缓存','').startswith('r18'):
+               cfg["setus"]['setu'] = []
+               print('rip setu')
     if msg != "":print(msg)
-#普通指令
+#普通指令 
 #├<色图来/不够色> <Int/Str/None> |色图功能
     if msg.startswith('不够色') == 1 or msg.startswith('色图来') == 1:
         if msg.startswith('色图来') == 1 and group.id in setu_group: is_r18 = 0
@@ -1142,7 +1170,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         msg = msg.replace('不够色','').replace('色图来','').replace(' ','')
         debug('r18:',is_r18,'xml:',cfg['xml'])
         ##xml特殊设置：
-        if is_r18 == 0:outmsg = await Setu.get(is_r18,msg=msg,qid=member.id)
+        if is_r18 == 0:outmsg = await Setu.get(is_r18,msg=msg,xml = cfg['xml'],qid=member.id)
         if is_r18 == 1:outmsg = await Setu.get(is_r18,msg=msg,xml = 1,qid=member.id)
         print(outmsg)
         if MessageChain.create(outmsg).has(Xml):rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg))
@@ -1158,7 +1186,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         outmsg = await Setu.get(r18,qid=member.id,msg=msg,xml=0)
         rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
         await Setu.rm(rmsg)
-    #├详情 <+/-> |开关色图详情
+#├详情 <+/-> |开关色图详情
     elif msg.startswith('详情') :
             msg = msg.replace('详情','').replace(' ','')
             if cfg["info"] == 1 :
