@@ -185,14 +185,14 @@ class CHS(object): #数据初始化
         for i in datas :
             if id not in i:
                 i[id] = 0
-#api = AppPixivAPI()
-#api = ByPassSniApi()  # Same as AppPixivAPI, but bypass the GFW
-#api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-#api.set_accept_language('en-us')
-#try:api.auth(refresh_token=refresh_token)
-#except:
-#    try:api.auth(refresh_token=refresh_token)
-#    except Exception as e:print('Pixiv登录错误: -\n└' + str(e))
+api = AppPixivAPI()
+api = ByPassSniApi()  # Same as AppPixivAPI, but bypass the GFW
+api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+api.set_accept_language('en-us')
+try:api.auth(refresh_token=refresh_token)
+except:
+    try:api.auth(refresh_token=refresh_token)
+    except Exception as e:print('Pixiv登录错误: -\n└' + str(e))
 
 
 bcc = Broadcast(loop=loop) 
@@ -381,23 +381,9 @@ class Setu:
         else:
             return setudata
     async def xml(setudata): #使用xml发出色图
-        path = setudata['img'][0]
-        ext = setudata['ext']
         print('intoxml')
-        with open(path,'rb') as f:
-            img = f.read()
-            pmd5 = hashlib.md5(img).hexdigest()
-        inputimg = Im.open(path)
-        mmx = inputimg.size[0]
-        mmy = inputimg.size[1]
         #textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0" advertiser_id="0" aid="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="http://p.qpic.cn/qqshare/0" url="http://gchat.qpic.cn/gchatpic_new/0/0-0-$md5?term=2" action="web" appid="-1" /></msg>'''
-        textxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="[有色图!!]" sourceMsgId="0" url="$url" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3">$title</title><picture cover="$url" w="0" h="0" /><summary size="25" color="#EE9A00" style="1">$user</summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">$TEXT</summary><hr hidden="false" style="0" /></item><source name="$lost" icon="" action="-1" appid="0" /></msg>"""
-        textxml = textxml.replace('$md5',pmd5)\
-            .replace('$x',str(mmx))\
-            .replace('$y',str(mmy))\
-            .replace('$mx',str(mmx))\
-            .replace('$my',str(mmy))\
-            .replace('$ext',ext)\
+        textxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="[有色图!!]" sourceMsgId="0" url="$url" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3">$title</title><picture cover="$url" w="0" h="0" /><summary size="25" color="#EE9A00" style="1">$user</summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">$TEXT</summary><hr hidden="false" style="0" /></item><source name="$lost" icon="" action="-1" appid="0" /></msg>"""\
             .replace('$title',setudata['raw'][0])\
             .replace('$TEXT','tags:' + setudata['raw'][4])\
             .replace('$user','by ' + setudata['raw'][2])\
@@ -495,8 +481,8 @@ class Setu:
             else : #搜索色图
                 setudata = await Setu.add(r18,False,s=msg)
                 print('joinsetudata')
+                xml = 1
                 if xml == 1:
-                    setudata['ext'] = setudata['ext'] + '色图缓存:' + str(len(cfg['setus'][fl]))
                     outxml = await Setu.xml(setudata)
                     outmsg = outxml
                 else:
@@ -571,7 +557,7 @@ class pixiv:
             setudata['info'] = 'pixiv冷却中'
             return setudata
         cfg['cooling'] = math.floor(Time.time())
-        debug('开始搜图：',msg)
+        debug('开始搜图：',msg,'r18:',r18)
         shlist = []
         for i in stag:
             if len(shlist) > num:break
@@ -581,8 +567,9 @@ class pixiv:
                 for _ in raw['illusts']:
                     print(len(shlist),'/',num,'|',_['tags'][0]['name'])
                     if len(shlist) > num:break
-                    if _['tags'][0]['name'] == 'R-18' and r18 == 2 :shlist.append(_)
-                    if _['tags'][0]['name'] != 'R-18' and r18 >= 2 :shlist.append(_)
+                    if _['tags'][0]['name'] == 'R-18' and r18 >= 1 :shlist.append(_)
+                    if _['tags'][0]['name'] != 'R-18' and r18 == 2 :shlist.append(_)
+                    if _['tags'][0]['name'] != 'R-18' and r18 <= 0 :shlist.append(_)
             except:
                 print('error:',raw)
             if len(shlist) > num:break
@@ -604,6 +591,9 @@ class pixiv:
             data['width'],data['height'],
             tags
             )
+        for _ in tags : tags_str = ','.join(_)
+        setudata['raw'] = [data['caption'],data['user']['name'],str(data['id']),str(data['user']['id']),tags_str]
+        outdata = ""
         try:
             print(data['meta_single_page']['original_image_url'],'>>>>')
             url = data['meta_single_page']['original_image_url']
@@ -620,15 +610,8 @@ class pixiv:
             n = 0
         print(urls)
         setudata['img'] = []
-        tasks=[]
         n = 0
-        for _ in urls:
-            n += 1
-            sdir('./listpsh/'+str(data['id']))
-            tasks.append(DF.adf(_,'./listpsh/'+str(data['id'])+'/'+str(n)+'.png'))
-            setudata['img'].append('./listpsh/'+str(data['id'])+'/'+str(n)+'.png')
-        print(tasks)
-        await asyncio.wait(tasks)
+        setudata['url'] = urls
         cfg['cooling'] = math.floor(Time.time())
         return setudata
 
@@ -1153,6 +1136,10 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 await Ak.s()
                 restart_program()
             else:msg = 'ak' + msg
+        elif msg.startswith('xml'):
+            msg = msg.replace('xml ','').replace('xml','')
+            xmlmsg = Xml(msg)
+            app.sendGroupMessage(group,MessageChain.create(xmlmsg))
     #└清除色图缓存 |清除色图缓存
         elif msg.startswith('清除色图缓存'):
             if not msg.replace('清除色图缓存','').startswith('setu'):
@@ -1180,7 +1167,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         await asyncio.gather(*tasks)
     elif msg.startswith('来点') and msg.endswith('色图'):
         msg = msg.replace('来点','').replace('色图','').replace(' ','')
-        if group.id in setu_group : r18 = 3
+        if group.id in setu_group : r18 = -1
         if group.id in r18_group : r18 = 2
         if len(msg) == 0:
             return
