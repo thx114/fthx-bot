@@ -185,7 +185,7 @@ class CHS(object): #数据初始化
         for i in datas :
             if id not in i:
                 i[id] = 0
-api = AppPixivAPI()
+#api = AppPixivAPI()
 api = ByPassSniApi()  # Same as AppPixivAPI, but bypass the GFW
 api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
 api.set_accept_language('en-us')
@@ -382,8 +382,7 @@ class Setu:
             return setudata
     async def xml(setudata): #使用xml发出色图
         print('intoxml')
-        #textxml = '''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="5" templateID="1" action="test" brief="[色图]" sourceMsgId="0" url="" flag="2" adverSign="0" multiMsgFlag="0"><item layout="0" advertiser_id="0" aid="0"><image uuid="$md5.png" md5="$md5" GroupFiledid="0" filesize="38504" local_path="" minWidth="$x" minHeight="$y" maxWidth="$mx" maxHeight="$my" /></item><source name="$ext" icon="http://p.qpic.cn/qqshare/0" url="http://gchat.qpic.cn/gchatpic_new/0/0-0-$md5?term=2" action="web" appid="-1" /></msg>'''
-        textxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="[有色图!!]" sourceMsgId="0" url="$url" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3">$title</title><picture cover="$url" w="0" h="0" /><summary size="25" color="#EE9A00" style="1">$user</summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">$TEXT</summary><hr hidden="false" style="0" /></item><source name="$lost" icon="" action="-1" appid="0" /></msg>"""\
+        textxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="[有色图!!]" sourceMsgId="0" url="" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3">$title</title><picture cover="$url" w="0" h="0" /><summary size="25" color="#EE9A00" style="1">$user</summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">$TEXT</summary><hr hidden="false" style="0" /></item><source name="$lost" icon="" action="-1" appid="0" /></msg>"""\
             .replace('$title',setudata['raw'][0])\
             .replace('$TEXT','tags:' + setudata['raw'][4])\
             .replace('$user','by ' + setudata['raw'][2])\
@@ -876,10 +875,16 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 if mode == 1:
                     fromt = 'saucenao'
                     print('以图搜图sau')
-                    url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&dbmask=999&numres=5&url=$url".replace('$url',timg).replace('$key',saucenao_key)
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(url) as resp:
-                            data = await resp.json()
+                    url = "https://saucenao.com/search.php?output_type=2&api_key=$key&testmode=1&db=999&numres=5&url=$url".replace('$url',timg).replace('$key',saucenao_key)
+                    print(url)
+                    try:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(url) as resp:
+                                data = await resp.json()
+                    except:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(url) as resp:
+                                data = await resp.json()
                     data = data['results']
                     ilist = []
                     n = 0
@@ -1136,10 +1141,11 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 await Ak.s()
                 restart_program()
             else:msg = 'ak' + msg
-        elif msg.startswith('xml'):
-            msg = msg.replace('xml ','').replace('xml','')
-            xmlmsg = Xml(msg)
-            app.sendGroupMessage(group,MessageChain.create(xmlmsg))
+    #├xml <str> |发送xml
+        elif msg.startswith('XML'):
+            msg = msg.replace('XML ','').replace('XML','')
+            xmlmsg = [Xml(msg)]
+            await app.sendGroupMessage(group,MessageChain.create(xmlmsg))
     #└清除色图缓存 |清除色图缓存
         elif msg.startswith('清除色图缓存'):
             if not msg.replace('清除色图缓存','').startswith('setu'):
