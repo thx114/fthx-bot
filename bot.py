@@ -382,13 +382,18 @@ class Setu:
             return setudata
     async def xml(setudata): #使用xml发出色图
         print('intoxml')
-        textxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="[有色图!!]" sourceMsgId="0" url="" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3">$title</title><picture cover="$url" w="0" h="0" /><summary size="25" color="#EE9A00" style="1">$user</summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">$TEXT</summary><hr hidden="false" style="0" /></item><source name="$lost" icon="" action="-1" appid="0" /></msg>"""\
+        print(setudata)
+        ''.find('qaq')
+        if 'r18' in setudata['raw'][4]: stpath = 'R-18'
+        else: stpath = 'setu'
+        setu_num = len(cfg['setus'][stpath])
+        textxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="[有色图!!]" sourceMsgId="0" url="$url" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3">$title</title><picture cover="$url" w="0" h="0" /><summary size="25" color="#EE9A00" style="1">$user</summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">$TEXT</summary><hr hidden="false" style="0" /></item><source name="$lost" icon="" action="-1" appid="0" /></msg>"""\
             .replace('$title',setudata['raw'][0])\
             .replace('$TEXT','tags:' + setudata['raw'][4])\
-            .replace('$user','by ' + setudata['raw'][2])\
-            .replace('$lost','pid:' + setudata['raw'][1] +' | uid:' + setudata['raw'][3])
-        if type(setudata['url']) is list: textxml = textxml.replace('$url',str(setudata['url'][0]))
-        elif type(setudata['url']) is str: textxml = textxml.replace('$url',str(setudata['url']))
+            .replace('$user','by ' + setudata['raw'][1])\
+            .replace('$lost','pid:' + setudata['raw'][2] +' | uid:' + setudata['raw'][3] + ' -缓存:' + str(setu_num))
+        if type(setudata['url']) is list: textxml = textxml.replace('$url',str(setudata['url'][0]).replace('i.pixiv.net','i.pixiv.cat').replace('i.pixiv.cat','i.pximg.lolipoi.online'))
+        elif type(setudata['url']) is str: textxml = textxml.replace('$url',str(setudata['url']).replace('i.pixiv.ney','i.pixiv.cat').replace('i.pixiv.cat','i.pximg.lolipoi.online'))
         outxml = [(Xml(textxml))]
         return outxml
     async def offline(r18): #发送离线色图
@@ -547,6 +552,7 @@ class Setu:
             .replace('$xy',w + '|' + h)\
             .replace('$tags',''.join(tags))
         return setudatatext
+
 class pixiv:
     async def sh(msg,num,r18=2):
         setudata = {}
@@ -575,9 +581,7 @@ class pixiv:
             await asyncio.sleep(3)
             cfg['cooling'] = math.floor(Time.time())
         debug('搜图完成，处理数据中')
-        set = random.randint(0,num-1)
-        debug('r:',set)
-        data = shlist[set]
+        data = shlist[random.randint(0,num)]
         raw_tags = data['tags']
         tags = []
         for tag in raw_tags:tags.append(tag['name'])
@@ -1154,7 +1158,6 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             if not msg.replace('清除色图缓存','').startswith('r18'):
                cfg["setus"]['setu'] = []
                print('rip setu')
-    if msg != "":print(msg)
 #普通指令 
 #├<色图来/不够色> <Int/Str/None> |色图功能
     if msg.startswith('不够色') == 1 or msg.startswith('色图来') == 1:
@@ -1492,7 +1495,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))    
 #├info |获取上一个色图详情
     elif msg.startswith('info') and group.id in setu_group:
-        outmsg = last_setu[str(member.id)]
+        outmsg = last_setu[str(member.id)]['info']
         await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
 #├debug |获取个人debug信息
     elif msg.startswith('debug') and group.id in setu_group:
