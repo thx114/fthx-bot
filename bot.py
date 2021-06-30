@@ -680,6 +680,7 @@ def toimg(msg,imgpath='./chace/mainbg.png',f1=fl1,f2=fl2,PZ=False,savepath='./ch
     color = COLOR
     mmx = img.size[0]
     mmy = img.size[1]
+    textmmy = mmy
     efunction = False
     f = ''
     img = Im.open(imgpath)
@@ -801,6 +802,9 @@ def toimg(msg,imgpath='./chace/mainbg.png',f1=fl1,f2=fl2,PZ=False,savepath='./ch
                 y += size
                 code = True
             if code == False : break #跳出循环
+        if my + 2*size > textmmy :
+            textmmy += 4 * size
+            textimg = textimg.crop((0,0,mmx,textmmy))
         for_e = Time.time()
         for_list.append(for_e - for_s)
     if x > mx: mx = x + size
@@ -836,6 +840,10 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         print(tapp)
     if message.has(Plain):
         tmsg = str(message.get(Plain)[0].text)
+    if msg.startswith('#bot'):
+        sendgroup=xmlimg_group
+        msg = msg.replace('#bot','')
+    else : sendgroup = group.id
 #图片
     if message.has(Image):
         timg = message.get(Image)[0].url
@@ -844,7 +852,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
 # at机器人功能
             if message.get(At)[0].target == bot_qq and group.id in setu_group:
     #├<@机器人> <Img> |以图搜图          
-                await app.sendGroupMessage(group, MessageChain.create([At(member.id), Plain("选择搜索源:\n1.saucenao\n2.ascii2d.net")]))
+                await app.sendGroupMessage(sendgroup, MessageChain.create([At(member.id), Plain("选择搜索源:\n1.saucenao\n2.ascii2d.net")]))
                 @Waiter.create_using_function([GroupMessage])
                 def waiter(
                     event: GroupMessage, waiter_group: Group,
@@ -992,10 +1000,10 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 #    setudata['img'] = './chace/out.png'
                 #    setudata['ext'] = '发送<数字>来查看详情'
                 #    outxml = await Setu.xml(setudata)
-                #    await app.sendGroupMessage(group,MessageChain.create(outxml))
+                #    await app.sendGroupMessage(sendgroup,MessageChain.create(outxml))
                 #else:
-                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
-                await app.sendGroupMessage(group, MessageChain.create([At(member.id), Plain("发送<数字>来查看详情")]))
+                await app.sendGroupMessage(sendgroup,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
+                await app.sendGroupMessage(sendgroup, MessageChain.create([At(member.id), Plain("发送<数字>来查看详情")]))
                 global tic
                 tic = Time.time()
                 @Waiter.create_using_function([GroupMessage])
@@ -1025,13 +1033,13 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                             .replace('$link2',link2)
                             img_ing = './chace/' + msg + '_r.png'
                             outmsg = [Image.fromLocalFile(img_ing),Plain(infomsg)]
-                            await app.sendGroupMessage(group, MessageChain.create(outmsg))
+                            await app.sendGroupMessage(sendgroup, MessageChain.create(outmsg))
                 outmsg = await inc.wait(waiter)
                 print('nooo')
     #└<Img> |表情色图来
         if message.get(Image)[0].imageId == '{B407F708-A2C6-A506-3420-98DF7CAC4A57}.mirai' and group.id in cfg['setu_group']:
             outmsg = await Setu.get(0,qid=member.id)
-            rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
+            rmsg = await app.sendGroupMessage(sendgroup,MessageChain.create(outmsg),quote=message[Source][0].id)
             if cfg['revoke'] > 0 :
                 await asyncio.sleep(cfg['revoke'])
                 await app.revokeMessage(rmsg)
@@ -1045,20 +1053,20 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             t_s = Time.time()
             if len(input) > 1:toimg(input[0],input[1])
             else:toimg(input[0])
-            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
             t_e = Time.time()
             print(t_e-t_s)
     #├撤回时间 <Int> |设置色图撤回时间
         elif msg.startswith('撤回时间'):
             cfg['revoke'] = int(msg.replace(' ','').replace('撤回时间',''))
-            await app.sendGroupMessage(group,MessageChain.create(
+            await app.sendGroupMessage(sendgroup,MessageChain.create(
                 [(Plain('撤回时间已改为'+str(cfg['revoke'])))]),quote=message[Source][0].id)
     #├test |test
         elif msg.startswith('test'):
             testxml = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><msg serviceID="1" templateID="1" action="web" brief="test" sourceMsgId="0" url="https://i.pixiv.cat/img-original/img/2021/04/06/04/20/34/88967403_p0.jpg" flag="3" adverSign="0" multiMsgFlag="0"><item layout="0" mode="2" advertiser_id="0" aid="0"><title size="30" color="#D32F2F" style="3"> test</title><picture cover="https://i.pixiv.cat/img-original/img/2021/04/06/04/20/34/88967403_p0.jpg" w="0" h="0" /><summary size="25" color="#EE9A00" style="1"></summary></item><item layout="6" advertiser_id="0" aid="0"><summary size="25" color="#EE9A00">第一行 第二行 第三行 第四行 第五行</summary><hr hidden="false" style="0" /></item><source name="擎天机器人" icon="http://t.cn/RVIeaZK" action="-1" appid="0" /></msg>"""
             outxml = [(Xml(testxml))]
             print(testxml)
-            await app.sendGroupMessage(group,MessageChain.create(outxml))
+            await app.sendGroupMessage(sendgroup,MessageChain.create(outxml))
     #├exec <Str> |运行函数
         elif msg.startswith('exec') and member.id in admin:
             mlist = await app.memberList(group)
@@ -1071,19 +1079,19 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             print(msg)
             await aexec(msg)
             if execout != "None":
-                if isinstance(execout,list):await app.sendGroupMessage(group,MessageChain.create(execout))
-                if isinstance(execout,str):await app.sendGroupMessage(group,MessageChain.create([(Plain(execout))]),quote=message[Source][0].id)
-                else:await app.sendGroupMessage(group,MessageChain.create([(Plain(str(execout)))]),quote=message[Source][0].id)
+                if isinstance(execout,list):await app.sendGroupMessage(sendgroup,MessageChain.create(execout))
+                if isinstance(execout,str):await app.sendGroupMessage(sendgroup,MessageChain.create([(Plain(execout))]),quote=message[Source][0].id)
+                else:await app.sendGroupMessage(sendgroup,MessageChain.create([(Plain(str(execout)))]),quote=message[Source][0].id)
     #├restart |重启机器人
         elif msg.startswith('restart') :
-            await app.sendGroupMessage(group,MessageChain.create([Plain('执行重启项目----')]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Plain('执行重启项目----')]))
             restart_program()
     #├hsolvr |重置色图
         elif msg.startswith("hsolvr"):
             outmsg = "所有当天获取色图次数被重置"
             for i in qd_data:
                 qd_data[i] = 0
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(outmsg)]))
             savecfg()
             srcfile='./cfg.json'
             name = Time.strftime('%Y-%m-%d-%H',Time.localtime(Time.time()))
@@ -1096,7 +1104,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             if id == '': id = str(member.id)
             hsolv_data[id] = hsolv_data[id] + 10
             outmsg = str(id) + "的色图增加了10"
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(outmsg)]))
             savecfg()
     #├sg setu <+/-> |色图群权限管理
         elif msg.startswith('sg setu'):
@@ -1111,7 +1119,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 else:
                     cfg['setu_group'].append(group.id)
                     outmsg = '已变成色图群'
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(outmsg)]))
     #├sg r18 <+/-> |r18群权限管理
         elif msg.startswith('sg r18') :
             if group.id in cfg['r18_group'] :
@@ -1126,19 +1134,19 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 else:
                     cfg['r18_group'].append(group.id)
                     outmsg = '已变成r18群'
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(outmsg)]))
     #├ak <rm/ri/rs/ra> |明日方舟企鹅物流手动数据更新
         elif msg.startswith('ak'):
             msg = msg.replace('ak','').replace(' ','').replace('－','-')
             if msg.startswith('rm') :
                 await Ak.m()
-                await app.sendGroupMessage(group,MessageChain.create([Plain('企鹅物流 - akm 数据下载完成')]))
+                await app.sendGroupMessage(sendgroup,MessageChain.create([Plain('企鹅物流 - akm 数据下载完成')]))
             if msg.startswith('ri') :
                 await Ak.i()
-                await app.sendGroupMessage(group,MessageChain.create([Plain('企鹅物流 - aki 数据下载完成')]))
+                await app.sendGroupMessage(sendgroup,MessageChain.create([Plain('企鹅物流 - aki 数据下载完成')]))
             if msg.startswith('rs') :
                 await Ak.s()
-                await app.sendGroupMessage(group,MessageChain.create([Plain('企鹅物流 - aks 数据下载完成')]))
+                await app.sendGroupMessage(sendgroup,MessageChain.create([Plain('企鹅物流 - aks 数据下载完成')]))
             if msg.startswith('ra') :
                 await Ak.m()
                 await Ak.i()
@@ -1149,7 +1157,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         elif msg.startswith('XML'):
             msg = msg.replace('XML ','').replace('XML','')
             xmlmsg = [Xml(msg)]
-            await app.sendGroupMessage(group,MessageChain.create(xmlmsg))
+            await app.sendGroupMessage(sendgroup,MessageChain.create(xmlmsg))
     #└清除色图缓存 |清除色图缓存
         elif msg.startswith('清除色图缓存'):
             if not msg.replace('清除色图缓存','').startswith('setu'):
@@ -1170,8 +1178,8 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         if is_r18 == 0:outmsg = await Setu.get(is_r18,msg=msg,xml = cfg['xml'],qid=member.id)
         if is_r18 == 1:outmsg = await Setu.get(is_r18,msg=msg,xml = 1,qid=member.id)
         print(outmsg)
-        if MessageChain.create(outmsg).has(Xml):rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg))
-        else:rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
+        if MessageChain.create(outmsg).has(Xml):rmsg = await app.sendGroupMessage(sendgroup,MessageChain.create(outmsg))
+        else:rmsg = await app.sendGroupMessage(sendgroup,MessageChain.create(outmsg),quote=message[Source][0].id)
         tasks = [(asyncio.ensure_future(Setu.rm(rmsg))),(asyncio.ensure_future(Setu.reget(is_r18)))]
         await asyncio.gather(*tasks)
     elif msg.startswith('来点') and msg.endswith('色图'):
@@ -1181,7 +1189,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         if len(msg) == 0:
             return
         outmsg = await Setu.get(r18,qid=member.id,msg=msg,xml=0)
-        rmsg = await app.sendGroupMessage(group,MessageChain.create(outmsg),quote=message[Source][0].id)
+        rmsg = await app.sendGroupMessage(sendgroup,MessageChain.create(outmsg),quote=message[Source][0].id)
         await Setu.rm(rmsg)
 #├详情 <+/-> |开关色图详情
     elif msg.startswith('详情') :
@@ -1198,21 +1206,21 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 else:
                     cfg["info"] = 1
                     outmsg = '已开启详情 详情可能在缓存色图用完之后才会生效'
-            await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(outmsg)]))
 #├xml <on/off> |开关色图xml模式
     elif msg.startswith('xml') and hsolvlist_data[str(member.id)] >30:
         msg = msg.replace('xml','').replace(' ','')
         if msg == 'on':
             cfg['xml'] = 1
-            await app.sendGroupMessage(group,MessageChain.create([(Plain('已开启'))]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([(Plain('已开启'))]))
         elif msg == 'off':
             cfg['xml'] = 0
-            await app.sendGroupMessage(group,MessageChain.create([(Plain('已关闭'))]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([(Plain('已关闭'))]))
         else :pass
 #├/help |获取帮助
     elif msg.startswith('/help'):
         text = helptext
-        await app.sendGroupMessage(group,MessageChain.create([Plain(text)]))
+        await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(text)]))
 #├排行榜 <day_r18/week_r18/week_r18g/week/month/None>|p站排行榜
     elif msg.startswith('排行榜') and group.id in setu_group:
         msg = msg.replace('排行榜','').replace(' ','')
@@ -1266,7 +1274,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
             p_ing = {}
         msglist.append([(Plain('使用tp 1~5来查看色图详情'))])
         for i in msglist:
-            await app.sendGroupMessage(group,MessageChain.create(i))
+            await app.sendGroupMessage(sendgroup,MessageChain.create(i))
             await asyncio.sleep(3)
     elif msg.startswith('tp'):
         msg = msg.replace(' ','').replace('tp','')
@@ -1319,7 +1327,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 .replace('url',urlstr))))
         print(outmsg)
         for i in outmsg:
-            await app.sendGroupMessage(group,MessageChain.create([i]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([i]))
             await asyncio.sleep(2)
 #├ak <s/i> <Str> |明日方舟企鹅物流物品查询
     elif msg.startswith('ak'):
@@ -1410,7 +1418,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 outmsg = outmsg + aks_map3
                 print(outmsg)
                 toimg(outmsg,imgpath = "./chace/ak.png" )
-                await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
+                await app.sendGroupMessage(sendgroup,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
         if msg.startswith('i'):
             print('aki')
             cost = 1
@@ -1492,16 +1500,16 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
 
             img = "./chace/ak.png"
             toimg(outmsg,img)
-            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))    
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))    
 #├info |获取上一个色图详情
     elif msg.startswith('info') and group.id in setu_group:
         outmsg = last_setu[str(member.id)]['info']
-        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(outmsg)]))
 #├debug |获取个人debug信息
     elif msg.startswith('debug') and group.id in setu_group:
         id = str(member.id)
         info = 'hsolv_data=' +  str(hsolv_data[id]) + '\nhsolvlist_data=' + str(hsolvlist_data[id]) + '\nqd_data=' + str(qd_data[id]) + '\nqdlist_data=' + str(qdlist_data[id])
-        await app.sendGroupMessage(group,MessageChain.create([Plain(info)]))
+        await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(info)]))
 #├hsolv <Int/list>| hsolv等级获取(qq) / lsp排行榜
     elif msg.startswith("hsolv"):
         print('hsolv')
@@ -1525,7 +1533,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                                 hsolvlist.append(str(inmsg))
                 except:
                     print('err')
-                    await app.sendGroupMessage(group,MessageChain.create([Plain('执行此命令时发生了错误')]))
+                    await app.sendGroupMessage(sendgroup,MessageChain.create([Plain('执行此命令时发生了错误')]))
 
             res = sorted(hsolvlist, key=lambda x: (lambda y: (int(y[1]), y[0]))(x.split(':')))
             res.reverse()
@@ -1564,7 +1572,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 msg = msg + '\\n\\|'
             print(msg)
             toimg(msg)
-            await app.sendGroupMessage(group,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
+            await app.sendGroupMessage(sendgroup,MessageChain.create([Image.fromLocalFile("./chace/out.png")]))
     #-显示hsolv等级
         else:
             try:
@@ -1573,7 +1581,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
                 mid = 0
                 mid = int(hsolvlist_data[str(id)])
                 outmsg = str(id) + "的hso等级为" + str(mid)
-                await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+                await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(outmsg)]))
             except:pass
 #└backup |备份
     elif msg.startswith('backup') and member.id in admin:
@@ -1583,7 +1591,7 @@ async def group_listener(app: GraiaMiraiApplication, message:MessageChain, group
         dstfile='./backups/'+ name + '.json'
         shutil.move(srcfile,dstfile)
         outmsg = name + '已备份'
-        await app.sendGroupMessage(group,MessageChain.create([Plain(outmsg)]))
+        await app.sendGroupMessage(sendgroup,MessageChain.create([Plain(outmsg)]))
 
 
 #后处理项目
