@@ -1,4 +1,4 @@
-~pencv_python>=4.3.0.38
+Opencv_python>=4.3.0.38
 beautifulsoup4>=4.9.3
 PixivPy>=3.5.10
 aiohttp>=3.7.3
